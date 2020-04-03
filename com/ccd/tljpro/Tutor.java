@@ -31,9 +31,9 @@ import java.util.Map;
  */
 public class Tutor extends Container {
 
-    private final TuoLaJi main;
+    private final TuoLaJiPro main;
 
-    Tutor(TuoLaJi main) {
+    Tutor(TuoLaJiPro main) {
         this.main = main;
         this.setLayout(new LayeredLayout());
     }
@@ -70,7 +70,7 @@ public class Tutor extends Container {
             index.setScrollableY(true);
 
             if (currentLang.equals("zh")) {
-                index.add(TuoLaJi.boldText("入门教程"));
+                index.add(TuoLaJiPro.boldText("入门教程"));
             } else {
                 index.add("Before playing games, please finish this tutorial first:");
             }
@@ -436,25 +436,25 @@ public class Tutor extends Container {
                 content.setScrollableX(true);
                 Container p = new Container();
                 content.add(p);
-                p.add(TuoLaJi.boldText("庄：")).add("庄家，叫分最低者");
+                p.add(TuoLaJiPro.boldText("庄：")).add("庄家，叫分最低者");
                 p = new Container();
                 content.add(p);
-                p.add(TuoLaJi.boldText("帮：")).add("帮庄，庄家的同伙");
+                p.add(TuoLaJiPro.boldText("帮：")).add("帮庄，庄家的同伙");
                 p = new Container();
                 content.add(p);
-                p.add(TuoLaJi.boldText("定约分：")).add("庄家最终所叫分数");
+                p.add(TuoLaJiPro.boldText("定约分：")).add("庄家最终所叫分数");
                 p = new Container();
                 content.add(p);
-                p.add(TuoLaJi.boldText("大光：")).add("闲家一分未得，庄家及同伴升三级");
+                p.add(TuoLaJiPro.boldText("大光：")).add("闲家一分未得，庄家及同伴升三级");
                 p = new Container();
                 content.add(p);
-                p.add(TuoLaJi.boldText("小光：")).add("闲家得分小于定约分的一半，庄家及同伴升两级");
+                p.add(TuoLaJiPro.boldText("小光：")).add("闲家得分小于定约分的一半，庄家及同伴升两级");
                 p = new Container();
                 content.add(p);
-                p.add(TuoLaJi.boldText("跳级：")).add("闲家得分超过定约分后，每多80分，闲家多升一级");
+                p.add(TuoLaJiPro.boldText("跳级：")).add("闲家得分超过定约分后，每多80分，闲家多升一级");
                 p = new Container();
                 content.add(p);
-                p.add(TuoLaJi.boldText("一打五：")).add("庄家不找朋友，一个对五个，打成后升级翻倍");
+                p.add(TuoLaJiPro.boldText("一打五：")).add("庄家不找朋友，一个对五个，打成后升级翻倍");
                 btnNext.setEnabled(true);
                 return content;
             } else {
@@ -648,7 +648,7 @@ public class Tutor extends Container {
                 content.add(" ");
                 content.add("跟牌则相对简单：如果自己一方大，则尽量垫分，否则避免垫分");
             } else {
-                Label lb0 = TuoLaJi.boldText("Leading");
+                Label lb0 = TuoLaJiPro.boldText("Leading");
                 content = BoxLayout.encloseY(lb0);
                 content.setScrollableY(true);
                 SpanLabel lb = new SpanLabel("When you are at the leading position, usually you should play your strong combinations of cards."
@@ -660,7 +660,7 @@ public class Tutor extends Container {
                 lb = new SpanLabel("After that, you should always try to pass to your partner."
                         + " So as to keep the leading right in your side longer and get more points.");
                 content.add(lb);
-                lb0 = TuoLaJi.boldText("Follow Play");
+                lb0 = TuoLaJiPro.boldText("Follow Play");
                 content.add(lb0);
                 lb = new SpanLabel("When your partner is winning this round, you discard point card(s)."
                         + " Otherwise, you should avoid to play point card(s).");
@@ -736,7 +736,7 @@ public class Tutor extends Container {
                         + " so you are forced to play KK and take back A, then 10 points will be added to your opponents.");
                 content.add(lb0);
 
-                content.add(TuoLaJi.boldText("Congratulations. Good luck and enjoy the game!"));
+                content.add(TuoLaJiPro.boldText("Congratulations. Good luck and enjoy the game!"));
             }
             btnNext.setEnabled(true);
             return content;

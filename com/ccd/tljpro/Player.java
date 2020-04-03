@@ -59,7 +59,7 @@ public class Player {
     static final int TIME_OUT_SECONDS = 25;
     private final String playerId;
     private String playerName;
-    private final TuoLaJi main;
+    private final TuoLaJiPro main;
 
     private String option;
 
@@ -72,12 +72,12 @@ public class Player {
         }
     };
 
-    public Player(String playerId, TuoLaJi main) {
+    public Player(String playerId, TuoLaJiPro main) {
         this.playerId = playerId;
         this.main = main;
     }
 
-    public Player(String playerId, String playerName, TuoLaJi main) {
+    public Player(String playerId, String playerName, TuoLaJiPro main) {
         this.playerId = playerId;
         this.playerName = playerName;
         this.main = main;
