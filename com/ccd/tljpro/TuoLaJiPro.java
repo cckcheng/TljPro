@@ -147,7 +147,7 @@ public class TuoLaJiPro {
     }
 
     public String version = "1.0";
-    public final static String title = "Langley TuoLaJi";
+    public final static String title = "Langley TuoLaJi Premium";
 
     public String lang = "en";
     private Container entry;
@@ -413,9 +413,9 @@ public class TuoLaJiPro {
                     this.formTutor.getStyle().setBgColor(BACKGROUND_COLOR);
                     this.formTutor.getToolbar().hideToolbar();
                     this.formTutor.addComponent(BorderLayout.CENTER, this.tutor);
-                    this.tutor.showTopic();
                 }
 
+                this.tutor.showTopic();
                 this.formTutor.show();
                 break;
         }

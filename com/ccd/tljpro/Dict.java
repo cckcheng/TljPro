@@ -8,7 +8,9 @@ public class Dict {
     static public String get(final String lang, final String src) {
         if (src == null || src.isEmpty()) return "";
         if (src.equals(TuoLaJiPro.title)) {
-            if (lang.equals("zh")) return "兰里拖拉机";
+            if (lang.equals("zh")) {
+                return "兰里拖拉机专业版";
+            }
             return src;
         }
 
