@@ -22,6 +22,7 @@ import com.codename1.ui.TextArea;
 import com.codename1.ui.TextField;
 import com.codename1.ui.Toolbar;
 import com.codename1.ui.events.ActionEvent;
+import com.codename1.ui.geom.Rectangle;
 import com.codename1.ui.layouts.BorderLayout;
 import com.codename1.ui.layouts.BoxLayout;
 import com.codename1.ui.layouts.LayeredLayout;
@@ -40,6 +41,7 @@ import java.util.Map;
 public class TuoLaJiPro {
 
     static public int BACKGROUND_COLOR = Card.DEBUG_MODE ? 0xffffff : 0x008000;
+    static public final boolean DEBUG = false;
     private Form current;
     public Resources theme;
 
@@ -78,7 +80,7 @@ public class TuoLaJiPro {
     private Button btnTutor = null;
     private Button btnPlay = null;
     private Button btnHelp = null;
-    private Button btnExit = null;
+//    private Button btnExit = null;
     private Button btnSetting = null;
 
     public void enableButtons() {
@@ -106,11 +108,12 @@ public class TuoLaJiPro {
 
     public void refreshButtons() {
         this.lbTitle.setText(Dict.get(lang, title));
+
         if (this.btnPlay.isEnabled()) {
             this.btnPlay.setText(Dict.get(lang, "Play"));
         }
         this.btnHelp.setText(Dict.get(lang, "Help"));
-        this.btnExit.setText(Dict.get(lang, "Exit"));
+//        this.btnExit.setText(Dict.get(lang, "Exit"));
         this.btnTutor.setText(Dict.get(lang, "Tutorial"));
         this.btnSetting.setText(Dict.get(lang, "Settings"));
         if (this.player != null) {
@@ -122,7 +125,7 @@ public class TuoLaJiPro {
         this.table.forceRevalidate();
     }
 
-    public Form getCurrentForm() {
+    public Form getCurForm() {
         return this.isMainForm ? this.formMain : this.formTable;
     }
 
@@ -148,6 +151,7 @@ public class TuoLaJiPro {
 
     public String version = "1.0";
     public final static String title = "Langley TuoLaJi Premium";
+    public String OS = "";
 
     public String lang = "en";
     private Container entry;
@@ -173,13 +177,21 @@ public class TuoLaJiPro {
         }
 
         back = theme.getImage("btn.png");
+//        back = back.scaledHeight(Hand.fontRank.getHeight());
 //        String onlineHelp = getHelp();
         disp.lockOrientation(false);
-        disp.requestFullScreen();
+//        disp.requestFullScreen();
         disp.setNoSleep(true);
         disp.setScreenSaverEnabled(false);
         disp.setBuiltinSoundsEnabled(true);
         this.version = disp.getProperty("AppVersion", this.version);
+
+        if (DEBUG) {
+            System.out.println("Platform=" + disp.getProperty("Platform", ""));
+            System.out.println("User-Agent=" + disp.getProperty("User-Agent", ""));
+            this.OS = disp.getProperty("OS", "");
+            System.out.println("OS=" + this.OS);
+        }
 
         String playerId = getPlayerID(disp);
         if (playerId == null) {
@@ -188,6 +200,14 @@ public class TuoLaJiPro {
         }
 
         Form mainForm = new Form(title, new BorderLayout());
+        mainForm.setSafeArea(true);
+        if (DEBUG) {
+            Rectangle safeRect = mainForm.getSafeArea();
+            System.out.print(" x=" + safeRect.getX());
+            System.out.print(" y=" + safeRect.getY());
+            System.out.print(" w=" + safeRect.getWidth());
+            System.out.print(" h=" + safeRect.getHeight());
+        }
         this.formMain = mainForm;
         mainForm.getStyle().setBgColor(BACKGROUND_COLOR);
         mainForm.getToolbar().hideToolbar();
@@ -195,7 +215,9 @@ public class TuoLaJiPro {
         this.player = new Player(playerId, this);
 
         this.entry = new Container(BoxLayout.yLast());
+        this.entry.setSafeArea(true);
         this.table = new Container(new LayeredLayout());
+        this.table.setSafeArea(true);
         this.tutor = new Tutor(this);
         this.player.createTable(this.table);
 
@@ -211,7 +233,10 @@ public class TuoLaJiPro {
         lbTitle.getAllStyles().setFgColor(0);
         entry.add(lbTitle);
 
+        int menuColor = Player.BUTTON_COLOR;
         Button bPlay = new Button(Dict.get(lang, "Connecting") + "...");
+        bPlay.getStyle().setFgColor(menuColor);
+        bPlay.getAllStyles().setFont(Hand.fontRank);
         bPlay.setEnabled(false);
         this.btnPlay = bPlay;
 
@@ -233,6 +258,8 @@ public class TuoLaJiPro {
 //        helpDlg.add(theme.getImage("h2.png").scaledWidth(disp.getDisplayWidth() - 400));
 
         btnHelp = new Button(Dict.get(lang, "Help"));
+        btnHelp.getStyle().setFgColor(menuColor);
+        btnHelp.getAllStyles().setFont(Hand.fontRank);
         FontImage.setMaterialIcon(btnHelp, FontImage.MATERIAL_HELP);
 //        btnHelp.setEnabled(false);
         btnHelp.addActionListener((e) -> {
@@ -240,22 +267,28 @@ public class TuoLaJiPro {
         });
 
         btnTutor = new Button(Dict.get(lang, "Tutorial"));
+        btnTutor.getStyle().setFgColor(menuColor);
+        btnTutor.getAllStyles().setFont(Hand.fontRank);
         FontImage.setMaterialIcon(btnTutor, FontImage.MATERIAL_TOUCH_APP);
         btnTutor.addActionListener((e) -> {
             this.switchScene("tutor");
         });
 
-        btnExit = new Button(Dict.get(lang, "Exit"));
-        FontImage.setMaterialIcon(btnExit, FontImage.MATERIAL_EXIT_TO_APP);
-        btnExit.addActionListener((e) -> {
-            disp.playBuiltinSound(Display.SOUND_TYPE_ALARM);
-            if (this.player != null) {
-                player.disconnect();
-            }
-            Display.getInstance().exitApplication();
-        });
+//        btnExit = new Button(Dict.get(lang, "Exit"));
+//        btnExit.getStyle().setFgColor(menuColor);
+//        btnExit.getStyle().setFont(Hand.fontRank);
+//        FontImage.setMaterialIcon(btnExit, FontImage.MATERIAL_EXIT_TO_APP);
+//        btnExit.addActionListener((e) -> {
+//            disp.playBuiltinSound(Display.SOUND_TYPE_ALARM);
+//            if (this.player != null) {
+//                player.disconnect();
+//            }
+//            Display.getInstance().exitApplication();
+//        });
 
         btnSetting = new Button(Dict.get(lang, "Settings"));
+        btnSetting.getStyle().setFgColor(menuColor);
+        btnSetting.getAllStyles().setFont(Hand.fontRank);
         FontImage.setMaterialIcon(btnSetting, FontImage.MATERIAL_SETTINGS);
         btnSetting.addActionListener((e) -> {
             disp.playBuiltinSound(Display.SOUND_TYPE_WARNING);
@@ -395,6 +428,7 @@ public class TuoLaJiPro {
     public boolean isMainForm = true;
 
     public void switchScene(final String scene) {
+        Display.getInstance().lockOrientation(false);
         isMainForm = false;
         switch (scene) {
             case "entry":
@@ -561,8 +595,9 @@ public class TuoLaJiPro {
     private void showHelp(final String lang) {
         if (this.help == null) {
             this.help = new Container(new LayeredLayout());
+            this.help.setSafeArea(true);
             this.formHelp = new Form(new BorderLayout());
-            this.formHelp.getStyle().setBgColor(BACKGROUND_COLOR);
+//            this.formHelp.getStyle().setBgColor(BACKGROUND_COLOR);
             this.formHelp.getToolbar().hideToolbar();
             this.formHelp.addComponent(BorderLayout.CENTER, this.help);
         } else {
@@ -589,7 +624,7 @@ public class TuoLaJiPro {
             currentLang = lang;
         }
 
-        Button bReturn = new Button();
+        Button bReturn = new Button(Dict.get(lang, "Exit"));
         FontImage.setMaterialIcon(bReturn, FontImage.MATERIAL_EXIT_TO_APP);
         bReturn.setUIID("return");
         bReturn.addActionListener((e) -> {
@@ -606,6 +641,7 @@ public class TuoLaJiPro {
         Container content = new Container(BoxLayout.y());
         content.setScrollableY(true);
         content.setScrollableX(true);
+        content.getAllStyles().setFgColor(0);
 
         SpanLabel lb = new SpanLabel("本游戏为六人四付找朋友打法，采用竞叫上庄，庄家叫主后拿底牌并扣底，\n然后找一个朋友（也可以不找，一个打五个，打成后升级翻倍）");
         content.add(lb);
@@ -730,6 +766,7 @@ public class TuoLaJiPro {
     public static Label boldText(String txt) {
         Label boldLabel = new Label(txt);
         boldLabel.getAllStyles().setFont(Hand.fontGeneral);
+        boldLabel.getAllStyles().setFgColor(0);
         return boldLabel;
     }
 

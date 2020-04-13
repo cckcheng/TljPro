@@ -1,4 +1,4 @@
-package com.ccd.tljpro;
+package com.ccd.tlj;
 
 /**
  *
