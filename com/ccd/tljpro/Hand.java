@@ -1,4 +1,4 @@
-package com.ccd.tlj;
+package com.ccd.tljpro;
 
 import com.codename1.io.Log;
 import com.codename1.ui.Button;
@@ -127,8 +127,9 @@ public class Hand extends Component {
 //            this.xFontRank = fontGeneral;
 //            this.xDeltaRank = deltaGeneral;
 //        }
-        int preferedFontHeight = this.cardHeight * 2 / 5;
-        if (fontGeneral.getHeight() < preferedFontHeight) {
+//        int preferedFontHeight = this.cardHeight * 2 / 5;
+        int preferedFontHeight = this.cardHeight / 2;
+        if (fontGeneral.getHeight() <= preferedFontHeight) {
             xFontSuit = fontGeneral;
         }
     }

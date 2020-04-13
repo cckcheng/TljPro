@@ -1,4 +1,4 @@
-package com.ccd.tlj;
+package com.ccd.tljpro;
 
 import com.codename1.components.SpanLabel;
 import com.codename1.io.Storage;
@@ -73,7 +73,7 @@ public class Tutor extends Container {
             if (currentLang.equals("zh")) {
                 index.add(TuoLaJiPro.boldText("入门教程"));
             } else {
-                index.add(TuoLaJi.boldText("Before playing games, please finish this tutorial first:"));
+                index.add(TuoLaJiPro.boldText("Before playing games, please finish this tutorial first:"));
             }
 
             GridLayout layout1 = new GridLayout(2);

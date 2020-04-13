@@ -1,4 +1,4 @@
-package com.ccd.tlj;
+package com.ccd.tljpro;
 
 import com.codename1.io.JSONParser;
 import com.codename1.io.Log;
@@ -263,8 +263,8 @@ public class Player {
         } else {
             this.partnerCardSeq.setText(part);
         }
-        this.partnerInfo.revalidate();
         this.widget.revalidate();
+        this.partnerInfo.revalidate();
     }
 
     private void definePartner(Map<String, Object> data) {
