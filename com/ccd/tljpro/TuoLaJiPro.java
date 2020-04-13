@@ -208,6 +208,7 @@ public class TuoLaJiPro {
         lbTitle = new Label(Dict.get(lang, title));
 //        lbTitle.getStyle().setAlignment(CENTER);
         lbTitle.getStyle().setFont(Hand.fontRank);
+        lbTitle.getAllStyles().setFgColor(0);
         entry.add(lbTitle);
 
         Button bPlay = new Button(Dict.get(lang, "Connecting") + "...");
