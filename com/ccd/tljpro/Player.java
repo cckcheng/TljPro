@@ -264,7 +264,7 @@ public class Player {
             this.partnerCardSeq.setText(part);
         }
         this.widget.revalidate();
-        this.partnerInfo.revalidate();
+//        this.partnerInfo.revalidate();
     }
 
     private void definePartner(Map<String, Object> data) {
@@ -315,8 +315,8 @@ public class Player {
     private int currentSeat;
     private Hand hand;
     private Label lbGeneral;
-    private Container gameInfo;
-    private Container partnerInfo;
+//    private Container gameInfo;
+//    private Container partnerInfo;
     private Label contractInfo;
     private Label trumpInfo;
     private Label partnerCardSeq;
@@ -564,21 +564,21 @@ public class Player {
         String ptInfo = "ptInfo";
         String pointInfo = "pointInfo";
 
-        this.gameInfo = new Container();
+//        this.gameInfo = new Container();
         this.contractInfo = new Label(gmInfo);
         this.trumpInfo = new Label(gmInfo);
         this.contractInfo.getStyle().setFgColor(0xebef07);
         this.contractInfo.getStyle().setFont(Hand.fontRank);
         this.trumpInfo.getStyle().setFont(Hand.fontRank);
-        this.gameInfo.add(this.contractInfo).add(this.trumpInfo);
+//        this.gameInfo.add(this.contractInfo).add(this.trumpInfo);
 
-        this.partnerInfo = new Container();
+//        this.partnerInfo = new Container();
         this.partnerCardSeq = new Label(ptInfo);
         this.partnerCard = new Label(ptInfo);
         this.partnerCardSeq.getStyle().setFgColor(INFO_COLOR);
         this.partnerCardSeq.getStyle().setFont(Hand.fontGeneral);
         this.partnerCard.getStyle().setFont(Hand.fontRank);
-        this.partnerInfo.add(this.partnerCardSeq).add(this.partnerCard);
+//        this.partnerInfo.add(this.partnerCardSeq).add(this.partnerCard);
 
         this.pointsInfo = new Label(pointInfo);
         this.pointsInfo.getStyle().setFgColor(POINT_COLOR);
@@ -586,7 +586,9 @@ public class Player {
 
         this.widget = new Container(new LayeredLayout());
 
-        this.widget.add(bExit).add(this.lbGeneral).add(this.gameInfo).add(this.partnerInfo).add(this.pointsInfo);
+//        this.widget.add(bExit).add(this.lbGeneral).add(this.gameInfo).add(this.partnerInfo).add(this.pointsInfo);
+        this.widget.add(bExit).add(this.lbGeneral).add(this.trumpInfo).add(this.contractInfo)
+                .add(this.partnerCardSeq).add(this.partnerCard).add(this.pointsInfo);
         this.widget.add(bRobot);
         this.widget.revalidate();
 
@@ -599,11 +601,22 @@ public class Player {
         ll.setInsets(bExit, "0 0 auto auto");   //top right bottom left
         ll.setInsets(bRobot, "auto 0 0 auto");   //top right bottom left
         ll.setInsets(this.lbGeneral, "-" + Hand.deltaGeneral + " auto auto 0")
-                .setInsets(this.partnerInfo, "-" + Hand.deltaRank + " 0 auto auto")
+                //                .setInsets(this.partnerInfo, "-" + Hand.deltaRank + " 0 auto auto")
+//                .setInsets(this.partnerCardSeq, "-" + Hand.deltaGeneral + " 0 auto auto")
+                .setInsets(this.partnerCardSeq, "auto 0 " + Hand.deltaGeneral + " auto")
+                .setInsets(this.partnerCard, "-" + Hand.deltaRank + " 0 auto auto")
                 .setInsets(this.pointsInfo, "0 auto auto 20%")
-                .setInsets(this.gameInfo, "-" + Hand.deltaRank + " auto auto 0");
-        ll.setReferenceComponentTop(this.gameInfo, lbGeneral, 1f);
-        ll.setReferenceComponentTop(this.partnerInfo, bExit, 1f);
+                //                .setInsets(this.gameInfo, "-" + Hand.deltaRank + " auto auto 0");
+                .setInsets(this.contractInfo, "-" + Hand.deltaRank + " auto auto 0")
+                .setInsets(this.trumpInfo, "-" + Hand.deltaRank + " auto auto 0");
+//        ll.setReferenceComponentTop(this.gameInfo, lbGeneral, 1f);
+//        ll.setReferenceComponentTop(this.partnerInfo, bExit, 1f);
+        ll.setReferenceComponentTop(this.contractInfo, lbGeneral, 1f);
+        ll.setReferenceComponentTop(this.trumpInfo, lbGeneral, 1f);
+        ll.setReferenceComponentLeft(this.trumpInfo, this.contractInfo, 1f);
+        ll.setReferenceComponentTop(this.partnerCard, lbGeneral, 1f);
+        ll.setReferenceComponentBottom(this.partnerCardSeq, this.partnerCard, 0f);
+        ll.setReferenceComponentRight(this.partnerCardSeq, this.partnerCard, 1f);
 
         for (PlayerInfo pp : infoLst) {
             pp.addItems(this.widget);
@@ -951,7 +964,7 @@ public class Player {
             this.trumpInfo.getStyle().setFgColor(BLACK_COLOR);
         }
         this.isPlaying = true;
-        this.gameInfo.revalidate();
+//        this.gameInfo.revalidate();
         this.widget.revalidate();
     }
 
