@@ -127,11 +127,15 @@ public class Hand extends Component {
 //            this.xFontRank = fontGeneral;
 //            this.xDeltaRank = deltaGeneral;
 //        }
-//        int preferedFontHeight = this.cardHeight * 2 / 5;
-        int preferedFontHeight = this.cardHeight / 2;
-        if (fontGeneral.getHeight() <= preferedFontHeight) {
-            xFontSuit = fontGeneral;
+//        int preferedFontHeight = Card.FOR_IOS ? this.cardHeight / 2 : this.cardHeight * 2 / 5;
+//        if (fontGeneral.getHeight() <= preferedFontHeight) {
+//            xFontSuit = fontGeneral;
+//        }
+
+        if (Card.FOR_IOS) {
+            xFontSuit = fontRank;
         }
+
     }
 
     public void addCard(Card c) {
