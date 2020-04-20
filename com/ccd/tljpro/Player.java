@@ -108,9 +108,13 @@ public class Player {
             return;
         }
 
-        main.disableButtons();
-        this.mySocket = new MySocket();
-        Socket.connect(tljHost, Card.TLJ_PORT, mySocket);
+        if (this.mySocket == null) {
+            this.mySocket = new MySocket();
+        }
+        if (!this.mySocket.isConnected()) {
+            main.disableButtons();
+            Socket.connect(tljHost, Card.TLJ_PORT, mySocket);
+        }
         if (rejoin) {
             joinTable(this.option);
         }
@@ -140,6 +144,7 @@ public class Player {
         if (option != null && !option.isEmpty()) {
             data += ",\"opt\":\"" + option + "\"";
         }
+        mySocket.clearRequest();  // clear pending requests
         mySocket.addRequest(actionJoinTable, data);
     }
 
@@ -538,7 +543,10 @@ public class Player {
             robotOn = false;
             bRobot.setSelected(false);
             cancelTimers();
-            if (!tableEnded) Dialog.show("", Dict.get(main.lang, "Hold Seat") + "?", holdCommand(15), holdCommand(5), holdCommand(0));
+            if (!tableEnded) {
+                Dialog.show("", Dict.get(main.lang, "Hold Seat") + "?", holdCommand(15), holdCommand(5), holdCommand(0));
+            }
+            main.enableButtons();
             main.switchScene("entry");
         });
 
@@ -985,6 +993,10 @@ public class Player {
             this.checkConnection = true;
         }
 
+        public void clearRequest() {
+            pendingRequests.clear();
+        }
+
         public void addRequest(String action, String data) {
             String json = "\"action\":\"" + action + "\"";
             if (data != null && !data.isEmpty()) {
@@ -1082,21 +1094,18 @@ public class Player {
                     tljHost = Card.TLJ_HOST;
                 }
             }
-            main.onConnectionError();
-            mySocket = null;    // reset connection
+            //mySocket = null;    // reset connection
 //            Dialog.show("Error", message, "OK", "");
             if (tableOn) {
                 cancelTimers();
                 try {
-                    //                tablePane.removeAll();
-//                mainForm.setGlassPane(null);
-////                mainForm.getContentPane().setVisible(true);
-//                mainForm.repaint();
                     Thread.sleep(10000);
                 } catch (InterruptedException ex) {
 
                 }
                 connectServer(!tableEnded);
+            } else {
+                main.onConnectionError();
             }
         }
 
@@ -1135,11 +1144,14 @@ public class Player {
                         }
                         processReceived(msg);
                     } else {
-                        if (checkConnection) {
-                            count++;
-                            if (count > serverWaitCycle) {
+                        count++;
+                        if (count > serverWaitCycle) {
+                            if (checkConnection) {
                                 Log.p("lost conncetion!");
                                 break;
+                            } else if (tableOn) {
+                                addRequest(actionReact, null);
+                                count = 0;
                             }
                         }
 //                        if (tableOn && !tableEnded && infoLst.get(0).countDownTimer == null) {
@@ -1164,6 +1176,7 @@ public class Player {
             if (!closeRequested) {
                 // not expected, connect again
                 Log.p("re-connect");
+                mySocket = null;
                 connectServer(tableOn && !tableEnded);
             }
         }

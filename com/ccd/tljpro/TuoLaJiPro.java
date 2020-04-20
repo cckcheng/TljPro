@@ -27,6 +27,7 @@ import com.codename1.ui.layouts.BorderLayout;
 import com.codename1.ui.layouts.BoxLayout;
 import com.codename1.ui.layouts.LayeredLayout;
 import com.codename1.ui.plaf.UIManager;
+import com.codename1.ui.spinner.Picker;
 import com.codename1.ui.table.TableLayout;
 import com.codename1.ui.util.Resources;
 import com.codename1.ui.util.UITimer;
@@ -40,8 +41,26 @@ import java.util.Map;
  */
 public class TuoLaJiPro {
 
-    static public int BACKGROUND_COLOR = Card.DEBUG_MODE ? 0xffffff : 0x008000;
+    static public final int GREEN = 0x008000;
+    static public final int DARK_GREEN = 0x0a300a;
+    static public final int LIGHT_GREEN = 0x39ad39;
+    static public final int DARK_BLUE = 0x374b6b;
+    static public final int LIGHT_BLUE = 0x54698c;
+
+    static final Map<String, CustomColor> AvailableColors = new HashMap<>();
+
+    static {
+        AvailableColors.put("GREEN", new CustomColor("Green", "绿色", GREEN));
+        AvailableColors.put("LT_GREEN", new CustomColor("Light Green", "浅绿", LIGHT_GREEN));
+        AvailableColors.put("DK_GREEN", new CustomColor("Dark Green", "深绿", DARK_GREEN));
+        AvailableColors.put("LT_BLUE", new CustomColor("Light Blue", "浅蓝", LIGHT_BLUE));
+        AvailableColors.put("DK_BLUE", new CustomColor("Dark Blue", "深蓝", DARK_BLUE));
+    }
+
+    static public int BACKGROUND_COLOR = Card.DEBUG_MODE ? 0xffffff : LIGHT_GREEN;
     static public final boolean DEBUG = false;
+
+    public CustomColor currentColor;
     private Form current;
     public Resources theme;
 
@@ -87,10 +106,13 @@ public class TuoLaJiPro {
         if (this.btnPlay != null) {
             this.btnPlay.setEnabled(true);
             this.btnPlay.setText(Dict.get(lang, "Play"));
+            this.formMain.revalidate();
+            Log.p("Enable play button");
         }
         if (this.btnHelp != null) {
             this.btnHelp.setEnabled(true);
         }
+        this.tryTimes = 0;
     }
 
     public void disableButtons() {
@@ -130,12 +152,16 @@ public class TuoLaJiPro {
     }
 
     private Player player = null;
+    public int tryTimes = 0;
 
     public void onConnectionError() {
         Player p = this.player;
         if (this.btnPlay != null) {
             this.btnPlay.setEnabled(false);
             this.btnPlay.setText(Dict.get(lang, "Network Error"));
+            if (++tryTimes >= 5) {
+                return;
+            }
             Button btn = this.btnPlay;
             if (this.currentComp == this.entry) {
                 new UITimer(new Runnable() {
@@ -159,6 +185,9 @@ public class TuoLaJiPro {
     private Container help;
     private Tutor tutor;
 
+    private Map<Integer, String> colorIdx = new HashMap<>();
+    private String currentColorKey;
+
     public Image back;
     public void start() {
         if(current != null){
@@ -175,6 +204,18 @@ public class TuoLaJiPro {
             this.lang = l10n.getLanguage();
             Storage.getInstance().writeObject("lang", this.lang);
         }
+
+        sObj = Storage.getInstance().readObject("myColor");
+        if (sObj != null) {
+            this.currentColorKey = sObj.toString();
+            this.currentColor = AvailableColors.get(this.currentColorKey);
+        }
+
+        if (this.currentColor == null) {
+            this.currentColorKey = "GREEN";
+            this.currentColor = AvailableColors.get(this.currentColorKey);
+        }
+        BACKGROUND_COLOR = this.currentColor.backColor;
 
         back = theme.getImage("btn.png");
 //        back = back.scaledHeight(Hand.fontRank.getHeight());
@@ -294,7 +335,13 @@ public class TuoLaJiPro {
 //            }
 //            Display.getInstance().exitApplication();
 //        });
-
+        String[] bkColors = new String[AvailableColors.keySet().size()];
+        int idx = 0;
+        for (String k : AvailableColors.keySet()) {
+            CustomColor c = AvailableColors.get(k);
+            this.colorIdx.put(idx, k);
+            bkColors[idx++] = c.getName(lang);
+        }
         btnSetting = new Button(Dict.get(lang, "Settings"));
         btnSetting.getStyle().setFgColor(menuColor);
         btnSetting.getAllStyles().setFont(Hand.fontRank);
@@ -315,7 +362,13 @@ public class TuoLaJiPro {
 //                    new Label(Dict.get(lang, "Version")), new Label(this.version)
 //            ));
 
+            Picker strPicker = new Picker();
+            strPicker.setType(Display.PICKER_TYPE_STRINGS);
+            strPicker.setStrings(bkColors);
+            strPicker.setSelectedString(this.currentColor.getName(lang));
+
             props.add(tl.createConstraint().widthPercentage(30).horizontalAlign(Component.RIGHT), new Label(Dict.get(lang, "Player Name"))).add(pName)
+                    .add(tl.createConstraint().widthPercentage(30).horizontalAlign(Component.RIGHT), new Label(Dict.get(lang, "Background"))).add(strPicker)
                     .add(tl.createConstraint().widthPercentage(30).horizontalAlign(Component.RIGHT), new Label(Dict.get(lang, "Version"))).add(new Label(this.version));
             Command okCmd = new Command(Dict.get(lang, "OK")) {
                 @Override
@@ -323,6 +376,7 @@ public class TuoLaJiPro {
                     String playerName = savePlayerName(pName);
                     if (playerName == null) return;
                     player.setPlayerName(playerName);
+                    saveBackground(strPicker);
                 }
             };
 //            settingDlg.add(BorderLayout.CENTER, props);
@@ -431,6 +485,19 @@ public class TuoLaJiPro {
         if (playerName.isEmpty()) return null;
         Storage.getInstance().writeObject("playerName", playerName);
         return playerName;
+    }
+
+    private void saveBackground(Picker strPicker) {
+        int idx = strPicker.getSelectedStringIndex();
+        if (this.colorIdx.get(idx).equals(this.currentColorKey)) {
+            return;
+        }
+        this.currentColorKey = this.colorIdx.get(idx);
+        Storage.getInstance().writeObject("myColor", this.currentColorKey);
+        this.currentColor = AvailableColors.get(this.currentColorKey);
+        BACKGROUND_COLOR = this.currentColor.backColor;
+        this.formMain.getStyle().setBgColor(BACKGROUND_COLOR);
+        this.formTable.getStyle().setBgColor(BACKGROUND_COLOR);
     }
 
     private Component currentComp;
@@ -804,5 +871,27 @@ public class TuoLaJiPro {
             Dialog.show("Landscape", "Please rotate to landscape", Dict.get(lang, "OK"), null);
         }
         return false;
+    }
+
+    static class CustomColor {
+
+        int backColor;
+        String nameZh;
+        String nameEn;
+
+        CustomColor(String nmEn, String nmZh, int bkColor) {
+            this.backColor = bkColor;
+            this.nameEn = nmEn;
+            this.nameZh = nmZh;
+        }
+
+        public String getName(final String lang) {
+            switch (lang) {
+                case "zh":
+                    return nameZh;
+            }
+
+            return nameEn;
+        }
     }
 }
