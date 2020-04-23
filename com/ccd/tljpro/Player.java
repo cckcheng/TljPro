@@ -100,9 +100,14 @@ public class Player {
     static final String actionPartner = "partner";
     static final String actionReact = "re";
 
+    static final String OPTION_RESUME = "resume";    // legacy
+    static final String OPTION_PRACTICE = "practice";    // legacy
+    static final String OPTION_CHECK = "check";  // check table status, resume play if table alive, otherwise no action
+    static final String OPTION_VIEW = "view";  // get table list
+
     static boolean checkOnce = true;
     static String tljHost = Card.TLJ_HOST;
-    public void connectServer(boolean rejoin) {
+    public void connectServer(String option) {
         if (!Socket.isSupported()) {
             Dialog.show("Alert", "Socket is not supported", "OK", "");
             return;
@@ -115,9 +120,13 @@ public class Player {
             main.disableButtons();
             Socket.connect(tljHost, Card.TLJ_PORT, mySocket);
         }
-        if (rejoin) {
-            joinTable(this.option);
-        }
+
+        if (option == null || option.isEmpty()) return;
+        joinTable(option);
+    }
+
+    public void connectServer(boolean rejoin) {
+        connectServer(rejoin ? this.option : "");
     }
 
     public void startPlay(String playerName) {
@@ -132,9 +141,9 @@ public class Player {
 
     public void joinTable(String option) {
         if (this.mySocket == null) {
-            return;
+            this.connectServer(false);
         }
-        this.tableOn = true;
+//        this.tableOn = true;
         mySocket.checkConnection = true;
         String data = "\"id\":\"" + this.playerId
                 + "\",\"name\":\"" + this.playerName
@@ -142,6 +151,7 @@ public class Player {
                 + "\",\"ver\":\"" + main.version
                 + "\"";
         if (option != null && !option.isEmpty()) {
+            this.option = option;
             data += ",\"opt\":\"" + option + "\"";
         }
         mySocket.clearRequest();  // clear pending requests
@@ -354,6 +364,7 @@ public class Player {
     }
 
     private void refreshTable(Map<String, Object> data) {
+        this.tableOn = true;
         this.resetTable();
 
         String stage = trimmedString(data.get("stage"));
@@ -1025,51 +1036,57 @@ public class Player {
                     subMsg = Card.confusedData(subMsg);
                     subMsg = new String(Base64.decode(subMsg.getBytes()));
                 }
-//                Log.p("Received: " + subMsg);
+
+                if (!subMsg.startsWith("{") || !subMsg.endsWith("}")) continue;
+
+                if (TuoLaJiPro.DEBUG) Log.p("Received: " + subMsg);
                 Map<String, Object> data = parser.parseJSON(new StringReader(subMsg));
                 final String action = trimmedString(data.get("action"));
 
-                if (!tableOn && !action.equals("info")) {
-                    continue;
-                }
-
                 switch (action) {
+                    case "view":
+                        // view tables
+                        main.switchScene("view");
+                        break;
+
                     case "init":
                         main.switchScene("table");
                         refreshTable(data);
                         break;
                     case "bid":
-                        displayBid(data);
+                        if (tableOn) displayBid(data);
                         break;
                     case "set_trump":
-                        setTrump(data);
+                        if (tableOn) setTrump(data);
                         break;
                     case "add_remains":
-                        addRemains(data);
+                        if (tableOn) addRemains(data);
                         break;
                     case "bury":
-                        buryCards(data);
+                        if (tableOn) buryCards(data);
                         break;
                     case "partner":
-                        definePartner(data);
+                        if (tableOn) definePartner(data);
                         break;
                     case "play":
-                        playCards(data);
+                        if (tableOn) playCards(data);
                         break;
                     case "gameover":
-                        hand.clearCards();
-                        startNotifyTimer(data);
-                        cancelTimers();
-                        gameSummary(data);
+                        if (tableOn) {
+                            hand.clearCards();
+                            startNotifyTimer(data);
+                            cancelTimers();
+                            gameSummary(data);
+                        }
                         break;
                     case "info":
                         showInfo(data);
                         break;
                     case "in":
-                        playerIn(data);
+                        if (tableOn) playerIn(data);
                         break;
                     case "out":
-                        playerOut(data);
+                        if (tableOn) playerOut(data);
                         break;
                     case "robot":
                         bRobot.setSelected(true);

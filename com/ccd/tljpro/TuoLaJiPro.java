@@ -58,7 +58,7 @@ public class TuoLaJiPro {
     }
 
     static public int BACKGROUND_COLOR = Card.DEBUG_MODE ? 0xffffff : LIGHT_GREEN;
-    static public final boolean DEBUG = false;
+    static public final boolean DEBUG = true;
 
     public CustomColor currentColor;
     private Form current;
@@ -91,6 +91,7 @@ public class TuoLaJiPro {
     }
 
     public Form formMain = null;
+    public TableView formView = null;
     public Form formTable = null;
     public Form formHelp = null;
     public Form formTutor = null;
@@ -152,14 +153,15 @@ public class TuoLaJiPro {
     }
 
     private Player player = null;
-    public int tryTimes = 0;
+    private int tryTimes = 0;
+    static final int MAX_TRY_TIMES = 3;
 
     public void onConnectionError() {
         Player p = this.player;
         if (this.btnPlay != null) {
             this.btnPlay.setEnabled(false);
             this.btnPlay.setText(Dict.get(lang, "Network Error"));
-            if (++tryTimes >= 5) {
+            if (++tryTimes >= MAX_TRY_TIMES) {
                 return;
             }
             Button btn = this.btnPlay;
@@ -168,7 +170,7 @@ public class TuoLaJiPro {
                     @Override
                     public void run() {
                         btn.setText(Dict.get(lang, "Connecting") + "...");
-                        p.connectServer(false);
+                        p.connectServer("");
                     }
                 }).schedule(3000, false, this.formMain);
             }
@@ -240,6 +242,13 @@ public class TuoLaJiPro {
             disp.exitApplication();;
         }
 
+        this.player = new Player(playerId, this);
+
+        String playerName = getPlayerName();
+        if (DEBUG || playerName.isEmpty()) {
+            this.inputPlayName(playerName);
+        }
+
         Form mainForm = new Form(title, new BorderLayout());
         mainForm.setSafeArea(true);
         if (DEBUG) {
@@ -253,8 +262,6 @@ public class TuoLaJiPro {
         mainForm.getStyle().setBgColor(BACKGROUND_COLOR);
         mainForm.getToolbar().hideToolbar();
 
-        this.player = new Player(playerId, this);
-
         this.entry = new Container(BoxLayout.yLast());
         this.entry.setSafeArea(true);
         this.table = new Container(new LayeredLayout());
@@ -266,10 +273,7 @@ public class TuoLaJiPro {
 //            Log.p("Start New Game");
 //        });
 
-//        Style sTitle = mainForm.getToolbar().getTitleComponent().getUnselectedStyle();
-//        sTitle.setFont(Hand.fontSymbol);
         lbTitle = new Label(Dict.get(lang, title));
-//        lbTitle.getStyle().setAlignment(CENTER);
         lbTitle.getStyle().setFont(Hand.fontRank);
         lbTitle.getAllStyles().setFgColor(0);
         entry.add(lbTitle);
@@ -286,26 +290,13 @@ public class TuoLaJiPro {
             if (!isLandscape()) {
                 return;
             }
-            Object sgObj = Storage.getInstance().readObject("playerName");
-            if (sgObj == null) {
-                showPlayOption();
-            } else {
-                bPlay.setEnabled(false);
-                this.player.startPlay(sgObj.toString(), "resume");
-            }
+            this.switchScene("view");
         });
-
-//        BrowserComponent browser = new BrowserComponent();    // not work
-//        WebBrowser browser = new WebBrowser();    // not work
-//        browser.setURL(Card.HELP_URL);
-//        browser.setPage(onlineHelp, null);
-//        helpDlg.add(theme.getImage("h2.png").scaledWidth(disp.getDisplayWidth() - 400));
 
         btnHelp = new Button(Dict.get(lang, "Help"));
         btnHelp.getStyle().setFgColor(menuColor);
         btnHelp.getAllStyles().setFont(Hand.fontRank);
         FontImage.setMaterialIcon(btnHelp, FontImage.MATERIAL_HELP);
-//        btnHelp.setEnabled(false);
         btnHelp.addActionListener((e) -> {
             if (!isLandscape()) {
                 return;
@@ -324,17 +315,6 @@ public class TuoLaJiPro {
             this.switchScene("tutor");
         });
 
-//        btnExit = new Button(Dict.get(lang, "Exit"));
-//        btnExit.getStyle().setFgColor(menuColor);
-//        btnExit.getStyle().setFont(Hand.fontRank);
-//        FontImage.setMaterialIcon(btnExit, FontImage.MATERIAL_EXIT_TO_APP);
-//        btnExit.addActionListener((e) -> {
-//            disp.playBuiltinSound(Display.SOUND_TYPE_ALARM);
-//            if (this.player != null) {
-//                player.disconnect();
-//            }
-//            Display.getInstance().exitApplication();
-//        });
         String[] bkColors = new String[AvailableColors.keySet().size()];
         int idx = 0;
         for (String k : AvailableColors.keySet()) {
@@ -420,7 +400,22 @@ public class TuoLaJiPro {
         this.formTable.getToolbar().hideToolbar();
         this.formTable.add(BorderLayout.CENTER, this.table);
 
-        this.player.connectServer(false);
+        this.player.connectServer(Player.OPTION_CHECK);
+    }
+
+    private void inputPlayName(String name) {
+        final TextField pName = new TextField(name, Dict.get(lang, "Your Name"), 16, TextArea.ANY);
+        pName.setMaxSize(16);
+        Command okCmd = new Command(Dict.get(lang, "OK")) {
+            @Override
+            public void actionPerformed(ActionEvent ev) {
+                String playerName = savePlayerName(pName);
+                if (playerName == null || playerName.isEmpty()) {
+                    Display.getInstance().exitApplication();
+                }
+            }
+        };
+        Dialog.show(Dict.get(lang, "Player Name"), pName, okCmd);
     }
 
     void showPlayOption() {
@@ -440,7 +435,7 @@ public class TuoLaJiPro {
                     return;
                 }
                 btnPlay.setEnabled(false);
-                player.startPlay(playerName, "practice");
+                player.startPlay(playerName, Player.OPTION_PRACTICE);
             }
         };
         FontImage.setMaterialIcon(practiceCmd, FontImage.MATERIAL_DIRECTIONS_WALK, "Button");
@@ -484,6 +479,7 @@ public class TuoLaJiPro {
         playerName = StringUtil.replaceAll(playerName, ":", " ");
         if (playerName.isEmpty()) return null;
         Storage.getInstance().writeObject("playerName", playerName);
+        this.player.setPlayerName(playerName);
         return playerName;
     }
 
@@ -511,6 +507,14 @@ public class TuoLaJiPro {
                 this.formMain.showBack();
                 isMainForm = true;
                 break;
+            case "view":
+                if (this.formView == null) {
+                    this.formView = new TableView(this);
+                }
+                this.formView.addContent();
+                this.formView.show();
+                break;
+
             case "table":
                 this.formTable.show();
                 this.formTable.repaint();
@@ -569,6 +573,11 @@ public class TuoLaJiPro {
 
         this.formMain.setGlassPane(null);
         this.formMain.repaint();
+    }
+
+    private String getPlayerName() {
+        Object sgObj = Storage.getInstance().readObject("playerName");
+        return sgObj == null ? "" : sgObj.toString();
     }
 
     private String getPlayerID(Display disp) {
