@@ -510,6 +510,8 @@ public class TuoLaJiPro {
             case "view":
                 if (this.formView == null) {
                     this.formView = new TableView(this);
+//                    this.formView.getStyle().setBgColor(BACKGROUND_COLOR);
+                    this.formView.init();
                 }
                 this.formView.addContent();
                 this.formView.show();

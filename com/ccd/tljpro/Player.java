@@ -88,9 +88,16 @@ public class Player {
         this.playerName = playerName;
     }
 
+//    public void sendRequest(String action, String data) {
+//        mySocket.addRequest0(action, data);
+//    }
+
+    public void sendRequest(Request req) {
+        mySocket.addRequest(req);
+    }
+
     private MySocket mySocket = null;
 
-    static final String actionJoinTable = "join";
     static final String actionExit = "out";
     static final String actionRobot = "robot";
     static final String actionBid = "bid";
@@ -121,12 +128,15 @@ public class Player {
             Socket.connect(tljHost, Card.TLJ_PORT, mySocket);
         }
 
-        if (option == null || option.isEmpty()) return;
-        joinTable(option);
+        if (option == null || option.isEmpty()) {
+            option = OPTION_CHECK;
+        }
+        initCheckin(option);
     }
 
-    public void connectServer(boolean rejoin) {
-        connectServer(rejoin ? this.option : "");
+    public void connectServer(Request lastRequest) {
+        connectServer("");
+        if (lastRequest != null) mySocket.addRequest(lastRequest);
     }
 
     public void startPlay(String playerName) {
@@ -136,26 +146,26 @@ public class Player {
     public void startPlay(String playerName, String option) {
         this.playerName = playerName;
         this.option = option;
-        joinTable(option);
+        initCheckin(option);
     }
 
-    public void joinTable(String option) {
-        if (this.mySocket == null) {
-            this.connectServer(false);
-        }
+    public void initCheckin(String option) {
+//        if (this.mySocket == null) {
+//            this.connectServer(false);
+//        }
 //        this.tableOn = true;
-        mySocket.checkConnection = true;
-        String data = "\"id\":\"" + this.playerId
-                + "\",\"name\":\"" + this.playerName
-                + "\",\"lang\":\"" + main.lang
-                + "\",\"ver\":\"" + main.version
-                + "\"";
+//        mySocket.checkConnection = true;
+        Request req = new Request(Request.JOIN, true);
+        req.append("id", this.playerId)
+                .append("name", this.playerName)
+                .append("lang", main.lang)
+                .append("ver", main.version);
         if (option != null && !option.isEmpty()) {
             this.option = option;
-            data += ",\"opt\":\"" + option + "\"";
+            req.append("opt", option);
         }
         mySocket.clearRequest();  // clear pending requests
-        mySocket.addRequest(actionJoinTable, data);
+        mySocket.addRequest(req);
     }
 
     public void disconnect() {
@@ -493,7 +503,7 @@ public class Player {
         this.tableOn = true;
         main.enableButtons();
         if (this.robotOn) {
-            mySocket.addRequest(actionRobot, "\"on\":1");
+            mySocket.addRequest(new Request(Request.ROBOT, true).append("on", 1));
         }
 
 //        hand.repaint();
@@ -523,7 +533,11 @@ public class Player {
             @Override
             public void actionPerformed(ActionEvent ev) {
                 if (mySocket != null) {
-                    mySocket.addRequest(actionExit, "\"hold\":" + holdMinutes);
+                    mySocket.clearRequest();
+                    Request req = new Request(Request.EXIT, false);
+                    req.append("hold", holdMinutes);
+//                    mySocket.addRequest(actionExit, "\"hold\":" + holdMinutes);
+                    mySocket.addRequest(req);
                 }
             }
         };
@@ -568,7 +582,7 @@ public class Player {
         bRobot.addActionListener((e) -> {
             robotOn = bRobot.isSelected();
             if (mySocket != null) {
-                mySocket.addRequest(actionRobot, "\"on\":" + (robotOn ? 1 : 0));
+                mySocket.addRequest(new Request(Request.ROBOT, true).append("on", robotOn ? 1 : 0));
             }
             if (robotOn) {
                 infoLst.get(0).dismissActions();
@@ -988,33 +1002,28 @@ public class Player {
     }
 
     static int serverWaitCycle = 10; // 10 times
+    static int idleWaitCycle = 20; // 20 times
 
     class MySocket extends SocketConnection {
 
         private boolean closeRequested = false;
         private boolean checkConnection = false;
-        private List<String> pendingRequests = new ArrayList<>();
+//        private List<String> pendingRequests0 = new ArrayList<>();
+        private List<Request> pendingRequests = new ArrayList<>();
+        private Request currentRequest;
+        private Request lastRequest;
 
         public void closeConnection() {
             this.closeRequested = true;
             if (Card.DEBUG_MODE) Log.p("this.closeRequested: " + this.closeRequested);
         }
 
-        public void setCheckConnection() {
-            this.checkConnection = true;
-        }
-
         public void clearRequest() {
             pendingRequests.clear();
         }
 
-        public void addRequest(String action, String data) {
-            String json = "\"action\":\"" + action + "\"";
-            if (data != null && !data.isEmpty()) {
-                json += "," + data;
-            }
-            pendingRequests.add("{" + json + "}");
-//            Log.p(json);
+        public void addRequest(Request req) {
+            pendingRequests.add(req);
         }
 
         private void processReceived(String msg) throws IOException {
@@ -1120,7 +1129,7 @@ public class Player {
                 } catch (InterruptedException ex) {
 
                 }
-                connectServer(!tableEnded);
+                connectServer("");
             } else {
                 main.onConnectionError();
             }
@@ -1136,18 +1145,20 @@ public class Player {
             try {
                 if (Card.DEBUG_MODE) Log.p("connected!");
                 while (isConnected() && !closeRequested) {
-                    if (!pendingRequests.isEmpty()) {
-                        String request = pendingRequests.remove(0);
+                    if (!checkConnection && !pendingRequests.isEmpty()) {
+                        this.currentRequest = pendingRequests.remove(0);
+                        String request = this.currentRequest.getMsg();
                         if (Card.DEBUG_MODE) {
                             os.write(request.getBytes());
                             Log.p("send request: " + request);
                         } else {
+                            if (TuoLaJiPro.DEBUG) Log.p("Send: " + request);
                             request = Base64.encode(request.getBytes());
                             os.write(Card.confusedData(request).getBytes());
                         }
-                        if (!checkConnection) {
-                            checkConnection = tableOn;
-                        }
+
+                        checkConnection = this.currentRequest.isCheckReply();
+                        count = 0;
                     }
                     int n = is.available();
                     if (n > 0) {
@@ -1164,21 +1175,21 @@ public class Player {
                         count++;
                         if (count > serverWaitCycle) {
                             if (checkConnection) {
+                                this.lastRequest = this.currentRequest.isReSend() ? this.currentRequest : null;
                                 Log.p("lost conncetion!");
                                 break;
                             } else if (tableOn) {
-                                addRequest(actionReact, null);
+                                if (robotOn) {
+                                    count = 0;
+                                } else if (count > idleWaitCycle) {
+                                    addRequest(new Request(Request.RE, true));
+                                    count = 0;
+                                }
+                            } else {
                                 count = 0;
                             }
                         }
-//                        if (tableOn && !tableEnded && infoLst.get(0).countDownTimer == null) {
-//                            count1++;
-//                            if (count1 > serverWaitCycle) {
-//                                Log.p("request response");
-//                                addRequest(actionReact, null);
-//                                count1 = 0;
-//                            }
-//                        }
+
                         Thread.sleep(500);
                     }
                 }
@@ -1194,7 +1205,7 @@ public class Player {
                 // not expected, connect again
                 Log.p("re-connect");
                 mySocket = null;
-                connectServer(tableOn && !tableEnded);
+                connectServer(this.lastRequest);
             }
         }
     }
@@ -1219,9 +1230,9 @@ public class Player {
                 pInfo.dismissActions();
                 pInfo.countDownTimer.cancel();
                 pInfo.countDownTimer = null;
-                if (mySocket != null) {
-                    mySocket.setCheckConnection();
-                }
+//                if (mySocket != null) {
+//                    mySocket.setCheckConnection();
+//                }
             }
         }
     }
@@ -1290,7 +1301,7 @@ public class Player {
                         List<Card> cards;
                         switch (action) {
                             case "pass":
-                                mySocket.addRequest(actionBid, "\"bid\":\"pass\"");
+                                mySocket.addRequest(new Request(Request.BID, true).append("bid", "pass"));
                                 break;
                             case "bury":
                                 cards = hand.getSelectedCards();
@@ -1299,7 +1310,7 @@ public class Player {
                                     return;
                                 }
                                 userHelp.clear();
-                                mySocket.addRequest(action, "\"cards\":\"" + Card.cardsToString(cards) + "\"");
+                                mySocket.addRequest(new Request(action, true).append("cards", Card.cardsToString(cards)));
                                 break;
                             case "play":
                                 cards = hand.getSelectedCards();
@@ -1308,7 +1319,7 @@ public class Player {
                                     return;
                                 }
                                 userHelp.clear();
-                                mySocket.addRequest(action, "\"cards\":\"" + Card.cardsToString(cards) + "\"");
+                                mySocket.addRequest(new Request(action, true).append("cards", Card.cardsToString(cards)));
                                 break;
                         }
 
@@ -1341,7 +1352,8 @@ public class Player {
 
                 btnBid.addActionListener((e) -> {
                     cancelTimer();
-                    mySocket.addRequest(actionBid, "\"bid\":" + btnBid.getText().trim());
+//                    mySocket.addRequest(actionBid, "\"bid\":" + btnBid.getText().trim());
+                    mySocket.addRequest(new Request(Request.BID, true).append("bid", parseInteger(btnBid.getText())));
                 });
 
                 btnPlus.addActionListener((e) -> {
@@ -1623,7 +1635,8 @@ public class Player {
                         buttons.add(btn);
                         btn.addActionListener((e) -> {
                             cancelTimer();
-                            mySocket.addRequest(actionSetTrump, "\"trump\":\"" + c + "\"");
+//                            mySocket.addRequest(actionSetTrump, "\"trump\":\"" + c + "\"");
+                            mySocket.addRequest(new Request(Request.TRUMP, true).append("trump", String.valueOf(c)));
                         });
                     }
 
@@ -1656,15 +1669,20 @@ public class Player {
                     userHelp.showHelp(userHelp.SET_PARTNER);
 
                     Container buttons = new Container(new BoxLayout(BoxLayout.X_AXIS_NO_GROW));
-                    RadioButton rb1 = new RadioButton(Dict.get(main.lang, "1st"));
-                    RadioButton rb2 = new RadioButton(Dict.get(main.lang, "2nd"));
-                    RadioButton rb3 = new RadioButton(Dict.get(main.lang, "3rd"));
-                    RadioButton rb4 = new RadioButton(Dict.get(main.lang, "4th"));
+//                    RadioButton rb1 = new RadioButton(Dict.get(main.lang, "1st"));
+//                    RadioButton rb2 = new RadioButton(Dict.get(main.lang, "2nd"));
+//                    RadioButton rb3 = new RadioButton(Dict.get(main.lang, "3rd"));
+//                    RadioButton rb4 = new RadioButton(Dict.get(main.lang, "4th"));
+                    ButtonGroup btnGroup = new ButtonGroup();
+                    RadioButton rb1 = RadioButton.createToggle(Dict.get(main.lang, "1st"), btnGroup);
+                    RadioButton rb2 = RadioButton.createToggle(Dict.get(main.lang, "2nd"), btnGroup);
+                    RadioButton rb3 = RadioButton.createToggle(Dict.get(main.lang, "3rd"), btnGroup);
+                    RadioButton rb4 = RadioButton.createToggle(Dict.get(main.lang, "4th"), btnGroup);
                     rb1.getAllStyles().setFont(Hand.fontGeneral);
                     rb2.getAllStyles().setFont(Hand.fontGeneral);
                     rb3.getAllStyles().setFont(Hand.fontGeneral);
                     rb4.getAllStyles().setFont(Hand.fontGeneral);
-                    ButtonGroup btnGroup = new ButtonGroup(rb1, rb2, rb3, rb4);
+//                    ButtonGroup btnGroup = new ButtonGroup(rb1, rb2, rb3, rb4);
                     buttons.addAll(rb1, rb2, rb3, rb4);
                     String rnk = Card.rankToString(playerRank);
                     rnk = rnk.equals("A") ? "K" : "A";
@@ -1677,7 +1695,8 @@ public class Player {
                     btn.setCapsText(false);
                     btn.addActionListener((e)->{
                         cancelTimer();
-                        mySocket.addRequest(actionPartner, "\"def\":\"0\"");
+//                        mySocket.addRequest(actionPartner, "\"def\":\"0\"");
+                        mySocket.addRequest(new Request(Request.PARTNER, true).append("def", "0"));
                     });
                     buttons.add(btn);
 
@@ -1736,8 +1755,10 @@ public class Player {
                         userHelp.showHelp(userHelp.PARTNER_DEF);
                     } else {
                         cancelTimer();
-                        mySocket.addRequest(actionPartner,
-                                "\"def\":\"" + suite+rnk+btnGroup.getSelectedIndex() + "\"");
+//                        mySocket.addRequest(actionPartner,
+//                                "\"def\":\"" + suite + rnk + btnGroup.getSelectedIndex() + "\"");
+                        mySocket.addRequest(new Request(Request.PARTNER, true)
+                                .append("def", suite + rnk + btnGroup.getSelectedIndex()));
                     }
                 });
             }
