@@ -40,6 +40,7 @@ import java.util.Map;
  * of building native mobile applications using Java.
  */
 public class TuoLaJiPro {
+    static public final boolean DEBUG = true;
 
     static public final int GREEN = 0x008000;
     static public final int DARK_GREEN = 0x0a300a;
@@ -57,8 +58,7 @@ public class TuoLaJiPro {
         AvailableColors.put("DK_BLUE", new CustomColor("Dark Blue", "深蓝", DARK_BLUE));
     }
 
-    static public int BACKGROUND_COLOR = Card.DEBUG_MODE ? 0xffffff : LIGHT_GREEN;
-    static public final boolean DEBUG = true;
+    static public int BACKGROUND_COLOR = Card.DEBUG_MODE ? 0xffffff : LIGHT_BLUE;
 
     public CustomColor currentColor;
     private Form current;
@@ -198,14 +198,20 @@ public class TuoLaJiPro {
         }
 
         Display disp = Display.getInstance();
+        if (DEBUG) {
+//            Storage.getInstance().writeObject("playerName", null);
+//            Storage.getInstance().writeObject("lang", null);
+            Storage.getInstance().writeObject("myColor", null);
+        }
+
         Object sObj = Storage.getInstance().readObject("lang");
         if (sObj != null) {
             this.lang = sObj.toString();
         } else {
             L10NManager l10n = disp.getLocalizationManager();
             this.lang = l10n.getLanguage();
-            Storage.getInstance().writeObject("lang", this.lang);
         }
+        if (this.lang == null || this.lang.trim().isEmpty()) this.lang = "en";
 
         sObj = Storage.getInstance().readObject("myColor");
         if (sObj != null) {
@@ -214,7 +220,7 @@ public class TuoLaJiPro {
         }
 
         if (this.currentColor == null) {
-            this.currentColorKey = "GREEN";
+            this.currentColorKey = "LT_BLUE";
             this.currentColor = AvailableColors.get(this.currentColorKey);
         }
         BACKGROUND_COLOR = this.currentColor.backColor;
@@ -245,8 +251,10 @@ public class TuoLaJiPro {
         this.player = new Player(playerId, this);
 
         String playerName = getPlayerName();
-        if (DEBUG || playerName.isEmpty()) {
+        if (playerName.isEmpty()) {
             this.inputPlayName(playerName);
+        } else {
+            this.player.setPlayerName(playerName);
         }
 
         Form mainForm = new Form(title, new BorderLayout());
@@ -400,6 +408,10 @@ public class TuoLaJiPro {
         this.formTable.getToolbar().hideToolbar();
         this.formTable.add(BorderLayout.CENTER, this.table);
 
+        this.formView = new TableView(this);
+//        this.formView.getStyle().setBgColor(BACKGROUND_COLOR);
+        this.formView.init();
+
         this.player.connectServer(Player.OPTION_CHECK);
     }
 
@@ -508,12 +520,6 @@ public class TuoLaJiPro {
                 isMainForm = true;
                 break;
             case "view":
-                if (this.formView == null) {
-                    this.formView = new TableView(this);
-//                    this.formView.getStyle().setBgColor(BACKGROUND_COLOR);
-                    this.formView.init();
-                }
-                this.formView.addContent();
                 this.formView.show();
                 break;
 
@@ -713,7 +719,7 @@ public class TuoLaJiPro {
 
         Button bReturn = new Button(Dict.get(lang, "Exit"));
         FontImage.setMaterialIcon(bReturn, FontImage.MATERIAL_EXIT_TO_APP);
-        bReturn.setUIID("return");
+//        bReturn.setUIID("return");
         bReturn.addActionListener((e) -> {
             this.switchScene("entry");
         });

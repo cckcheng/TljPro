@@ -6,6 +6,7 @@ package com.ccd.tljpro;
  * @author ccheng
  */
 public class Request {
+    static final String CREATE = "create";
     static final String JOIN = "join";
     static final String EXIT = "out";
     static final String ROBOT = "robot";
@@ -19,7 +20,7 @@ public class Request {
     private String msg;
     private final String action;
     private final boolean checkReply;
-    private final boolean reSend;
+    private boolean reSend;
 
     Request(String action, boolean reply) {
         this(action, reply, false);
@@ -57,6 +58,11 @@ public class Request {
 
     public boolean isReSend() {
         return reSend;
+    }
+
+    public Request setReSend(boolean reSend) {
+        this.reSend = reSend;
+        return this;
     }
 
     public Request append(String key, String value) {

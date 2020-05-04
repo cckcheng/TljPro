@@ -101,7 +101,7 @@ public class Tutor extends Container {
             this.add(index);
             Button bExit = new Button(Dict.get(main.lang, "Exit"));
             FontImage.setMaterialIcon(bExit, FontImage.MATERIAL_EXIT_TO_APP);
-            bExit.setUIID("myExit");
+//            bExit.setUIID("myExit");
             bExit.addActionListener((e) -> {
                 main.switchScene("entry");
             });
