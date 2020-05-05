@@ -11,6 +11,7 @@ import com.codename1.ui.Component;
 import com.codename1.ui.Form;
 import com.codename1.ui.Container;
 import com.codename1.ui.Dialog;
+import com.codename1.ui.Display;
 import com.codename1.ui.FontImage;
 import com.codename1.ui.Label;
 import com.codename1.ui.RadioButton;
@@ -56,7 +57,7 @@ public class TableView extends Form {
         cmdQuickJoin = Command.createMaterial(Dict.get(main.lang, Dict.QUICK_JOIN), FontImage.MATERIAL_PLAY_ARROW, (e) -> {
             int idx = this.listTabs.getSelectedIndex();
             TableContainer t = this.tableList.get(idx);
-            player.sendRequest(player.initRequest().append("opt", t.category).setReSend(true));
+            player.sendRequest(Request.create(Request.JOIN, "opt", t.category).setReSend(true));
             Storage.getInstance().writeObject("category", t.category);
         });
         cmdPrivateTable = Command.createMaterial(Dict.get(main.lang, Dict.PRIVATE_TABLE), FontImage.MATERIAL_LOCK, (e) -> {
@@ -76,7 +77,8 @@ public class TableView extends Form {
             new ButtonGroup(rb1, rb2, rb3, rb4);
             rb1.setSelected(true);
             props.add(BoxLayout.encloseX(rb1, rb2, rb3, rb4));
-            props.add(new CheckBox(Dict.get(lang, Dict.PRIVATE_TABLE)));
+            CheckBox cPrivate = new CheckBox(Dict.get(lang, Dict.PRIVATE_TABLE));
+            props.add(cPrivate);
 
             Player p = this.player;
             Command okCmd = new Command(Dict.get(lang, "OK")) {
@@ -86,10 +88,10 @@ public class TableView extends Form {
                     if (rb2.isSelected()) type = "HALF";
                     else if (rb3.isSelected()) type = "EXPRESS";
                     else if (rb4.isSelected()) type = "POINTS";
-                    p.sendRequest(p.initRequest(Request.CREATE).setReSend(true)
-                            .append("category", t.category)
-                            .append("private", 0)
+                    p.sendRequest(Request.create(Request.CREATE, "category", t.category)
+                            .append("private", cPrivate.isSelected() ? 1 : 0)
                             .append("tableType", type)
+                            .setReSend(true)
                     );
                     Storage.getInstance().writeObject("category", t.category);
                 }
@@ -176,15 +178,20 @@ public class TableView extends Form {
                 category = category.substring(idx + 1);
             }
 
+            this.revalidate();
             Object sObj = Storage.getInstance().readObject("category");
             if (sObj != null) {
                 String defaultCategory = sObj.toString();
                 if (this.categoryIndex.containsKey(defaultCategory)) {
-                    this.listTabs.setSelectedIndex(this.categoryIndex.get(defaultCategory));
+                    final Tabs tabs = this.listTabs;
+                    final int cIdx = this.categoryIndex.get(defaultCategory);
+                    Display.getInstance().callSerially(new Runnable() {
+                        public void run() {
+                            tabs.setSelectedIndex(cIdx);
+                        }
+                    });
                 }
             }
-
-            this.revalidate();
         }
 
         for (TableContainer c : this.tableList) {
@@ -257,15 +264,23 @@ public class TableView extends Form {
             while (true) {
                 int idx = tableIds.indexOf(',');
                 if (idx > 0) {
-                    this.add(new Button(Player.trimmedString(data.get(tableIds.subSequence(0, idx)))));
+                    this.add(toTableButton(tableIds.substring(0, idx), data));
                 } else {
-                    this.add(new Button(Player.trimmedString(data.get(tableIds))));
+                    this.add(toTableButton(tableIds, data));
                     break;
                 }
                 tableIds = tableIds.substring(idx + 1);
             }
 
             this.revalidate();
+        }
+
+        private Button toTableButton(String tableId, Map<String, Object> data) {
+            Button btn = new Button(Player.trimmedString(data.get(tableId)));
+            btn.addActionListener((ev) -> {
+                player.sendRequest(Request.create(Request.WATCH, "tid", tableId.substring(1)).setReSend(true));
+            });
+            return btn;
         }
 
     }

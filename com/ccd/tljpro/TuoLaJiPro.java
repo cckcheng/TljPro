@@ -40,11 +40,13 @@ import java.util.Map;
  * of building native mobile applications using Java.
  */
 public class TuoLaJiPro {
-    static public final boolean DEBUG = true;
+    static public final boolean DEBUG = false;
 
     static public final int GREEN = 0x008000;
-    static public final int DARK_GREEN = 0x0a300a;
-    static public final int LIGHT_GREEN = 0x39ad39;
+//    static public final int DARK_GREEN = 0x0a300a;
+    static public final int DARK_GREEN = 0x3c8535;
+//    static public final int LIGHT_GREEN = 0x39ad39;
+    static public final int LIGHT_GREEN = 0x27b070;
     static public final int DARK_BLUE = 0x374b6b;
     static public final int LIGHT_BLUE = 0x54698c;
 
@@ -103,6 +105,14 @@ public class TuoLaJiPro {
 //    private Button btnExit = null;
     private Button btnSetting = null;
 
+    public String getMyId() {
+        return myId;
+    }
+
+    public String getMyName() {
+        return myName;
+    }
+
     public void enableButtons() {
         if (this.btnPlay != null) {
             this.btnPlay.setEnabled(true);
@@ -153,6 +163,8 @@ public class TuoLaJiPro {
     }
 
     private Player player = null;
+    private String myId = null;
+    private String myName = null;
     private int tryTimes = 0;
     static final int MAX_TRY_TIMES = 3;
 
@@ -201,7 +213,7 @@ public class TuoLaJiPro {
         if (DEBUG) {
 //            Storage.getInstance().writeObject("playerName", null);
 //            Storage.getInstance().writeObject("lang", null);
-            Storage.getInstance().writeObject("myColor", null);
+//            Storage.getInstance().writeObject("myColor", null);
         }
 
         Object sObj = Storage.getInstance().readObject("lang");
@@ -247,6 +259,7 @@ public class TuoLaJiPro {
             Dialog.show(Dict.get(lang, "Error"), "Failed to generate Player ID", Dict.get(lang, "OK"), "");
             disp.exitApplication();;
         }
+        this.myId = playerId;
 
         this.player = new Player(playerId, this);
 
@@ -255,6 +268,7 @@ public class TuoLaJiPro {
             this.inputPlayName(playerName);
         } else {
             this.player.setPlayerName(playerName);
+            this.myName = playerName;
         }
 
         Form mainForm = new Form(title, new BorderLayout());
@@ -492,6 +506,7 @@ public class TuoLaJiPro {
         if (playerName.isEmpty()) return null;
         Storage.getInstance().writeObject("playerName", playerName);
         this.player.setPlayerName(playerName);
+        this.myName = playerName;
         return playerName;
     }
 
@@ -893,6 +908,8 @@ public class TuoLaJiPro {
     static class CustomColor {
 
         int backColor;
+        int generalColor = Player.BLACK_COLOR;
+        int pointColor = Player.POINT_COLOR;
         String nameZh;
         String nameEn;
 
@@ -900,6 +917,11 @@ public class TuoLaJiPro {
             this.backColor = bkColor;
             this.nameEn = nmEn;
             this.nameZh = nmZh;
+
+            if (nmEn.contains("Dark")) {
+                this.generalColor = 0xb1c4bb;
+                this.pointColor = Player.INFO_COLOR;
+            }
         }
 
         public String getName(final String lang) {

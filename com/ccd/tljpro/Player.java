@@ -98,15 +98,6 @@ public class Player {
 
     private MySocket mySocket = null;
 
-    static final String actionExit = "out";
-    static final String actionRobot = "robot";
-    static final String actionBid = "bid";
-    static final String actionSetTrump = "trump";
-    static final String actionBuryCards = "bury";
-    static final String actionPlayCards = "play";
-    static final String actionPartner = "partner";
-    static final String actionReact = "re";
-
     static final String OPTION_RESUME = "resume";    // legacy
     static final String OPTION_PRACTICE = "practice";    // legacy
     static final String OPTION_CHECK = "check";  // check table status, resume play if table alive, otherwise no action
@@ -139,7 +130,7 @@ public class Player {
     public void connectServer(Request lastRequest) {
         if (lastRequest != null) {
             connectServer("IGNORE");
-            mySocket.addRequest(lastRequest);
+            mySocket.addRequest(lastRequest.appendPlayerInfo(main));
         } else {
             connectServer("");
         }
@@ -160,11 +151,11 @@ public class Player {
     }
 
     public Request initRequest(String action) {
+        if (action == null || action.isEmpty()) {
+            action = Request.JOIN;
+        }
         Request req = new Request(action, true);
-        return req.append("id", this.playerId)
-                .append("name", this.playerName)
-                .append("lang", main.lang)
-                .append("ver", main.version);
+        return req.appendPlayerInfo(main);
     }
 
     public void initCheckin(String option) {
@@ -395,6 +386,12 @@ public class Player {
         String stage = trimmedString(data.get("stage"));
         this.isPlaying = stage.equalsIgnoreCase(PLAYING_STAGE);
         currentSeat = parseInteger(data.get("seat"));
+        if (currentSeat > Card.TOTAL_SEATS) {
+            this.watching = true;
+            currentSeat %= Card.TOTAL_SEATS;
+        } else {
+            this.watching = false;
+        }
         int actionSeat = parseInteger(data.get("next"));
         this.playerRank = parseInteger(data.get("rank"));
         int game = parseInteger(data.get("game"));
@@ -604,7 +601,7 @@ public class Player {
 
         this.lbGeneral = new Label("Game ");
         this.lbGeneral.getStyle().setFont(Hand.fontGeneral);
-        this.lbGeneral.getStyle().setFgColor(BLACK_COLOR);
+        this.lbGeneral.getStyle().setFgColor(main.currentColor.generalColor);
 
         String gmInfo = "gmInfo";
         String ptInfo = "ptInfo";
@@ -627,7 +624,7 @@ public class Player {
 //        this.partnerInfo.add(this.partnerCardSeq).add(this.partnerCard);
 
         this.pointsInfo = new Label(pointInfo);
-        this.pointsInfo.getStyle().setFgColor(POINT_COLOR);
+        this.pointsInfo.getStyle().setFgColor(main.currentColor.pointColor);
         this.pointsInfo.getStyle().setFont(Hand.fontRank);
 
         this.widget = new Container(new LayeredLayout());
@@ -1288,14 +1285,14 @@ public class Player {
             this.location = loc;
 
             mainInfo = new Label(loc);
-            mainInfo.getAllStyles().setFgColor(BLACK_COLOR);
+            mainInfo.getAllStyles().setFgColor(main.currentColor.generalColor);
             mainInfo.getAllStyles().setFont(Hand.fontPlain);
 
             points = new Label("        ");
             points.getAllStyles().setFont(Hand.fontRank);
 
             contractor = new Label("     ");
-            contractor.getAllStyles().setFgColor(POINT_COLOR);
+            contractor.getAllStyles().setFgColor(main.currentColor.pointColor);
             contractor.getAllStyles().setFont(Hand.fontRank);
 
             timer = new Label("    ");
@@ -1444,7 +1441,7 @@ public class Player {
 
         synchronized void reset() {
             cancelTimer();
-            contractor.getAllStyles().setFgColor(POINT_COLOR);
+            contractor.getAllStyles().setFgColor(main.currentColor.pointColor);
             contractor.setText("");
             points.setText("");
             hand.clearPlayCards(this);
@@ -1598,7 +1595,7 @@ public class Player {
             if (point.equalsIgnoreCase("pass")) {
                 this.points.getStyle().setFgColor(GREY_COLOR);
             } else {
-                this.points.getStyle().setFgColor(POINT_COLOR);
+                this.points.getStyle().setFgColor(main.currentColor.pointColor);
             }
             parent.revalidate();
 //            this.points.repaint();
@@ -1803,8 +1800,8 @@ public class Player {
 
         String curLang;
         UserHelp(String lang) {
-            chnLabel.getAllStyles().setFgColor(BLACK_COLOR);
-            engLabel.getAllStyles().setFgColor(BLACK_COLOR);
+            chnLabel.getAllStyles().setFgColor(main.currentColor.generalColor);
+            engLabel.getAllStyles().setFgColor(main.currentColor.generalColor);
             chnLabel.getAllStyles().setAlignment(Component.CENTER);
             engLabel.getAllStyles().setAlignment(Component.CENTER);
             this.setLayout(new BoxLayout(BoxLayout.Y_AXIS_BOTTOM_LAST));
