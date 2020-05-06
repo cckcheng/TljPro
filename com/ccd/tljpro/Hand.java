@@ -677,13 +677,14 @@ public class Hand extends Component {
     static public Font fontPlain = Font.createSystemFont(fontFace, Font.STYLE_PLAIN, Font.SIZE_MEDIUM);
 
     static final int heightRank = fontRank.getHeight();
+    static final int heightGeneral = fontGeneral.getHeight();
 
     static final int deltaRank = fontRank.getDescent();
     static final int deltaGeneral = fontGeneral.getDescent();
     static final int deltaSymbol = fontSymbol.getDescent();
 
     Font xFontSuit = fontSymbol;
-    int xDeltaSuit = deltaSymbol;
+    int xDeltaSuit = 0;
 
     Font xFontRank = fontRank;
     int xDeltaRank = deltaRank;
@@ -716,7 +717,7 @@ public class Hand extends Component {
             }
             g.setFont(this.xFontSuit);
 //            g.drawString(Card.suiteSign(c.suite), x0 + 2, y0 - this.xDeltaSuit + cardH / 2);
-            g.drawString(Card.suiteSign(c.suite), x0 + 2, y0 - this.xDeltaSuit + heightRank);
+            g.drawString(Card.suiteSign(c.suite), x0 + 2, y0 - this.xDeltaSuit + heightGeneral);
         } else {
             g.setFont(fontSymbol);
             x0 += 5;

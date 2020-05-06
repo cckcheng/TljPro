@@ -521,6 +521,7 @@ public class TuoLaJiPro {
         BACKGROUND_COLOR = this.currentColor.backColor;
         this.formMain.getStyle().setBgColor(BACKGROUND_COLOR);
         this.formTable.getStyle().setBgColor(BACKGROUND_COLOR);
+        this.start();
     }
 
     private Component currentComp;

@@ -123,30 +123,6 @@ public class TableView extends Form {
 //        this.listTabs.setSelectedStyle(UIManager.getInstance().getComponentStyle("RaisedButton"));
         this.listTabs.getStyle().setFont(Hand.fontRank);
 
-        /*
-        int idx = 0;
-        String category = "Practice";
-        this.tableList.add(new TableContainer(category));
-        this.listTabs.addTab(category, this.tableList.get(idx));
-        idx++;
-        category = "Novice";
-        this.tableList.add(new TableContainer(category));
-        this.listTabs.addTab(category, this.tableList.get(idx));
-
-        idx++;
-        category = "Experienced";
-        this.tableList.add(new TableContainer("Experienced"));
-        this.listTabs.addTab(category, this.tableList.get(idx));
-        idx++;
-        category = "Expert";
-        this.tableList.add(new TableContainer("Expert"));
-        this.listTabs.addTab(category, this.tableList.get(idx));
-
-        this.tableList.get(1).addContent();
-
-        this.listTabs.setTabSelectedIcon(0, FontImage.createMaterial((char) 57669, s));
-        this.listTabs.setTabSelectedIcon(1, FontImage.createMaterial(FontImage.MATERIAL_CASINO, s));
-         */
         this.add(BorderLayout.CENTER, this.listTabs);
 
         this.listTabs.addSelectionListener((oldIdx, newIdx) -> {
@@ -179,6 +155,7 @@ public class TableView extends Form {
             }
 
             this.revalidate();
+            this.listTabs.revalidate();
             Object sObj = Storage.getInstance().readObject("category");
             if (sObj != null) {
                 String defaultCategory = sObj.toString();
@@ -188,6 +165,7 @@ public class TableView extends Form {
                     Display.getInstance().callSerially(new Runnable() {
                         public void run() {
                             tabs.setSelectedIndex(cIdx);
+                            tabs.revalidate();
                         }
                     });
                 }
@@ -218,27 +196,6 @@ public class TableView extends Form {
         this.listTabs.addTab(tabName, this.tableList.get(idxTab));
         Style s = UIManager.getInstance().getComponentStyle("Tab");
         this.listTabs.setTabSelectedIcon(idxTab, FontImage.createMaterial(icon, s));
-    }
-
-    int idx = 0;
-    public void addContent() {
-        Toolbar topTool = this.getToolbar();
-        switch (idx++ % 3) {
-            case 0:
-                topTool.removeCommand(cmdPrivateTable);
-                topTool.removeCommand(cmdNewTable);
-                break;
-            case 1:
-                topTool.addCommandToLeftBar(cmdPrivateTable);
-                topTool.addCommandToLeftBar(cmdNewTable);
-                break;
-            case 2:
-//                topTool.addCommandToLeftBar(cmdPrivateTable);
-//                topTool.addCommandToLeftBar(cmdNewTable);
-                break;
-        }
-
-        this.revalidate();
     }
 
     class TableContainer extends Container {
