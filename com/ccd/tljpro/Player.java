@@ -398,10 +398,11 @@ public class Player {
         int defaultTimeout = parseInteger(data.get("timeout"));
         if (defaultTimeout > 0) this.timeout = defaultTimeout;
 
-        this.addCards(data);
+        if (!this.watching) this.addCards(data);
 
         PlayerInfo p0 = this.infoLst.get(0);
-        p0.setMainInfo(currentSeat, playerName, this.playerRank);
+        String myName = trimmedString(data.get("name"));
+        p0.setMainInfo(currentSeat, myName, this.playerRank);
         this.playerMap.put(currentSeat, p0);
         char trumpSuite = Card.JOKER;
 
@@ -578,7 +579,7 @@ public class Player {
             robotOn = false;
             bRobot.setSelected(false);
             cancelTimers();
-            if (!tableEnded) {
+            if (!watching && !tableEnded) {
                 Dialog.show("", Dict.get(main.lang, "Hold Seat") + "?", holdCommand(15), holdCommand(5), holdCommand(0));
             }
             main.enableButtons();
@@ -968,7 +969,7 @@ public class Player {
     protected char currentTrump;
     protected int gameRank;
     synchronized private void setTrump(Map<String, Object> data) {
-        if (this.hand.isEmpty()) return;
+        if (!this.watching && this.hand.isEmpty()) return;
         String trump = data.get("trump").toString();
         if (trump.isEmpty()) return;
         this.currentTrump = trump.charAt(0);

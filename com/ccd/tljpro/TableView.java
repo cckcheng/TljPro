@@ -24,6 +24,7 @@ import com.codename1.ui.layouts.FlowLayout;
 import com.codename1.ui.plaf.Style;
 import com.codename1.ui.plaf.UIManager;
 import com.codename1.ui.table.TableLayout;
+import com.codename1.ui.util.UITimer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -132,11 +133,25 @@ public class TableView extends Form {
                 topTool.addCommandToLeftBar(cmdNewTable);
             }
         });
+
+        new UITimer(new Runnable() {
+            @Override
+            public void run() {
+                player.sendRequest(new Request(Request.LIST, true));
+            }
+        }).schedule(TuoLaJiPro.DEBUG ? 5000 : 60000, true, this);
     }
 
     @Override
     protected boolean shouldPaintStatusBar() {
         return false;
+    }
+
+    public void pullTableList() {
+        // only when the tabs is empty
+        if (this.listTabs.getTabCount() < 1) {
+            player.sendRequest(new Request(Request.LIST, true));
+        }
     }
 
     public void refreshTableList(Map<String, Object> data) {
@@ -175,6 +190,7 @@ public class TableView extends Form {
         for (TableContainer c : this.tableList) {
             c.addContent(Player.trimmedString(data.get(c.category)), data);
         }
+        this.revalidate();
     }
 
     private void addCategoryTab(String cStr) {

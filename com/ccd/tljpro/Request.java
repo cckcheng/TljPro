@@ -20,6 +20,7 @@ public class Request {
     static final String PARTNER = "partner";
     static final String RE = "re";
     static final String WATCH = "watch";
+    static final String LIST = "list";
 
     private String msg;
     private final String action;

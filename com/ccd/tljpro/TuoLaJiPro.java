@@ -40,7 +40,7 @@ import java.util.Map;
  * of building native mobile applications using Java.
  */
 public class TuoLaJiPro {
-    static public final boolean DEBUG = false;
+    static public final boolean DEBUG = true;
 
     static public final int GREEN = 0x008000;
 //    static public final int DARK_GREEN = 0x0a300a;
@@ -537,6 +537,7 @@ public class TuoLaJiPro {
                 break;
             case "view":
                 this.formView.show();
+                this.formView.pullTableList();
                 break;
 
             case "table":
