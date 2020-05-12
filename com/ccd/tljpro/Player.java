@@ -58,8 +58,6 @@ public class Player {
 
 //    private final ButtonImage backImage = new ButtonImage(0xbcbcbc);
     static final int TIME_OUT_SECONDS = 25;
-    private final String playerId;
-    private String playerName;
     private final TuoLaJiPro main;
 
     private String option;
@@ -73,19 +71,8 @@ public class Player {
         }
     };
 
-    public Player(String playerId, TuoLaJiPro main) {
-        this.playerId = playerId;
+    public Player(TuoLaJiPro main) {
         this.main = main;
-    }
-
-    public Player(String playerId, String playerName, TuoLaJiPro main) {
-        this.playerId = playerId;
-        this.playerName = playerName;
-        this.main = main;
-    }
-
-    public void setPlayerName(String playerName) {
-        this.playerName = playerName;
     }
 
 //    public void sendRequest(String action, String data) {
@@ -136,12 +123,11 @@ public class Player {
         }
     }
 
-    public void startPlay(String playerName) {
-        this.startPlay(playerName, null);
+    public void startPlay() {
+        this.startPlay(null);
     }
 
-    public void startPlay(String playerName, String option) {
-        this.playerName = playerName;
+    public void startPlay(String option) {
         this.option = option;
         initCheckin(option);
     }
@@ -379,6 +365,7 @@ public class Player {
         this.leadingPlayer = null;
     }
 
+    public int numCardsLeft = 0;
     private void refreshTable(Map<String, Object> data) {
         this.tableOn = true;
         this.resetTable();
@@ -386,12 +373,16 @@ public class Player {
         String stage = trimmedString(data.get("stage"));
         this.isPlaying = stage.equalsIgnoreCase(PLAYING_STAGE);
         currentSeat = parseInteger(data.get("seat"));
-        if (currentSeat > Card.TOTAL_SEATS) {
-            this.watching = true;
-            currentSeat %= Card.TOTAL_SEATS;
+
+        String visit = trimmedString(data.get("visit"));
+        this.watching = visit.equals("Y");
+        this.bRobot.setVisible(!this.watching);
+        if (this.watching) {
+            this.numCardsLeft = parseInteger(data.get("cnum"));
         } else {
-            this.watching = false;
+            this.numCardsLeft = 0;
         }
+
         int actionSeat = parseInteger(data.get("next"));
         this.playerRank = parseInteger(data.get("rank"));
         int game = parseInteger(data.get("game"));
@@ -411,7 +402,7 @@ public class Player {
             this.gameRank = parseInteger(data.get("gameRank"));
             this.contractPoint = parseInteger(data.get("contract"));
 
-            String trump = data.get("trump").toString();
+            String trump = trimmedString(data.get("trump"));
             if (!trump.isEmpty()) trumpSuite = trump.charAt(0);
 
             if (gameRank > 0) {
@@ -581,6 +572,8 @@ public class Player {
             cancelTimers();
             if (!watching && !tableEnded) {
                 Dialog.show("", Dict.get(main.lang, "Hold Seat") + "?", holdCommand(15), holdCommand(5), holdCommand(0));
+            } else {
+                mySocket.addRequest(new Request(Request.EXIT, false));
             }
             main.enableButtons();
             main.switchScene("view");
@@ -741,7 +734,7 @@ public class Player {
         int seat = parseInteger(data.get("seat"));
         int actionSeat = parseInteger(data.get("next"));
         this.contractPoint = parseInteger(data.get("contract"));   // send contract point every time to avoid error
-        String bid = data.get("bid").toString();
+        String bid = trimmedString(data.get("bid"));
         PlayerInfo pp = this.playerMap.get(seat);
         if (pp != null) displayBidInfo(pp, bid);
 
@@ -758,7 +751,11 @@ public class Player {
         if (lst != null) {
             this.hand.addPlayCards(pp, lst);
             if (pp.location.equals("bottom")) {
-                if (!this.hand.isEmpty()) hand.removeCards(cards);
+                if (!this.hand.isEmpty()) {
+                    hand.removeCards(cards);
+                } else if (this.watching) {
+                    this.numCardsLeft -= lst.size();
+                }
 
                 pp.userHelp.clear();
             }
@@ -970,7 +967,7 @@ public class Player {
     protected int gameRank;
     synchronized private void setTrump(Map<String, Object> data) {
         if (!this.watching && this.hand.isEmpty()) return;
-        String trump = data.get("trump").toString();
+        String trump = trimmedString(data.get("trump"));
         if (trump.isEmpty()) return;
         this.currentTrump = trump.charAt(0);
         int seat = parseInteger(data.get("seat"));
@@ -1038,91 +1035,90 @@ public class Player {
         }
 
         private void processReceived(String msg) throws IOException {
-//            Log.p("Raw data: " + msg);
-//            if (!msg.startsWith("{")) {
-//                msg = Card.confusedData(msg);
-//                msg = new String(Base64.decode(msg.getBytes()));
-//            }
+            try {
+                JSONParser parser = new JSONParser();
+                int idx = msg.indexOf("\n");
+                while (idx > 0) {
+                    String subMsg = msg.substring(0, idx);
+                    msg = msg.substring(idx + 1);
+                    idx = msg.indexOf("\n");
+                    if (subMsg.trim().isEmpty()) continue;
 
-            JSONParser parser = new JSONParser();
-            int idx = msg.indexOf("\n");
-            while (idx > 0) {
-                String subMsg = msg.substring(0, idx);
-                msg = msg.substring(idx + 1);
-                idx = msg.indexOf("\n");
-                if (subMsg.trim().isEmpty()) continue;
+                    if (!subMsg.startsWith("{")) {
+                        subMsg = Card.confusedData(subMsg);
+                        subMsg = new String(Base64.decode(subMsg.getBytes()));
+                    }
 
-                if (!subMsg.startsWith("{")) {
-                    subMsg = Card.confusedData(subMsg);
-                    subMsg = new String(Base64.decode(subMsg.getBytes()));
+                    if (!subMsg.startsWith("{") || !subMsg.endsWith("}")) continue;
+
+                    if (TuoLaJiPro.DEBUG) Log.p("Received: " + subMsg);
+                    Map<String, Object> data = parser.parseJSON(new StringReader(subMsg));
+                    final String action = trimmedString(data.get("action"));
+
+                    switch (action) {
+                        case "list":
+                            // list current tables
+                            main.formView.refreshTableList(data);
+                            break;
+
+                        case "init":
+                            main.switchScene("table");
+                            refreshTable(data);
+                            break;
+                        case "bid":
+                            if (tableOn) displayBid(data);
+                            break;
+                        case "set_trump":
+                            if (tableOn) setTrump(data);
+                            break;
+                        case "add_remains":
+                            if (tableOn) addRemains(data);
+                            break;
+                        case "bury":
+                            if (tableOn) buryCards(data);
+                            break;
+                        case "partner":
+                            if (tableOn) definePartner(data);
+                            break;
+                        case "play":
+                            if (tableOn) playCards(data);
+                            break;
+                        case "gameover":
+                            if (tableOn) {
+                                hand.clearCards();
+                                startNotifyTimer(data);
+                                cancelTimers();
+                                gameSummary(data);
+                            }
+                            break;
+                        case "info":
+                            showInfo(data);
+                            break;
+                        case "in":
+                            if (tableOn) playerIn(data);
+                            break;
+                        case "out":
+                            if (tableOn) playerOut(data);
+                            break;
+                        case "robot":
+                            bRobot.setSelected(true);
+                            robotOn = true;
+                            break;
+                        case "opt":
+                            tableOn = false;
+                            main.showPlayOption();
+                            break;
+                    }
                 }
-
-                if (!subMsg.startsWith("{") || !subMsg.endsWith("}")) continue;
-
-                if (TuoLaJiPro.DEBUG) Log.p("Received: " + subMsg);
-                Map<String, Object> data = parser.parseJSON(new StringReader(subMsg));
-                final String action = trimmedString(data.get("action"));
-
-                switch (action) {
-                    case "list":
-                        // list current tables
-                        main.formView.refreshTableList(data);
-                        break;
-
-                    case "init":
-                        main.switchScene("table");
-                        refreshTable(data);
-                        break;
-                    case "bid":
-                        if (tableOn) displayBid(data);
-                        break;
-                    case "set_trump":
-                        if (tableOn) setTrump(data);
-                        break;
-                    case "add_remains":
-                        if (tableOn) addRemains(data);
-                        break;
-                    case "bury":
-                        if (tableOn) buryCards(data);
-                        break;
-                    case "partner":
-                        if (tableOn) definePartner(data);
-                        break;
-                    case "play":
-                        if (tableOn) playCards(data);
-                        break;
-                    case "gameover":
-                        if (tableOn) {
-                            hand.clearCards();
-                            startNotifyTimer(data);
-                            cancelTimers();
-                            gameSummary(data);
-                        }
-                        break;
-                    case "info":
-                        showInfo(data);
-                        break;
-                    case "in":
-                        if (tableOn) playerIn(data);
-                        break;
-                    case "out":
-                        if (tableOn) playerOut(data);
-                        break;
-                    case "robot":
-                        bRobot.setSelected(true);
-                        robotOn = true;
-                        break;
-                    case "opt":
-                        tableOn = false;
-                        main.showPlayOption();
-                        break;
-                }
+            } catch (Exception err) {
+                // to prevent break the connection by accident
+                err.printStackTrace();
             }
         }
 
         @Override
         public void connectionError(int errorCode, String message) {
-//            if (isConnected()) closeRequested = true;
+            closeRequested = true;
 //            main.enableButtons();
             if (checkOnce) {
                 if (tljHost.equals(Card.TLJ_HOST)) {
@@ -1148,6 +1144,7 @@ public class Player {
 
         @Override
         public void connectionEstablished(InputStream is, OutputStream os) {
+            closeRequested = false;
             checkOnce = false;
             main.enableButtons();
             byte[] buffer = new byte[4096];
@@ -1189,7 +1186,8 @@ public class Player {
                                 Log.p("lost conncetion!");
                                 break;
                             } else if (tableOn) {
-                                if (robotOn) {
+//                                if (robotOn || tableEnded || watching) {
+                                if (robotOn || tableEnded) {
                                     count = 0;
                                 } else if (count > idleWaitCycle) {
                                     addRequest(new Request(Request.RE, true));
@@ -1621,7 +1619,10 @@ public class Player {
 
             if (this.location.equals("bottom")) {
                 userHelp.clear();
-                if (robotOn || watching) return;
+                if (robotOn || watching) {
+                    parent.revalidate();
+                    return;
+                }
 //                if (Display.getInstance().isBuiltinSoundAvailable(Display.SOUND_TYPE_ALARM)) {
 //                    Display.getInstance().playBuiltinSound(Display.SOUND_TYPE_ALARM);
 //                }

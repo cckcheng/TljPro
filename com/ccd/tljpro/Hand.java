@@ -5,6 +5,7 @@ import com.codename1.ui.Button;
 import com.codename1.ui.Component;
 import com.codename1.ui.Display;
 import com.codename1.ui.Font;
+import com.codename1.ui.FontImage;
 import com.codename1.ui.Graphics;
 import com.codename1.ui.plaf.Style;
 import java.util.ArrayList;
@@ -53,6 +54,9 @@ public class Hand extends Component {
 
     int popHeight = 30;
     int hReserved = 0;
+    FontImage cardBack;
+//    FontImage redJoker;
+//    FontImage blackJoker;
 
     Hand(Player player) {
         suites.add(this.spades);
@@ -66,6 +70,14 @@ public class Hand extends Component {
         suiteIndex.add(Card.DIAMOND);
 
         this.player = player;
+
+//        int bigJoker = 0x1F0CF;
+//        int smallJoker = 0x1F0BF;
+//        int smallJoker = 0x1F0DF;
+        Font materialFont = FontImage.getMaterialDesignFont();
+        cardBack = FontImage.createFixed("\uEB3B", materialFont, TuoLaJiPro.BACKGROUND_COLOR, 200, 300);
+//        redJoker = FontImage.createFixed(new String(Character.toChars(bigJoker)), materialFont, redColor, 200, 300);
+//        blackJoker = FontImage.createFixed(new String(Character.toChars(bigJoker)), materialFont, blackColor, 200, 300);
     }
 
 //    int xPR1 = 0;   // right player 1 coodinate
@@ -85,8 +97,8 @@ public class Hand extends Component {
     private void init() {
         int w = getWidth();
         int h = getHeight();
-        int wAlt = Display.getInstance().getDisplayWidth();
-        int hAlt = Display.getInstance().getDisplayHeight();
+//        int wAlt = Display.getInstance().getDisplayWidth();
+//        int hAlt = Display.getInstance().getDisplayHeight();
         if (h > w) {
             int tmp = w;
             w = h;
@@ -105,6 +117,10 @@ public class Hand extends Component {
             this.cardHeight = h00;
         }
 
+//        if (TuoLaJiPro.DEBUG) {
+//            Log.p("cardW = " + cardWidth);
+//            Log.p("cardH = " + cardHeight);
+//        }
 //        this.xPitch = w / MAX_CARDS;
         this.xPitch = this.cardWidth * 2 / 3;
         this.yPitch = (this.cardHeight - 10) / 5;
@@ -133,8 +149,8 @@ public class Hand extends Component {
 //        }
 
         if (Card.FOR_IOS) {
-            xFontSuit = fontRank;
-            xDeltaSuit = deltaRank;
+            xFontSuit = fontGeneral;
+            xDeltaSuit = deltaGeneral;
         }
 
     }
@@ -665,9 +681,9 @@ public class Hand extends Component {
         return (cardNum - 1) * this.xPitch + this.cardWidth;
     }
 
-    int blackColor = 0x000000;
-    int redColor = 0xff0000;
-    int whiteColor = 0xffffff;
+    static int blackColor = 0x000000;
+    static int redColor = 0xff0000;
+    static int whiteColor = 0xffffff;
     static final int fontFace = Font.FACE_SYSTEM;
 //    static final int fontFace = Font.FACE_PROPORTIONAL;
 //    static final int fontFace = Font.FACE_MONOSPACE;
@@ -688,6 +704,16 @@ public class Hand extends Component {
 
     Font xFontRank = fontRank;
     int xDeltaRank = deltaRank;
+
+    private void drawCardBack(Graphics g, int cardW, int cardH) {
+        int x0 = 5;
+        int y0 = 0;
+        g.setColor(blackColor);
+        g.drawRoundRect(x0 - 1, y0 - 1, cardW + 2, cardH + 2, 10, 10);
+        g.setColor(whiteColor);
+        g.fillRoundRect(x0, y0, cardW, cardH, 10, 10);
+        g.drawImage(cardBack, x0, y0, cardW, cardH);
+    }
 
     private void drawCard(Graphics g, Card c, int cardW, int cardH, boolean selfHand) {
         int x0 = 5;
@@ -712,7 +738,7 @@ public class Hand extends Component {
             if (s.length() < 2) {
                 g.drawString(s, x0 + 2, y0 - this.xDeltaRank + cardH / 20);
             } else {
-                g.drawString("" + s.charAt(0), x0 - 5, y0 - this.xDeltaRank + cardH / 20);
+                g.drawString("" + s.charAt(0), x0 - cardW / 25, y0 - this.xDeltaRank + cardH / 20);
                 g.drawString("" + s.charAt(1), x0 + cardW * 2 / 7, y0 - this.xDeltaRank + cardH / 20);
             }
             g.setFont(this.xFontSuit);
@@ -727,13 +753,19 @@ public class Hand extends Component {
             g.drawString("K", x0, y0 + py * 2);
             g.drawString("E", x0, y0 + py * 3);
             g.drawString("R", x0, y0 + py * 4);
+
+//            g.drawImage(c.rank == Card.SmallJokerRank ? blackJoker : redJoker, x0, y0, cardW , cardH);
+//            int iW = cardW * 6 / 5;
+//            int iH = cardH * 6 / 5;
+//            g.drawImage(c.rank == Card.SmallJokerRank ? blackJoker : redJoker,
+//                    x0 - (iW - cardW), y0 - (iH - cardH), iW, iH);  // this does not work well
         }
     }
     /*
     @Override
     public void paintBackgrounds(Graphics g) {
         this.getStyle().setBgTransparency(0);
-//        this.getStyle().setBgColor(TuoLaJi.BACKGROUND_COLOR);
+//        this.getStyle().setBgColor(TuoLaJiPro.BACKGROUND_COLOR);
 //        g.setColor(blackColor);
 //        g.drawLine(getX(), getY() + getHeight(), getX() + 100, getY());
 //        g.drawLine(getX() + 100, 0, getX() + getWidth() - 50, getY() + Display.getInstance().getDisplayHeight());
@@ -744,7 +776,7 @@ public class Hand extends Component {
     synchronized public void paint(Graphics g) {
 //        this.getStyle().setBgTransparency(0);
         g.translate(-g.getTranslateX(), -g.getTranslateY());
-//        g.setColor(TuoLaJi.BACKGROUND_COLOR);
+//        g.setColor(TuoLaJiPro.BACKGROUND_COLOR);
 //        g.fillRect(0, 0, getX() + getWidth(), getY() + getHeight());
         if (!this.isReady) {
             return;
@@ -778,6 +810,15 @@ public class Hand extends Component {
             g.translate(px, 0);
         }
         g.translate(-g.getTranslateX(), -g.getTranslateY());
+
+        if (player.numCardsLeft > 0) {
+            g.translate(x, y0 - cardHeight / 4);
+            for (int i = 0; i < player.numCardsLeft; i++) {
+                drawCardBack(g, cardWidth, cardHeight);
+                g.translate(px, 0);
+            }
+            g.translate(-g.getTranslateX(), -g.getTranslateY());
+        }
 
         if (this.player.isPlaying) {
             for (Player.PlayerInfo pp : this.player.infoLst) {

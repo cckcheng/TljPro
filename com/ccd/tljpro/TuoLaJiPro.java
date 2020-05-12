@@ -40,13 +40,13 @@ import java.util.Map;
  * of building native mobile applications using Java.
  */
 public class TuoLaJiPro {
-    static public final boolean DEBUG = true;
+    static public final boolean DEBUG = false;
 
     static public final int GREEN = 0x008000;
 //    static public final int DARK_GREEN = 0x0a300a;
     static public final int DARK_GREEN = 0x3c8535;
 //    static public final int LIGHT_GREEN = 0x39ad39;
-    static public final int LIGHT_GREEN = 0x27b070;
+    static public final int LIGHT_GREEN = 0x498057;
     static public final int DARK_BLUE = 0x374b6b;
     static public final int LIGHT_BLUE = 0x54698c;
 
@@ -261,13 +261,12 @@ public class TuoLaJiPro {
         }
         this.myId = playerId;
 
-        this.player = new Player(playerId, this);
+        this.player = new Player(this);
 
         String playerName = getPlayerName();
         if (playerName.isEmpty()) {
             this.inputPlayName(playerName);
         } else {
-            this.player.setPlayerName(playerName);
             this.myName = playerName;
         }
 
@@ -377,7 +376,6 @@ public class TuoLaJiPro {
                 public void actionPerformed(ActionEvent ev) {
                     String playerName = savePlayerName(pName);
                     if (playerName == null) return;
-                    player.setPlayerName(playerName);
                     saveBackground(strPicker);
                 }
             };
@@ -461,7 +459,7 @@ public class TuoLaJiPro {
                     return;
                 }
                 btnPlay.setEnabled(false);
-                player.startPlay(playerName, Player.OPTION_PRACTICE);
+                player.startPlay(Player.OPTION_PRACTICE);
             }
         };
         FontImage.setMaterialIcon(practiceCmd, FontImage.MATERIAL_DIRECTIONS_WALK, "Button");
@@ -474,7 +472,7 @@ public class TuoLaJiPro {
                     return;
                 }
                 btnPlay.setEnabled(false);
-                player.startPlay(playerName);
+                player.startPlay();
             }
         };
         FontImage.setMaterialIcon(matchCmd, FontImage.MATERIAL_DIRECTIONS_RUN, "Button");
@@ -505,7 +503,6 @@ public class TuoLaJiPro {
         playerName = StringUtil.replaceAll(playerName, ":", " ");
         if (playerName.isEmpty()) return null;
         Storage.getInstance().writeObject("playerName", playerName);
-        this.player.setPlayerName(playerName);
         this.myName = playerName;
         return playerName;
     }
@@ -528,38 +525,45 @@ public class TuoLaJiPro {
     public boolean isMainForm = true;
 
     public void switchScene(final String scene) {
-        Display.getInstance().lockOrientation(false);
         isMainForm = false;
-        switch (scene) {
-            case "entry":
-                this.formMain.showBack();
-                isMainForm = true;
-                break;
-            case "view":
-                this.formView.show();
-                this.formView.pullTableList();
-                break;
+        final TuoLaJiPro app = this;
+        Display.getInstance().callSerially(new Runnable() {
+            public void run() {
+                switch (scene) {
+                    case "entry":
+                        app.formMain.showBack();
+                        isMainForm = true;
+                        break;
+                    case "view":
+                        app.formView.show();
+                        app.formView.pullTableList();
+                        break;
 
-            case "table":
-                this.formTable.show();
-                this.formTable.repaint();
-                break;
-            case "help":
-                this.formHelp.show();
-                break;
-            case "tutor":
-                if (this.formTutor == null) {
-                    this.formTutor = new Form("Tutor", new BorderLayout());
-                    this.formTutor.getStyle().setBgColor(BACKGROUND_COLOR);
-                    this.formTutor.getToolbar().hideToolbar();
-                    this.formTutor.addComponent(BorderLayout.CENTER, this.tutor);
+                    case "table":
+                        app.formTable.show();
+                        app.formTable.repaint();
+                        break;
+                    case "help":
+                        app.formHelp.show();
+                        break;
+                    case "tutor":
+                        if (app.formTutor == null) {
+                            app.formTutor = new Form("Tutor", new BorderLayout());
+                            app.formTutor.setBackCommand("", null, (e) -> {
+                                app.switchScene("entry");
+                            });
+                            app.formTutor.getStyle().setBgColor(BACKGROUND_COLOR);
+                            app.formTutor.getToolbar().hideToolbar();
+                            app.formTutor.addComponent(BorderLayout.CENTER, app.tutor);
+                        }
+                        app.tutor.showTopic();
+                        app.formTutor.show();
+                        break;
+                    default:
+                        break;
                 }
-
-                this.tutor.showTopic();
-                this.formTutor.show();
-                break;
-        }
-
+            }
+        });
 //        this.formMain.setGlassPane(null);
 //        this.formMain.repaint();
     }
@@ -707,6 +711,9 @@ public class TuoLaJiPro {
             this.help = new Container(new LayeredLayout());
             this.help.setSafeArea(true);
             this.formHelp = new Form(new BorderLayout());
+            this.formHelp.setBackCommand("", null, (e) -> {
+                this.switchScene("entry");
+            });
 //            this.formHelp.getStyle().setBgColor(BACKGROUND_COLOR);
             this.formHelp.getToolbar().hideToolbar();
             this.formHelp.addComponent(BorderLayout.CENTER, this.help);
