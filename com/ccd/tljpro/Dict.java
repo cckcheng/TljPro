@@ -41,6 +41,8 @@ public class Dict {
                     case "score":
                         return "得分";
 
+                    case "refresh":
+                        return "刷新";
                     case "play":
                         return "开局";
                     case "help":

@@ -40,7 +40,7 @@ import java.util.Map;
  * of building native mobile applications using Java.
  */
 public class TuoLaJiPro {
-    static public final boolean DEBUG = false;
+    static public final boolean DEBUG = true;
 
     static public final int GREEN = 0x008000;
 //    static public final int DARK_GREEN = 0x0a300a;
@@ -60,7 +60,7 @@ public class TuoLaJiPro {
         AvailableColors.put("DK_BLUE", new CustomColor("Dark Blue", "深蓝", DARK_BLUE));
     }
 
-    static public int BACKGROUND_COLOR = Card.DEBUG_MODE ? 0xffffff : LIGHT_BLUE;
+    static public int BACKGROUND_COLOR = Card.DEBUG_MODE ? 0xffffff : DARK_BLUE;
 
     public CustomColor currentColor;
     private Form current;
@@ -232,7 +232,7 @@ public class TuoLaJiPro {
         }
 
         if (this.currentColor == null) {
-            this.currentColorKey = "LT_BLUE";
+            this.currentColorKey = "DK_BLUE";
             this.currentColor = AvailableColors.get(this.currentColorKey);
         }
         BACKGROUND_COLOR = this.currentColor.backColor;

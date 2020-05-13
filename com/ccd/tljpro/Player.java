@@ -7,6 +7,7 @@ import com.codename1.io.SocketConnection;
 import com.codename1.io.Storage;
 import com.codename1.ui.Button;
 import com.codename1.ui.ButtonGroup;
+import static com.codename1.ui.CN.getCurrentForm;
 import com.codename1.ui.CheckBox;
 import com.codename1.ui.Command;
 import com.codename1.ui.Component;
@@ -14,6 +15,7 @@ import com.codename1.ui.Container;
 import com.codename1.ui.Dialog;
 import com.codename1.ui.Display;
 import com.codename1.ui.DynamicImage;
+import com.codename1.ui.Font;
 import com.codename1.ui.FontImage;
 import com.codename1.ui.Form;
 import com.codename1.ui.Graphics;
@@ -841,37 +843,70 @@ public class Player {
         }
     }
 
-    private void showInfo(Map<String, Object> data) {
-        final Form curForm = main.getCurForm();
-        final String info = trimmedString(data.get("info"));
-        Rectangle safeRect = curForm.getSafeArea();
-        if (!info.isEmpty() && !info.equals(".")) {
-            int fontHeight = Hand.fontGeneral.getHeight();
-            int x = main.isMainForm ? fontHeight : (hand.displayWidth(6) + fontHeight);
-            curForm.setGlassPane((g, rect) -> {
-                g.translate(safeRect.getX(), safeRect.getY());
-
-                g.setColor(INFO_COLOR);
-                g.setFont(Hand.fontGeneral);
-                int idx = -1;
-                int y = main.isMainForm ? fontHeight * 2 : this.infoLst.get(2).posY();
-                String str = info;
-                while (!str.isEmpty()) {
-                    idx = str.indexOf("\n");
-                    if (idx >= 0) {
-                        g.drawString(str.substring(0, idx), x, y);
-                    } else {
-                        g.drawString(str, x, y);
-                        break;
-                    }
-                    y += fontHeight;
-                    str = str.substring(idx + 1);
-                }
-                g.translate(-g.getTranslateX(), -g.getTranslateY());
-            });
-        } else {
-            curForm.setGlassPane(null);
+    private void drawBackShade(Graphics g, int x, int y, String str, Font f) {
+        if (str.isEmpty() || str.equals(".")) return;
+        int idx = -1;
+        int w = 0, h = 0;
+        int wStr = 0;
+        String line = "";
+        while (!str.isEmpty()) {
+            idx = str.indexOf("\n");
+            if (idx >= 0) {
+                line = str.substring(0, idx);
+            } else {
+                line = str;
+            }
+            wStr = f.charsWidth(line.toCharArray(), 0, line.length());
+            if (wStr > w) w = wStr;
+            str = str.substring(idx + 1);
+            h += f.getHeight();
+            if (idx < 0) break;
         }
+        g.setColor(TuoLaJiPro.BACKGROUND_COLOR);
+        g.fillRoundRect(x - 10, y - 10, w + 20, h + 20, 20, 20);
+    }
+
+    private void showInfo(Map<String, Object> data) {
+//        final Form curForm = main.getCurForm();
+        final Player thisPlayer = this;
+        Display.getInstance().callSerially(new Runnable() {
+            public void run() {
+                final Form curForm = getCurrentForm();
+                final String info = trimmedString(data.get("info"));
+                Rectangle safeRect = curForm.getSafeArea();
+                if (!info.isEmpty() && !info.equals(".")) {
+                    int fontHeight = Hand.fontGeneral.getHeight();
+                    int x = main.isMainForm ? fontHeight : (hand.displayWidth(6) + fontHeight);
+                    curForm.setGlassPane((g, rect) -> {
+                        g.translate(safeRect.getX(), safeRect.getY());
+
+                        int idx = -1;
+                        int y = main.isMainForm ? fontHeight * 2 : thisPlayer.infoLst.get(2).posY();
+                        drawBackShade(g, x, y, info, Hand.fontGeneral);
+
+                        int y0 = y;
+                        String str = info;
+                        g.setColor(INFO_COLOR);
+                        g.setFont(Hand.fontGeneral);
+                        while (!str.isEmpty()) {
+                            idx = str.indexOf("\n");
+                            if (idx >= 0) {
+                                g.drawString(str.substring(0, idx), x, y);
+                            } else {
+                                g.drawString(str, x, y);
+                                break;
+                            }
+                            y += fontHeight;
+                            str = str.substring(idx + 1);
+                        }
+
+                        g.translate(-g.getTranslateX(), -g.getTranslateY());
+                    });
+                } else {
+                    curForm.setGlassPane(null);
+                }
+            }
+        });
     }
 
     void setLeadingIcon(PlayerInfo pp) {

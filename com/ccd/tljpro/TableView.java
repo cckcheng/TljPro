@@ -23,6 +23,7 @@ import com.codename1.ui.plaf.UIManager;
 import com.codename1.ui.table.TableLayout;
 import com.codename1.ui.util.UITimer;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +49,10 @@ public class TableView extends Form {
     private Command cmdQuickJoin;
     private Command cmdPrivateTable;
     private Command cmdNewTable;
+    private Command cmdRefresh;
+
+    private long lastRefreshTime = 0;
+    private final static long MIN_REFRESH_TIME = 10000; // 10 seconds
 
     public void init() {
         this.setSafeArea(true);
@@ -58,11 +63,18 @@ public class TableView extends Form {
             player.sendRequest(Request.create(Request.JOIN, "opt", t.category).setReSend(true));
             Storage.getInstance().writeObject("category", t.category);
         });
+        cmdRefresh = Command.createMaterial(Dict.get(main.lang, "Refresh"), FontImage.MATERIAL_REFRESH, (e) -> {
+            long tm = new Date().getTime();
+            if (tm > MIN_REFRESH_TIME + lastRefreshTime) {
+                player.sendRequest(new Request(Request.LIST, true));
+                lastRefreshTime = tm;
+            }
+        });
         cmdPrivateTable = Command.createMaterial(Dict.get(main.lang, Dict.PRIVATE_TABLE), FontImage.MATERIAL_LOCK, (e) -> {
             Log.p("private clicked");
         });
-//        cmdNewTable = Command.createMaterial(Dict.get(main.lang, Dict.NEW_TABLE), FontImage.MATERIAL_GROUP_ADD, (e) -> {
-        cmdNewTable = Command.createMaterial(Dict.get(main.lang, Dict.NEW_TABLE), (char) 57669, (e) -> {
+        cmdNewTable = Command.createMaterial(Dict.get(main.lang, Dict.NEW_TABLE), FontImage.MATERIAL_ADD_CIRCLE, (e) -> {
+//        cmdNewTable = Command.createMaterial(Dict.get(main.lang, Dict.NEW_TABLE), (char) 57669, (e) -> {
             int idx = this.listTabs.getSelectedIndex();
             TableContainer t = this.tableList.get(idx);
             TableLayout tl = new TableLayout(2, 1);
@@ -115,6 +127,7 @@ public class TableView extends Form {
 
         topTool.addCommandToLeftBar(cmdQuickJoin);
 //        topTool.addCommandToLeftBar(cmdNewTable);
+        topTool.addCommandToRightBar(cmdRefresh);
         topTool.addCommandToRightBar(cmdPrivateTable);
 
         this.listTabs.setTabTextPosition(Component.RIGHT);
@@ -134,9 +147,13 @@ public class TableView extends Form {
         new UITimer(new Runnable() {
             @Override
             public void run() {
-                player.sendRequest(new Request(Request.LIST, true));
+                long tm = new Date().getTime();
+                if (tm > MIN_REFRESH_TIME + lastRefreshTime) {
+                    player.sendRequest(new Request(Request.LIST, true));
+                    lastRefreshTime = tm;
+                }
             }
-        }).schedule(TuoLaJiPro.DEBUG ? 5000 : 60000, true, this);
+        }).schedule(TuoLaJiPro.DEBUG ? 15000 : 60000, true, this);
     }
 
     @Override
