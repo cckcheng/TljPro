@@ -14,6 +14,7 @@ import com.codename1.ui.Display;
 import com.codename1.ui.FontImage;
 import com.codename1.ui.RadioButton;
 import com.codename1.ui.Tabs;
+import com.codename1.ui.TextField;
 import com.codename1.ui.Toolbar;
 import com.codename1.ui.events.ActionEvent;
 import com.codename1.ui.layouts.BorderLayout;
@@ -71,7 +72,7 @@ public class TableView extends Form {
             }
         });
         cmdPrivateTable = Command.createMaterial(Dict.get(main.lang, Dict.PRIVATE_TABLE), FontImage.MATERIAL_LOCK, (e) -> {
-            Log.p("private clicked");
+            inputPassword(this.player);
         });
         cmdNewTable = Command.createMaterial(Dict.get(main.lang, Dict.NEW_TABLE), FontImage.MATERIAL_ADD_CIRCLE, (e) -> {
 //        cmdNewTable = Command.createMaterial(Dict.get(main.lang, Dict.NEW_TABLE), (char) 57669, (e) -> {
@@ -159,6 +160,22 @@ public class TableView extends Form {
     @Override
     protected boolean shouldPaintStatusBar() {
         return false;
+    }
+
+    public void inputPassword(Player p) {
+        Dialog dlg = new Dialog(Dict.get(main.lang, "Password"));
+        TextField tf = new TextField(6);
+        tf.setMaxSize(8);
+        dlg.add(tf);
+        dlg.add(new Button(Command.create(Dict.get(main.lang, "OK"), null, (ev) -> {
+            String pass = tf.getText().trim();
+            if (pass.isEmpty()) return;
+            p.sendRequest(Request.create(Request.SIT, "pass", pass));
+        })));
+        dlg.setBackCommand("", null, (ev) -> {
+            dlg.dispose();
+        });
+        dlg.show();
     }
 
     public void pullTableList() {
@@ -267,6 +284,9 @@ public class TableView extends Form {
             btn.addActionListener((ev) -> {
                 player.sendRequest(Request.create(Request.WATCH, "tid", tableId.substring(1)).setReSend(true));
             });
+            if (tableId.startsWith("L")) {
+                btn.setMaterialIcon(FontImage.MATERIAL_LOCK);
+            }
             return btn;
         }
 

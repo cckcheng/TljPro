@@ -151,6 +151,7 @@ public class Hand extends Component {
         if (Card.FOR_IOS) {
             xFontSuit = fontGeneral;
             xDeltaSuit = deltaGeneral;
+            xHeightRank = heightRank;
         }
 
     }
@@ -704,6 +705,7 @@ public class Hand extends Component {
 
     Font xFontRank = fontRank;
     int xDeltaRank = deltaRank;
+    int xHeightRank = heightGeneral;
 
     private void drawCardBack(Graphics g, int cardW, int cardH) {
         int x0 = 5;
@@ -743,7 +745,7 @@ public class Hand extends Component {
             }
             g.setFont(this.xFontSuit);
 //            g.drawString(Card.suiteSign(c.suite), x0 + 2, y0 - this.xDeltaSuit + cardH / 2);
-            g.drawString(Card.suiteSign(c.suite), x0 + 2, y0 - this.xDeltaSuit + heightGeneral);
+            g.drawString(Card.suiteSign(c.suite), x0 + 2, y0 - this.xDeltaSuit + xHeightRank);
         } else {
             g.setFont(fontSymbol);
             x0 += 5;

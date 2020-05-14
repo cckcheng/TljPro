@@ -334,6 +334,7 @@ public class Player {
     private int currentSeat;
     private Hand hand;
     private Label lbGeneral;
+    private Label lbPass;
 //    private Container gameInfo;
 //    private Container partnerInfo;
     private Label contractInfo;
@@ -343,6 +344,9 @@ public class Player {
     private Label pointsInfo;
     private Button bExit;
     private CheckBox bRobot;
+
+    private String currentTableId = "";
+    private String currentPass = "";
 
     private void resetTable() {
         this.tableEnded = false;
@@ -365,13 +369,16 @@ public class Player {
             pp.reset();
         }
         this.leadingPlayer = null;
+        this.currentPass = "";
     }
 
     public int numCardsLeft = 0;
+
     private void refreshTable(Map<String, Object> data) {
         this.tableOn = true;
         this.resetTable();
 
+        this.currentTableId = trimmedString(data.get("tid"));
         String stage = trimmedString(data.get("stage"));
         this.isPlaying = stage.equalsIgnoreCase(PLAYING_STAGE);
         currentSeat = parseInteger(data.get("seat"));
@@ -383,6 +390,9 @@ public class Player {
             this.numCardsLeft = parseInteger(data.get("cnum"));
         } else {
             this.numCardsLeft = 0;
+            if (this.currentTableId.startsWith("L")) {
+                this.currentPass = trimmedString(data.get("pass"));
+            }
         }
 
         int actionSeat = parseInteger(data.get("next"));
@@ -446,6 +456,11 @@ public class Player {
         }
 
         lbGeneral.setText(main.lang.equalsIgnoreCase("zh") ? "第" + game + "局" : "Game " + game);
+        if (!this.currentPass.isEmpty()) {
+            lbPass.setText(this.currentPass);
+        } else {
+            lbPass.setText("");
+        }
 
         String strTrump = "";
 //        String ptInfo = " ";
@@ -599,6 +614,10 @@ public class Player {
         this.lbGeneral.getStyle().setFont(Hand.fontGeneral);
         this.lbGeneral.getStyle().setFgColor(main.currentColor.generalColor);
 
+        this.lbPass = new Label(" ");
+        this.lbPass.getStyle().setFont(Hand.fontGeneral);
+        this.lbPass.getStyle().setFgColor(TIMER_COLOR);
+
         String gmInfo = "gmInfo";
         String ptInfo = "ptInfo";
         String pointInfo = "pointInfo";
@@ -626,7 +645,7 @@ public class Player {
         this.widget = new Container(new LayeredLayout());
 
 //        this.widget.add(bExit).add(this.lbGeneral).add(this.gameInfo).add(this.partnerInfo).add(this.pointsInfo);
-        this.widget.add(bExit).add(this.lbGeneral).add(this.trumpInfo).add(this.contractInfo)
+        this.widget.add(bExit).add(this.lbGeneral).add(this.lbPass).add(this.trumpInfo).add(this.contractInfo)
                 .add(this.partnerCardSeq).add(this.partnerCard).add(this.pointsInfo);
         this.widget.add(bRobot);
         this.widget.revalidate();
@@ -640,8 +659,7 @@ public class Player {
         ll.setInsets(bExit, "0 0 auto auto");   //top right bottom left
         ll.setInsets(bRobot, "auto 0 0 auto");   //top right bottom left
         ll.setInsets(this.lbGeneral, "-" + Hand.deltaGeneral + " auto auto 0")
-                //                .setInsets(this.partnerInfo, "-" + Hand.deltaRank + " 0 auto auto")
-//                .setInsets(this.partnerCardSeq, "-" + Hand.deltaGeneral + " 0 auto auto")
+                .setInsets(this.lbPass, "-" + Hand.deltaGeneral + " auto auto 0")
                 .setInsets(this.partnerCardSeq, "auto 0 " + Hand.deltaGeneral + " auto")
                 .setInsets(this.partnerCard, "-" + Hand.deltaRank + " 0 auto auto")
                 .setInsets(this.pointsInfo, "0 auto auto 20%")
@@ -654,6 +672,7 @@ public class Player {
         ll.setReferenceComponentTop(this.trumpInfo, lbGeneral, 1f);
         ll.setReferenceComponentLeft(this.trumpInfo, this.contractInfo, 1f);
         ll.setReferenceComponentTop(this.partnerCard, lbGeneral, 1f);
+        ll.setReferenceComponentLeft(this.lbPass, lbGeneral, 1f);
         ll.setReferenceComponentBottom(this.partnerCardSeq, this.partnerCard, 0f);
         ll.setReferenceComponentRight(this.partnerCardSeq, this.partnerCard, 1f);
 
@@ -1450,7 +1469,9 @@ public class Player {
         }
 
         int posY() {
-            return mainInfo.getAbsoluteY() + mainInfo.getHeight() - Hand.deltaGeneral;
+            return Card.FOR_IOS
+                    ? mainInfo.getAbsoluteY() + mainInfo.getHeight() - Hand.deltaGeneral
+                    : mainInfo.getAbsoluteY() + mainInfo.getHeight() - Hand.deltaSymbol;
         }
 
         int posY0() {

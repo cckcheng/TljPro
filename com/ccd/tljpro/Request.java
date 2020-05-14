@@ -11,6 +11,7 @@ import java.util.Set;
 public class Request {
     static final String CREATE = "create";
     static final String JOIN = "join";
+    static final String SIT = "sit";
     static final String EXIT = "out";
     static final String ROBOT = "robot";
     static final String BID = "bid";
