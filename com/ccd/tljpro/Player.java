@@ -22,6 +22,7 @@ import com.codename1.ui.Graphics;
 import com.codename1.ui.Label;
 import com.codename1.ui.RadioButton;
 import com.codename1.ui.events.ActionEvent;
+import com.codename1.ui.events.ActionListener;
 import com.codename1.ui.geom.Rectangle;
 import com.codename1.ui.layouts.BorderLayout;
 import com.codename1.ui.layouts.BoxLayout;
@@ -179,9 +180,6 @@ public class Player {
             int rank = parseInteger(d);
             if (rank > 0) {
                 hand.addCard(new Card(suite, rank));
-                if (rank == this.playerRank || suite == Card.JOKER) {
-                    if (!candidateTrumps.contains(suite)) candidateTrumps.add(suite);
-                }
             }
         }
     }
@@ -344,6 +342,7 @@ public class Player {
     private Label pointsInfo;
     private Button bExit;
     private CheckBox bRobot;
+    private Button bSit;
 
     private String currentTableId = "";
     private String currentPass = "";
@@ -386,12 +385,19 @@ public class Player {
         String visit = trimmedString(data.get("visit"));
         this.watching = visit.equals("Y");
         this.bRobot.setVisible(!this.watching);
+        this.bSit.setVisible(this.watching);
         if (this.watching) {
             this.numCardsLeft = parseInteger(data.get("cnum"));
         } else {
             this.numCardsLeft = 0;
             if (this.currentTableId.startsWith("L")) {
                 this.currentPass = trimmedString(data.get("pass"));
+            }
+            String pTrumps = trimmedString(data.get("ptrumps"));
+            if (!pTrumps.isEmpty()) {
+                for (int i = 0, n = pTrumps.length(); i < n; i++) {
+                    this.candidateTrumps.add(pTrumps.charAt(i));
+                }
             }
         }
 
@@ -458,8 +464,10 @@ public class Player {
         lbGeneral.setText(main.lang.equalsIgnoreCase("zh") ? "第" + game + "局" : "Game " + game);
         if (!this.currentPass.isEmpty()) {
             lbPass.setText(this.currentPass);
+            lbPass.setVisible(true);
         } else {
-            lbPass.setText("");
+            lbPass.setVisible(false);
+//            FontImage.setMaterialIcon(lbPass, '\0');
         }
 
         String strTrump = "";
@@ -610,6 +618,18 @@ public class Player {
             }
         });
 
+        this.bSit = new Button(Dict.get(main.lang, "Join"));
+        this.bSit.getAllStyles().setFont(Hand.fontGeneral);
+        FontImage.setMaterialIcon(bSit, FontImage.MATERIAL_PLAY_ARROW);
+        if (!Card.FOR_IOS) this.bSit.setUIID("sit");
+        bSit.addActionListener((e) -> {
+            if (currentTableId.startsWith("L")) {
+                main.formView.inputPassword(Player.this);
+                return;
+            }
+            mySocket.addRequest(Request.create(Request.SIT, "tid", currentTableId.substring(1)).setReSend(true));
+        });
+
         this.lbGeneral = new Label("Game ");
         this.lbGeneral.getStyle().setFont(Hand.fontGeneral);
         this.lbGeneral.getStyle().setFgColor(main.currentColor.generalColor);
@@ -617,6 +637,7 @@ public class Player {
         this.lbPass = new Label(" ");
         this.lbPass.getStyle().setFont(Hand.fontGeneral);
         this.lbPass.getStyle().setFgColor(TIMER_COLOR);
+        FontImage.setMaterialIcon(lbPass, FontImage.MATERIAL_LOCK_OPEN);
 
         String gmInfo = "gmInfo";
         String ptInfo = "ptInfo";
@@ -647,7 +668,7 @@ public class Player {
 //        this.widget.add(bExit).add(this.lbGeneral).add(this.gameInfo).add(this.partnerInfo).add(this.pointsInfo);
         this.widget.add(bExit).add(this.lbGeneral).add(this.lbPass).add(this.trumpInfo).add(this.contractInfo)
                 .add(this.partnerCardSeq).add(this.partnerCard).add(this.pointsInfo);
-        this.widget.add(bRobot);
+        this.widget.add(bRobot).add(bSit);
         this.widget.revalidate();
 
         table.add(hand);
@@ -658,6 +679,7 @@ public class Player {
         LayeredLayout ll = (LayeredLayout) table.getLayout();
         ll.setInsets(bExit, "0 0 auto auto");   //top right bottom left
         ll.setInsets(bRobot, "auto 0 0 auto");   //top right bottom left
+        ll.setInsets(bSit, "auto 0 0 auto");   //top right bottom left
         ll.setInsets(this.lbGeneral, "-" + Hand.deltaGeneral + " auto auto 0")
                 .setInsets(this.lbPass, "-" + Hand.deltaGeneral + " auto auto 0")
                 .setInsets(this.partnerCardSeq, "auto 0 " + Hand.deltaGeneral + " auto")
@@ -686,6 +708,7 @@ public class Player {
     public void refreshLang() {
         this.bExit.setText(Dict.get(main.lang, "Exit"));
         this.bRobot.setText(Dict.get(main.lang, "Robot"));
+        this.bSit.setText(Dict.get(main.lang, "Join"));
     }
 
     private void cancelTimers() {
@@ -888,44 +911,41 @@ public class Player {
     private void showInfo(Map<String, Object> data) {
 //        final Form curForm = main.getCurForm();
         final Player thisPlayer = this;
-        Display.getInstance().callSerially(new Runnable() {
-            public void run() {
-                final Form curForm = getCurrentForm();
-                final String info = trimmedString(data.get("info"));
-                Rectangle safeRect = curForm.getSafeArea();
-                if (!info.isEmpty() && !info.equals(".")) {
-                    int fontHeight = Hand.fontGeneral.getHeight();
-                    int x = main.isMainForm ? fontHeight : (hand.displayWidth(6) + fontHeight);
-                    curForm.setGlassPane((g, rect) -> {
-                        g.translate(safeRect.getX(), safeRect.getY());
+        final Form curForm = getCurrentForm();
+        final String info = trimmedString(data.get("info"));
+        Rectangle safeRect = curForm.getSafeArea();
+        if (!info.isEmpty() && !info.equals(".")) {
+            int fontHeight = Hand.fontGeneral.getHeight();
+            int x = main.isMainForm ? fontHeight : (hand.displayWidth(6) + fontHeight);
+            curForm.setGlassPane((g, rect) -> {
+                g.translate(safeRect.getX(), safeRect.getY());
 
-                        int idx = -1;
-                        int y = main.isMainForm ? fontHeight * 2 : thisPlayer.infoLst.get(2).posY();
-                        drawBackShade(g, x, y, info, Hand.fontGeneral);
+                int idx = -1;
+                int y = main.isMainForm ? fontHeight * 2 : thisPlayer.infoLst.get(2).posY();
+                drawBackShade(g, x, y, info, Hand.fontGeneral);
 
-                        int y0 = y;
-                        String str = info;
-                        g.setColor(INFO_COLOR);
-                        g.setFont(Hand.fontGeneral);
-                        while (!str.isEmpty()) {
-                            idx = str.indexOf("\n");
-                            if (idx >= 0) {
-                                g.drawString(str.substring(0, idx), x, y);
-                            } else {
-                                g.drawString(str, x, y);
-                                break;
-                            }
-                            y += fontHeight;
-                            str = str.substring(idx + 1);
-                        }
-
-                        g.translate(-g.getTranslateX(), -g.getTranslateY());
-                    });
-                } else {
-                    curForm.setGlassPane(null);
+                int y0 = y;
+                String str = info;
+                g.setColor(INFO_COLOR);
+                g.setFont(Hand.fontGeneral);
+                while (!str.isEmpty()) {
+                    idx = str.indexOf("\n");
+                    if (idx >= 0) {
+                        g.drawString(str.substring(0, idx), x, y);
+                    } else {
+                        g.drawString(str, x, y);
+                        break;
+                    }
+                    y += fontHeight;
+                    str = str.substring(idx + 1);
                 }
-            }
-        });
+
+                g.translate(-g.getTranslateX(), -g.getTranslateY());
+            });
+        } else {
+            curForm.setGlassPane(null);
+        }
+
     }
 
     void setLeadingIcon(PlayerInfo pp) {
@@ -1109,60 +1129,62 @@ public class Player {
                     Map<String, Object> data = parser.parseJSON(new StringReader(subMsg));
                     final String action = trimmedString(data.get("action"));
 
-                    switch (action) {
-                        case "list":
-                            // list current tables
-                            main.formView.refreshTableList(data);
-                            break;
+                    Display.getInstance().callSeriallyAndWait(() -> {
+                        switch (action) {
+                            case "list":
+                                // list current tables
+                                main.formView.refreshTableList(data);
+                                break;
 
-                        case "init":
-                            main.switchScene("table");
-                            refreshTable(data);
-                            break;
-                        case "bid":
-                            if (tableOn) displayBid(data);
-                            break;
-                        case "set_trump":
-                            if (tableOn) setTrump(data);
-                            break;
-                        case "add_remains":
-                            if (tableOn) addRemains(data);
-                            break;
-                        case "bury":
-                            if (tableOn) buryCards(data);
-                            break;
-                        case "partner":
-                            if (tableOn) definePartner(data);
-                            break;
-                        case "play":
-                            if (tableOn) playCards(data);
-                            break;
-                        case "gameover":
-                            if (tableOn) {
-                                hand.clearCards();
-                                startNotifyTimer(data);
-                                cancelTimers();
-                                gameSummary(data);
-                            }
-                            break;
-                        case "info":
-                            showInfo(data);
-                            break;
-                        case "in":
-                            if (tableOn) playerIn(data);
-                            break;
-                        case "out":
-                            if (tableOn) playerOut(data);
-                            break;
-                        case "robot":
-                            bRobot.setSelected(true);
-                            robotOn = true;
-                            break;
-                        case "opt":
-                            tableOn = false;
-                            main.showPlayOption();
-                            break;
-                    }
+                            case "init":
+                                main.switchScene("table");
+                                refreshTable(data);
+                                break;
+                            case "bid":
+                                if (tableOn) displayBid(data);
+                                break;
+                            case "set_trump":
+                                if (tableOn) setTrump(data);
+                                break;
+                            case "add_remains":
+                                if (tableOn) addRemains(data);
+                                break;
+                            case "bury":
+                                if (tableOn) buryCards(data);
+                                break;
+                            case "partner":
+                                if (tableOn) definePartner(data);
+                                break;
+                            case "play":
+                                if (tableOn) playCards(data);
+                                break;
+                            case "gameover":
+                                if (tableOn) {
+                                    hand.clearCards();
+                                    startNotifyTimer(data);
+                                    cancelTimers();
+                                    gameSummary(data);
+                                }
+                                break;
+                            case "info":
+                                showInfo(data);
+                                break;
+                            case "in":
+                                if (tableOn) playerIn(data);
+                                break;
+                            case "out":
+                                if (tableOn) playerOut(data);
+                                break;
+                            case "robot":
+                                bRobot.setSelected(true);
+                                robotOn = true;
+                                break;
+                            case "opt":
+                                tableOn = false;
+                                main.showPlayOption();
+                                break;
+                        }
+                    });
                 }
             } catch (Exception err) {
                 // to prevent break the connection by accident
@@ -1255,12 +1277,17 @@ public class Player {
                         Thread.sleep(500);
                     }
                 }
-                os.close();
-                is.close();
             } catch (Exception err) {
                 Log.p("exception conncetion!");
                 err.printStackTrace();
 //                Dialog.show("Exception", "Error: " + err.getMessage(), "OK", "");
+            }
+
+            try {
+                os.close();
+                is.close();
+            } catch (Exception err) {
+
             }
 
             if (!closeRequested) {
@@ -1667,8 +1694,7 @@ public class Player {
 
             this.points.setText("");
             this.timer.setText(timeout + "");
-            Display.getInstance().callSerially(()
-                    -> FontImage.setMaterialIcon(timer, FontImage.MATERIAL_TIMER));
+            FontImage.setMaterialIcon(timer, FontImage.MATERIAL_TIMER);
             this.timer.setVisible(true);
             countDownTimer = new UITimer(new CountDown(this, timeout));
             countDownTimer.schedule(950, true, main.formTable);   // slightly less to 1 sec

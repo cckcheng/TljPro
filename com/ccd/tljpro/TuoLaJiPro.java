@@ -419,6 +419,7 @@ public class TuoLaJiPro {
         this.formTable.getStyle().setBgColor(BACKGROUND_COLOR);
         this.formTable.getToolbar().hideToolbar();
         this.formTable.add(BorderLayout.CENTER, this.table);
+        this.formTable.revalidate();
 
         this.formView = new TableView(this);
 //        this.formView.getStyle().setBgColor(BACKGROUND_COLOR);
@@ -527,45 +528,39 @@ public class TuoLaJiPro {
     public void switchScene(final String scene) {
         isMainForm = false;
         final TuoLaJiPro app = this;
-        Display.getInstance().callSerially(new Runnable() {
-            public void run() {
-                switch (scene) {
-                    case "entry":
-                        app.formMain.showBack();
-                        isMainForm = true;
-                        break;
-                    case "view":
-                        app.formView.show();
-                        app.formView.pullTableList();
-                        break;
+        switch (scene) {
+            case "entry":
+                app.formMain.showBack();
+                isMainForm = true;
+                break;
+            case "view":
+                app.formView.show();
+                app.formView.pullTableList();
+                break;
 
-                    case "table":
-                        app.formTable.show();
-                        app.formTable.repaint();
-                        break;
-                    case "help":
-                        app.formHelp.show();
-                        break;
-                    case "tutor":
-                        if (app.formTutor == null) {
-                            app.formTutor = new Form("Tutor", new BorderLayout());
-                            app.formTutor.setBackCommand("", null, (e) -> {
-                                app.switchScene("entry");
-                            });
-                            app.formTutor.getStyle().setBgColor(BACKGROUND_COLOR);
-                            app.formTutor.getToolbar().hideToolbar();
-                            app.formTutor.addComponent(BorderLayout.CENTER, app.tutor);
-                        }
-                        app.tutor.showTopic();
-                        app.formTutor.show();
-                        break;
-                    default:
-                        break;
+            case "table":
+                app.formTable.show();
+                app.formTable.repaint();
+                break;
+            case "help":
+                app.formHelp.show();
+                break;
+            case "tutor":
+                if (app.formTutor == null) {
+                    app.formTutor = new Form("Tutor", new BorderLayout());
+                    app.formTutor.setBackCommand("", null, (e) -> {
+                        app.switchScene("entry");
+                    });
+                    app.formTutor.getStyle().setBgColor(BACKGROUND_COLOR);
+                    app.formTutor.getToolbar().hideToolbar();
+                    app.formTutor.addComponent(BorderLayout.CENTER, app.tutor);
                 }
-            }
-        });
-//        this.formMain.setGlassPane(null);
-//        this.formMain.repaint();
+                app.tutor.showTopic();
+                app.formTutor.show();
+                break;
+            default:
+                break;
+        }
     }
 
     public void switchSceneDeprecated(final String scene) {

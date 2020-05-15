@@ -68,6 +68,8 @@ public class Dict {
                     case "start over":
                         return "重新开始";
 
+                    case "join":
+                        return "加入";
                     case "robot":
                         return "托管";
                     case "bury":

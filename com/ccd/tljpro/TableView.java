@@ -170,7 +170,7 @@ public class TableView extends Form {
         dlg.add(new Button(Command.create(Dict.get(main.lang, "OK"), null, (ev) -> {
             String pass = tf.getText().trim();
             if (pass.isEmpty()) return;
-            p.sendRequest(Request.create(Request.SIT, "pass", pass));
+            p.sendRequest(Request.create(Request.SIT, "pass", pass).setReSend(true));
         })));
         dlg.setBackCommand("", null, (ev) -> {
             dlg.dispose();
@@ -208,12 +208,9 @@ public class TableView extends Form {
                 if (this.categoryIndex.containsKey(defaultCategory)) {
                     final Tabs tabs = this.listTabs;
                     final int cIdx = this.categoryIndex.get(defaultCategory);
-                    Display.getInstance().callSerially(new Runnable() {
-                        public void run() {
-                            tabs.setSelectedIndex(cIdx);
-                            tabs.revalidate();
-                        }
-                    });
+
+                    tabs.setSelectedIndex(cIdx);
+                    tabs.revalidate();
                 }
             }
         }
@@ -283,6 +280,7 @@ public class TableView extends Form {
             Button btn = new Button(Player.trimmedString(data.get(tableId)));
             btn.addActionListener((ev) -> {
                 player.sendRequest(Request.create(Request.WATCH, "tid", tableId.substring(1)).setReSend(true));
+                Storage.getInstance().writeObject("category", category);
             });
             if (tableId.startsWith("L")) {
                 btn.setMaterialIcon(FontImage.MATERIAL_LOCK);
