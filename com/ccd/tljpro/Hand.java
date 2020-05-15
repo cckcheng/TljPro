@@ -471,7 +471,7 @@ public class Hand extends Component {
     }
 
     synchronized public void sortCards(char trumpSuite, int gameRank, boolean doPreSort) {
-        Log.p("sortCards");
+        if (TuoLaJiPro.DEBUG) Log.p("sortCards");
         this.upperList.clear();
         this.lowerList.clear();
         if (doPreSort) {
@@ -783,7 +783,7 @@ public class Hand extends Component {
         if (!this.isReady) {
             return;
         }
-//        Log.p(this.upperList.size() + ":" + this.lowerList.size());
+//        if(TuoLaJiPro.DEBUG) Log.p(this.upperList.size() + ":" + this.lowerList.size());
 //        g.clearRect(0, 0, getWidth(), getY() + getHeight());
         init();
 

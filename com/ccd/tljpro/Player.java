@@ -369,6 +369,9 @@ public class Player {
         }
         this.leadingPlayer = null;
         this.currentPass = "";
+
+        this.robotOn = false;
+        this.bRobot.setSelected(false);
     }
 
     public int numCardsLeft = 0;
@@ -538,9 +541,7 @@ public class Player {
 //        hand.repaint();
 //        this.widget.revalidate();
         main.validateTable();
-        if (Card.DEBUG_MODE) {
-            Log.p("refresh table: done");
-        }
+        if (Card.DEBUG_MODE) Log.p("refresh table: done");
     }
 
     private void startNotifyTimer(Map<String, Object> data) {
@@ -558,14 +559,21 @@ public class Player {
         if (holdMinutes > 0) {
             txt = holdMinutes + Dict.get(main.lang, " minutes");
         }
+
+        final Player p = this;
         return new Command(txt) {
             @Override
             public void actionPerformed(ActionEvent ev) {
-                if (mySocket != null) {
-                    mySocket.clearRequest();
+                p.tableOn = false;
+                p.cancelTimers();
+                if (p.mySocket != null) {
+                    p.mySocket.clearRequest();
                     Request req = new Request(Request.EXIT, false);
-                    mySocket.addRequest(req.append("hold", holdMinutes));
+                    p.mySocket.addRequest(req.append("hold", holdMinutes));
                 }
+                Display.getInstance().callSerially(() -> {
+                    p.main.switchScene("view");
+                });
             }
         };
     }
@@ -591,17 +599,25 @@ public class Player {
         FontImage.setMaterialIcon(bExit, FontImage.MATERIAL_EXIT_TO_APP);
         if (!Card.FOR_IOS) this.bExit.setUIID("myExit");
         bExit.addActionListener((e) -> {
-            tableOn = false;
-            robotOn = false;
-            bRobot.setSelected(false);
-            cancelTimers();
             if (!watching && !tableEnded) {
-                Dialog.show("", Dict.get(main.lang, "Hold Seat") + "?", holdCommand(15), holdCommand(5), holdCommand(0));
+                boolean orgRobotOn = robotOn;
+                if (!orgRobotOn) mySocket.addRequest(Request.create(Request.ROBOT, "on", 1));
+
+                Dialog dlg = new Dialog(Dict.get(main.lang, "Hold Seat") + "?");
+                dlg.add(new Button(holdCommand(15)));
+                dlg.add(new Button(holdCommand(5)));
+                dlg.add(new Button(holdCommand(0)));
+                dlg.setBackCommand("", null, (ev) -> {
+                    if (!orgRobotOn) mySocket.addRequest(Request.create(Request.ROBOT, "on", 0));
+                    dlg.dispose();
+                });
+                dlg.show();
             } else {
                 mySocket.addRequest(new Request(Request.EXIT, false));
+                tableOn = false;
+                cancelTimers();
+                main.switchScene("view");
             }
-            main.enableButtons();
-            main.switchScene("view");
         });
 
         this.bRobot = new CheckBox(Dict.get(main.lang, "Robot"));
@@ -619,9 +635,8 @@ public class Player {
         });
 
         this.bSit = new Button(Dict.get(main.lang, "Join"));
-        this.bSit.getAllStyles().setFont(Hand.fontGeneral);
-        FontImage.setMaterialIcon(bSit, FontImage.MATERIAL_PLAY_ARROW);
-        if (!Card.FOR_IOS) this.bSit.setUIID("sit");
+        this.bSit.getAllStyles().setFont(Hand.fontRank);
+        this.bSit.getAllStyles().setBgImage(main.back);
         bSit.addActionListener((e) -> {
             if (currentTableId.startsWith("L")) {
                 main.formView.inputPassword(Player.this);
@@ -1259,7 +1274,7 @@ public class Player {
                         if (count > serverWaitCycle) {
                             if (checkConnection) {
                                 this.lastRequest = this.currentRequest.isReSend() ? this.currentRequest : null;
-                                Log.p("lost conncetion!");
+                                if (TuoLaJiPro.DEBUG) Log.p("lost conncetion!");
                                 break;
                             } else if (tableOn) {
 //                                if (robotOn || tableEnded || watching) {
@@ -1278,7 +1293,7 @@ public class Player {
                     }
                 }
             } catch (Exception err) {
-                Log.p("exception conncetion!");
+                if (TuoLaJiPro.DEBUG) Log.p("exception conncetion!");
                 err.printStackTrace();
 //                Dialog.show("Exception", "Error: " + err.getMessage(), "OK", "");
             }
@@ -1292,7 +1307,7 @@ public class Player {
 
             if (!closeRequested) {
                 // not expected, connect again
-                Log.p("re-connect");
+               if (TuoLaJiPro.DEBUG) Log.p("re-connect");
                 mySocket = null;
                 connectServer(this.lastRequest);
             }
@@ -1922,8 +1937,6 @@ public class Player {
                 engLabel.setText(info);
             }
             this.revalidate();
-//            widget.revalidate();
-            Log.p(info);
         }
 
         void showHelp(int category) {
@@ -1982,7 +1995,7 @@ public class Player {
 
         @Override
         protected void drawImageImpl(Graphics g, Object nativeGraphics, int x, int y, int w, int h) {
-//            Log.p("x,y,w,h: " + x + "," + y + "," + w + "," + h);
+//             if(TuoLaJiPro.DEBUG)Log.p("x,y,w,h: " + x + "," + y + "," + w + "," + h);
             g.setColor(this.bgColor);
             g.fillRoundRect(x, y, w, h, 60, 60);
         }

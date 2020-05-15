@@ -117,8 +117,8 @@ public class TuoLaJiPro {
         if (this.btnPlay != null) {
             this.btnPlay.setEnabled(true);
             this.btnPlay.setText(Dict.get(lang, "Play"));
-            this.formMain.revalidate();
-            Log.p("Enable play button");
+//            this.formMain.revalidate();
+            if (TuoLaJiPro.DEBUG) Log.p("Enable play button");
         }
         if (this.btnHelp != null) {
             this.btnHelp.setEnabled(true);
