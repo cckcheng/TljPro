@@ -97,6 +97,7 @@ public class TuoLaJiPro {
     public Form formTable = null;
     public Form formHelp = null;
     public Form formTutor = null;
+    public Form formSetting = null;
 
     private Label lbTitle;
     private Button btnTutor = null;
@@ -285,14 +286,8 @@ public class TuoLaJiPro {
 
         this.entry = new Container(BoxLayout.yLast());
         this.entry.setSafeArea(true);
-        this.table = new Container(new LayeredLayout());
-        this.table.setSafeArea(true);
-        this.tutor = new Tutor(this);
-        this.player.createTable(this.table);
 
-//        mainForm.getToolbar().addCommandToLeftSideMenu("New Game", null, (e) -> {
-//            Log.p("Start New Game");
-//        });
+        this.setupTable();
 
         lbTitle = new Label(Dict.get(lang, title));
         lbTitle.getStyle().setFont(Hand.fontRank);
@@ -336,54 +331,12 @@ public class TuoLaJiPro {
             this.switchScene("tutor");
         });
 
-        String[] bkColors = new String[AvailableColors.keySet().size()];
-        int idx = 0;
-        for (String k : AvailableColors.keySet()) {
-            CustomColor c = AvailableColors.get(k);
-            this.colorIdx.put(idx, k);
-            bkColors[idx++] = c.getName(lang);
-        }
         btnSetting = new Button(Dict.get(lang, "Settings"));
         btnSetting.getStyle().setFgColor(menuColor);
         btnSetting.getAllStyles().setFont(Hand.fontRank);
         FontImage.setMaterialIcon(btnSetting, FontImage.MATERIAL_SETTINGS);
         btnSetting.addActionListener((e) -> {
-            disp.playBuiltinSound(Display.SOUND_TYPE_WARNING);
-            TextField pName = new TextField("", Dict.get(lang, "Your Name"), 16, TextArea.ANY);
-            pName.setMaxSize(16);
-            Object sgObj = Storage.getInstance().readObject("playerName");
-            if (sgObj != null) {
-                pName.setText(sgObj.toString());
-            }
-//            Dialog settingDlg = new Dialog(Dict.get(lang, "Settings"), new BorderLayout());
-            TableLayout tl = new TableLayout(2, 2);
-            Container props = new Container(tl);
-//            settingDlg.add(BorderLayout.CENTER, TableLayout.encloseIn(2, true,
-//                    new Label(Dict.get(lang, "Player Name")), pName,
-//                    new Label(Dict.get(lang, "Version")), new Label(this.version)
-//            ));
-
-            Picker strPicker = new Picker();
-            strPicker.setType(Display.PICKER_TYPE_STRINGS);
-            strPicker.setStrings(bkColors);
-            strPicker.setSelectedString(this.currentColor.getName(lang));
-
-            props.add(tl.createConstraint().widthPercentage(30).horizontalAlign(Component.RIGHT), new Label(Dict.get(lang, "Player Name"))).add(pName)
-                    .add(tl.createConstraint().widthPercentage(30).horizontalAlign(Component.RIGHT), new Label(Dict.get(lang, "Background"))).add(strPicker)
-                    .add(tl.createConstraint().widthPercentage(30).horizontalAlign(Component.RIGHT), new Label(Dict.get(lang, "Version"))).add(new Label(this.version));
-            Command okCmd = new Command(Dict.get(lang, "OK")) {
-                @Override
-                public void actionPerformed(ActionEvent ev) {
-                    String playerName = savePlayerName(pName);
-                    if (playerName == null) return;
-                    saveBackground(strPicker);
-                }
-            };
-//            settingDlg.add(BorderLayout.CENTER, props);
-//            settingDlg.add(BorderLayout.SOUTH, new Button(okCmd));
-//            settingDlg.setDisposeWhenPointerOutOfBounds(true);
-//            settingDlg.show(0, 0, 200, 200);
-            Dialog.show(Dict.get(lang, "Settings"), props, okCmd);
+            showSettings();
         });
 
         RadioButton rbEn = new RadioButton("English");
@@ -397,6 +350,8 @@ public class TuoLaJiPro {
             }
             Storage.getInstance().writeObject("lang", this.lang);
             refreshButtons();
+            this.formSetting = null;
+            this.player.sendRequest(this.player.initRequest());
         });
         if (lang.equalsIgnoreCase("zh")) {
             rbZh.setSelected(true);
@@ -408,7 +363,6 @@ public class TuoLaJiPro {
         entry.add(this.btnPlay);
         entry.add(this.btnHelp)
                 .add(this.btnSetting);
-//                .add(this.btnExit);
         entry.add(BoxLayout.encloseX(rbEn, rbZh));
 
         mainForm.add(BorderLayout.CENTER, entry);
@@ -428,8 +382,14 @@ public class TuoLaJiPro {
         this.player.connectServer(Player.OPTION_CHECK);
     }
 
+    private void setupTable() {
+        this.table = new Container(new LayeredLayout());
+        this.table.setSafeArea(true);
+        this.player.createTable(this.table);
+    }
+
     private void inputPlayName(String name) {
-        final TextField pName = new TextField(name, Dict.get(lang, "Your Name"), 16, TextArea.ANY);
+        final TextField pName = new TextField(name, Dict.get(lang, "Your Name"), 8, TextArea.ANY);
         pName.setMaxSize(16);
         Command okCmd = new Command(Dict.get(lang, "OK")) {
             @Override
@@ -440,7 +400,9 @@ public class TuoLaJiPro {
                 }
             }
         };
-        Dialog.show(Dict.get(lang, "Player Name"), pName, okCmd);
+        Dialog dlg = new Dialog(Dict.get(lang, "Player Name"));
+        dlg.add(pName).add(new Button(okCmd));
+        dlg.show();
     }
 
     void showPlayOption() {
@@ -515,10 +477,18 @@ public class TuoLaJiPro {
         }
         this.currentColorKey = this.colorIdx.get(idx);
         Storage.getInstance().writeObject("myColor", this.currentColorKey);
+//        restartApp();
         this.currentColor = AvailableColors.get(this.currentColorKey);
         BACKGROUND_COLOR = this.currentColor.backColor;
         this.formMain.getStyle().setBgColor(BACKGROUND_COLOR);
         this.formTable.getStyle().setBgColor(BACKGROUND_COLOR);
+        if (this.formTutor != null) this.formTutor.getStyle().setBgColor(BACKGROUND_COLOR);
+        refreshButtons();
+    }
+
+    private void restartApp() {
+//        if (this.player != null) this.player.disconnect();
+        this.formSetting = null;
         this.start();
     }
 
@@ -553,6 +523,7 @@ public class TuoLaJiPro {
                     });
                     app.formTutor.getStyle().setBgColor(BACKGROUND_COLOR);
                     app.formTutor.getToolbar().hideToolbar();
+                    app.tutor = new Tutor(app);
                     app.formTutor.addComponent(BorderLayout.CENTER, app.tutor);
                 }
                 app.tutor.showTopic();
@@ -563,40 +534,51 @@ public class TuoLaJiPro {
         }
     }
 
-    public void switchSceneDeprecated(final String scene) {
-//        this.formMain.removeAll();
-        switch (scene) {
-            case "entry":
-                if (this.currentComp != this.entry) {
-                    this.formMain.replaceAndWait(currentComp, this.entry, null);
-//                this.formMain.add(BorderLayout.CENTER, this.entry);
-                    this.currentComp = this.entry;
+    private void showSettings() {
+        if (this.formSetting == null) {
+            this.formSetting = new Form(Dict.get(lang, "Settings"));
+            Toolbar tbar = this.formSetting.getToolbar();
+            tbar.setBackCommand("", (e) -> {
+                switchScene("entry");
+            });
+            TextField pName = new TextField("", Dict.get(lang, "Your Name"), 16, TextArea.ANY);
+            pName.setMaxSize(16);
+            Object sgObj = Storage.getInstance().readObject("playerName");
+            if (sgObj != null) {
+                pName.setText(sgObj.toString());
+            }
+            TableLayout tl = new TableLayout(2, 2);
+            this.formSetting.setLayout(tl);
+
+            String[] bkColors = new String[AvailableColors.keySet().size()];
+            int idx = 0;
+            for (String k : AvailableColors.keySet()) {
+                CustomColor c = AvailableColors.get(k);
+                this.colorIdx.put(idx, k);
+                bkColors[idx++] = c.getName(lang);
+            }
+
+            Picker strPicker = new Picker();
+            strPicker.setType(Display.PICKER_TYPE_STRINGS);
+            strPicker.setStrings(bkColors);
+            strPicker.setSelectedString(this.currentColor.getName(lang));
+
+            this.formSetting.add(tl.createConstraint().widthPercentage(30).horizontalAlign(Component.RIGHT), new Label(Dict.get(lang, "Player Name"))).add(pName)
+                    .add(tl.createConstraint().widthPercentage(30).horizontalAlign(Component.RIGHT), new Label(Dict.get(lang, "Background"))).add(strPicker)
+                    .add(tl.createConstraint().widthPercentage(30).horizontalAlign(Component.RIGHT), new Label(Dict.get(lang, "Version"))).add(new Label(this.version));
+            Command okCmd = new Command(Dict.get(lang, "Save")) {
+                @Override
+                public void actionPerformed(ActionEvent ev) {
+                    String playerName = savePlayerName(pName);
+                    if (playerName == null) return;
+                    saveBackground(strPicker);
+                    switchScene("entry");
                 }
-                break;
-            case "table":
-                if (this.currentComp != this.table) {
-                    this.formMain.replaceAndWait(currentComp, this.table, null);
-//                this.formMain.add(BorderLayout.CENTER, this.table);
-                    this.currentComp = this.table;
-                }
-                break;
-            case "help":
-                if (this.currentComp != this.help) {
-                    this.formMain.replaceAndWait(currentComp, this.help, null);
-                    this.currentComp = this.help;
-                }
-                break;
-            case "tutor":
-                if (this.currentComp != this.tutor) {
-                    this.formMain.replaceAndWait(currentComp, this.tutor, null);
-                    this.currentComp = this.tutor;
-                    this.tutor.showTopic();
-                }
-                break;
+            };
+            tbar.addCommandToRightBar(okCmd);
         }
 
-        this.formMain.setGlassPane(null);
-        this.formMain.repaint();
+        this.formSetting.show();
     }
 
     private String getPlayerName() {
@@ -633,49 +615,6 @@ public class TuoLaJiPro {
         }
         return playerId;
     }
-    /*
-    private String getHelp1() {
-        try {
-            ConnectionRequest r = new ConnectionRequest();
-            r.setPost(false);
-            r.setUrl(Card.HELP_URL);
-            NetworkManager.getInstance().addToQueueAndWait(r);
-            Map<String, Object> result = new JSONParser().parseJSON(new InputStreamReader(new ByteArrayInputStream(r.getResponseData()), "UTF-8"));
-            Map<String, Object> response = (Map<String, Object>) result.get("response");
-            return response.get("listings").toString();
-        } catch (Exception err) {
-            Log.e(err);
-            return null;
-        }
-    }
-
-    private String getHelp2() {
-        try {
-            URL u = new URL(Card.HELP_URL);
-            URL.HttpURLConnection conn = (URL.HttpURLConnection) u.openConnection();
-            conn.connect();
-            InputStreamReader in = new InputStreamReader(conn.getInputStream());
-
-            StringBuilder s = new StringBuilder();
-            char[] buf = new char[2048];
-            int num = 0;
-            while ((num = in.read(buf)) != -1) {
-                s.append(buf, 0, num);
-            }
-            return s.toString();
-        } catch (Exception err) {
-            Log.e(err);
-            return "Not Available";
-        }
-    }
-*/
-    private String getHelp() {
-        String s = "TBA\n";
-        for (int i = 0; i < 10; i++) {
-            s += "Test " + i + "\n";
-        }
-        return s;
-    }
 
     public void stop() {
         current = getCurrentForm();
@@ -685,10 +624,7 @@ public class TuoLaJiPro {
         }
 
         if (this.isMainForm || this.player == null || this.player.tableEnded || !this.player.tableOn) {
-            if (this.player != null) {
-                player.disconnect();
-            }
-            Display.getInstance().exitApplication();
+            destroy();
         }
     }
 

@@ -136,7 +136,8 @@ public class Player {
     }
 
     public Request initRequest() {
-        return initRequest(Request.JOIN);
+        if (this.tableOn) return initRequest(Request.JOIN);
+        return initRequest(Request.LIST);
     }
 
     public Request initRequest(String action) {
@@ -321,7 +322,7 @@ public class Player {
 
     public final List<PlayerInfo> infoLst = new ArrayList<>();
     public Map<Integer, PlayerInfo> playerMap = new HashMap<>();
-    public boolean tableOn = false;
+    public boolean tableOn = true;
     private boolean robotOn = false;
     private boolean watching = false;
     public boolean tableEnded = false;
@@ -724,6 +725,9 @@ public class Player {
         this.bExit.setText(Dict.get(main.lang, "Exit"));
         this.bRobot.setText(Dict.get(main.lang, "Robot"));
         this.bSit.setText(Dict.get(main.lang, "Join"));
+
+        this.lbGeneral.getStyle().setFgColor(main.currentColor.generalColor);
+        this.pointsInfo.getStyle().setFgColor(main.currentColor.pointColor);
     }
 
     private void cancelTimers() {
@@ -1219,7 +1223,6 @@ public class Player {
                 }
             }
             //mySocket = null;    // reset connection
-//            Dialog.show("Error", message, "OK", "");
             if (tableOn) {
                 cancelTimers();
                 try {
@@ -1295,7 +1298,6 @@ public class Player {
             } catch (Exception err) {
                 if (TuoLaJiPro.DEBUG) Log.p("exception conncetion!");
                 err.printStackTrace();
-//                Dialog.show("Exception", "Error: " + err.getMessage(), "OK", "");
             }
 
             try {
@@ -1538,6 +1540,7 @@ public class Player {
 
         synchronized void reset() {
             cancelTimer();
+            mainInfo.getAllStyles().setFgColor(main.currentColor.generalColor);
             contractor.getAllStyles().setFgColor(main.currentColor.pointColor);
             contractor.setText("");
             points.setText("");
@@ -1913,6 +1916,8 @@ public class Player {
         }
 
         void setLanguage(String lang) {
+            chnLabel.getAllStyles().setFgColor(main.currentColor.generalColor);
+            engLabel.getAllStyles().setFgColor(main.currentColor.generalColor);
             if (curLang.equalsIgnoreCase(lang)) {
                 return;
             }

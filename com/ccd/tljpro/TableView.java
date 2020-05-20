@@ -14,6 +14,7 @@ import com.codename1.ui.Display;
 import com.codename1.ui.FontImage;
 import com.codename1.ui.RadioButton;
 import com.codename1.ui.Tabs;
+import com.codename1.ui.TextArea;
 import com.codename1.ui.TextField;
 import com.codename1.ui.Toolbar;
 import com.codename1.ui.events.ActionEvent;
@@ -69,6 +70,7 @@ public class TableView extends Form {
             if (tm > MIN_REFRESH_TIME + lastRefreshTime) {
                 player.sendRequest(new Request(Request.LIST, true));
                 lastRefreshTime = tm;
+                this.setGlassPane(null);
             }
         });
         cmdPrivateTable = Command.createMaterial(Dict.get(main.lang, Dict.PRIVATE_TABLE), FontImage.MATERIAL_LOCK, (e) -> {
@@ -84,7 +86,7 @@ public class TableView extends Form {
             RadioButton rb1 = new RadioButton("2->A");
             RadioButton rb2 = new RadioButton("8->A");
             RadioButton rb3 = new RadioButton("10->A");
-            RadioButton rb4 = new RadioButton("5 10 K A");
+            RadioButton rb4 = new RadioButton("5 10 K");
             new ButtonGroup(rb1, rb2, rb3, rb4);
             rb1.setSelected(true);
             props.add(BoxLayout.encloseX(rb1, rb2, rb3, rb4));
@@ -175,6 +177,7 @@ public class TableView extends Form {
         dlg.setBackCommand("", null, (ev) -> {
             dlg.dispose();
         });
+        Display.getInstance().editString(tf, tf.getMaxSize(), TextArea.NUMERIC, "");
         dlg.show();
     }
 
@@ -182,6 +185,12 @@ public class TableView extends Form {
         // only when the tabs is empty
         if (this.listTabs.getTabCount() < 1) {
             player.sendRequest(new Request(Request.LIST, true));
+        }
+    }
+
+    public void resetTableList() {
+        for (int i = this.listTabs.getTabCount() - 1; i >= 0; i--) {
+            this.listTabs.removeTabAt(i);
         }
     }
 
