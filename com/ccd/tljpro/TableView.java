@@ -177,7 +177,7 @@ public class TableView extends Form {
         dlg.setBackCommand("", null, (ev) -> {
             dlg.dispose();
         });
-        Display.getInstance().editString(tf, tf.getMaxSize(), TextArea.NUMERIC, "");
+//        Display.getInstance().editString(tf, tf.getMaxSize(), TextArea.NUMERIC, ""); // not work well
         dlg.show();
     }
 
@@ -186,12 +186,29 @@ public class TableView extends Form {
         if (this.listTabs.getTabCount() < 1) {
             player.sendRequest(new Request(Request.LIST, true));
         }
+        this.setGlassPane(null);
     }
 
     public void resetTableList() {
         for (int i = this.listTabs.getTabCount() - 1; i >= 0; i--) {
             this.listTabs.removeTabAt(i);
         }
+
+        Toolbar topTool = this.getToolbar();
+        topTool.removeCommand(cmdNewTable);
+        topTool.removeCommand(cmdQuickJoin);
+        topTool.removeCommand(cmdRefresh);
+        topTool.removeCommand(cmdPrivateTable);
+        this.cmdNewTable.setCommandName(Dict.get(main.lang, Dict.NEW_TABLE));
+        this.cmdQuickJoin.setCommandName(Dict.get(main.lang, Dict.QUICK_JOIN));
+        this.cmdRefresh.setCommandName(Dict.get(main.lang, "Refresh"));
+        this.cmdPrivateTable.setCommandName(Dict.get(main.lang, Dict.PRIVATE_TABLE));
+
+        topTool.addCommandToLeftBar(cmdQuickJoin);
+        topTool.addCommandToRightBar(cmdRefresh);
+        topTool.addCommandToRightBar(cmdPrivateTable);
+
+        this.getToolbar().revalidate();
     }
 
     public void refreshTableList(Map<String, Object> data) {

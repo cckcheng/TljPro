@@ -40,7 +40,7 @@ import java.util.Map;
  * of building native mobile applications using Java.
  */
 public class TuoLaJiPro {
-    static public final boolean DEBUG = true;
+    static public final boolean DEBUG = false;
 
     static public final int GREEN = 0x008000;
 //    static public final int DARK_GREEN = 0x0a300a;
@@ -351,7 +351,8 @@ public class TuoLaJiPro {
             Storage.getInstance().writeObject("lang", this.lang);
             refreshButtons();
             this.formSetting = null;
-            this.player.sendRequest(this.player.initRequest());
+            this.formView.resetTableList();
+            this.player.sendRequest(this.player.initRequest(Request.LIST));
         });
         if (lang.equalsIgnoreCase("zh")) {
             rbZh.setSelected(true);
@@ -402,6 +403,7 @@ public class TuoLaJiPro {
         };
         Dialog dlg = new Dialog(Dict.get(lang, "Player Name"));
         dlg.add(pName).add(new Button(okCmd));
+//        Display.getInstance().editString(pName, pName.getMaxSize(), TextArea.ANY, "");
         dlg.show();
     }
 
@@ -543,10 +545,7 @@ public class TuoLaJiPro {
             });
             TextField pName = new TextField("", Dict.get(lang, "Your Name"), 16, TextArea.ANY);
             pName.setMaxSize(16);
-            Object sgObj = Storage.getInstance().readObject("playerName");
-            if (sgObj != null) {
-                pName.setText(sgObj.toString());
-            }
+            pName.setText(this.myName);
             TableLayout tl = new TableLayout(2, 2);
             this.formSetting.setLayout(tl);
 
@@ -576,6 +575,7 @@ public class TuoLaJiPro {
                 }
             };
             tbar.addCommandToRightBar(okCmd);
+            Display.getInstance().editString(pName, pName.getMaxSize(), TextArea.ANY, this.myName);
         }
 
         this.formSetting.show();
