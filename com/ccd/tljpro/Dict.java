@@ -47,12 +47,16 @@ public class Dict {
                         return "刷新";
                     case "play":
                         return "开局";
+                    case "browse":
+                        return "浏览";
                     case "help":
                         return "帮助";
                     case "settings":
                         return "设置";
                     case "version":
                         return "版本";
+                    case "account":
+                        return "账户";
                     case "player name":
                         return "玩家";
                     case "your name":

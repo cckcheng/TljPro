@@ -12,6 +12,7 @@ import com.codename1.ui.Container;
 import com.codename1.ui.Dialog;
 import com.codename1.ui.Display;
 import com.codename1.ui.FontImage;
+import com.codename1.ui.Label;
 import com.codename1.ui.RadioButton;
 import com.codename1.ui.Tabs;
 import com.codename1.ui.TextArea;
@@ -165,10 +166,10 @@ public class TableView extends Form {
     }
 
     public void inputPassword(Player p) {
-        Dialog dlg = new Dialog(Dict.get(main.lang, "Password"));
+        Dialog dlg = new Dialog();
         TextField tf = new TextField(6);
         tf.setMaxSize(8);
-        dlg.add(tf);
+        dlg.add(Dict.get(main.lang, "Password")).add(tf);
         dlg.add(new Button(Command.create(Dict.get(main.lang, "OK"), null, (ev) -> {
             String pass = tf.getText().trim();
             if (pass.isEmpty()) return;
@@ -178,7 +179,11 @@ public class TableView extends Form {
             dlg.dispose();
         });
 //        Display.getInstance().editString(tf, tf.getMaxSize(), TextArea.NUMERIC, ""); // not work well
-        dlg.show();
+        dlg.setDialogPosition(BorderLayout.NORTH);
+        dlg.showModeless();
+        Display.getInstance().callSerially(() -> {
+            Display.getInstance().editString(tf, tf.getMaxSize(), TextArea.NUMERIC, "");
+        });
     }
 
     public void pullTableList() {

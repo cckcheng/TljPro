@@ -99,10 +99,13 @@ public class TuoLaJiPro {
     public Form formTutor = null;
     public Form formSetting = null;
 
-    private Label lbTitle;
+//    private Label lbTitle;
     private Button btnTutor = null;
     private Button btnPlay = null;
+    private Button btnBrowse = null;
+    private Button btnPrivateTable = null;
     private Button btnHelp = null;
+    private Button btnAccount = null;
 //    private Button btnExit = null;
     private Button btnSetting = null;
 
@@ -141,12 +144,16 @@ public class TuoLaJiPro {
     }
 
     public void refreshButtons() {
-        this.lbTitle.setText(Dict.get(lang, title));
+//        this.lbTitle.setText(Dict.get(lang, title));
+        this.formMain.setTitle(Dict.get(lang, title));
 
         if (this.btnPlay.isEnabled()) {
             this.btnPlay.setText(Dict.get(lang, "Play"));
         }
+        this.btnBrowse.setText(Dict.get(lang, "Browse"));
+        this.btnPrivateTable.setText(Dict.get(lang, Dict.PRIVATE_TABLE));
         this.btnHelp.setText(Dict.get(lang, "Help"));
+        this.btnAccount.setText(Dict.get(lang, "Account"));
 //        this.btnExit.setText(Dict.get(lang, "Exit"));
         this.btnTutor.setText(Dict.get(lang, "Tutorial"));
         this.btnSetting.setText(Dict.get(lang, "Settings"));
@@ -271,110 +278,8 @@ public class TuoLaJiPro {
             this.myName = playerName;
         }
 
-        Form mainForm = new Form(title, new BorderLayout());
-        mainForm.setSafeArea(true);
-        if (DEBUG) {
-            Rectangle safeRect = mainForm.getSafeArea();
-            System.out.print(" x=" + safeRect.getX());
-            System.out.print(" y=" + safeRect.getY());
-            System.out.print(" w=" + safeRect.getWidth());
-            System.out.print(" h=" + safeRect.getHeight());
-        }
-        this.formMain = mainForm;
-        mainForm.getStyle().setBgColor(BACKGROUND_COLOR);
-        mainForm.getToolbar().hideToolbar();
-
-        this.entry = new Container(BoxLayout.yLast());
-        this.entry.setSafeArea(true);
-
+        this.showMainForm();
         this.setupTable();
-
-        lbTitle = new Label(Dict.get(lang, title));
-        lbTitle.getStyle().setFont(Hand.fontRank);
-        lbTitle.getAllStyles().setFgColor(0);
-        entry.add(lbTitle);
-
-        int menuColor = Player.BUTTON_COLOR;
-        Button bPlay = new Button(Dict.get(lang, "Connecting") + "...");
-        bPlay.getStyle().setFgColor(menuColor);
-        bPlay.getAllStyles().setFont(Hand.fontRank);
-        bPlay.setEnabled(false);
-        this.btnPlay = bPlay;
-
-        FontImage.setMaterialIcon(bPlay, FontImage.MATERIAL_PEOPLE);
-        bPlay.addActionListener((e) -> {
-            if (!isLandscape()) {
-                return;
-            }
-            this.switchScene("view");
-        });
-
-        btnHelp = new Button(Dict.get(lang, "Help"));
-        btnHelp.getStyle().setFgColor(menuColor);
-        btnHelp.getAllStyles().setFont(Hand.fontRank);
-        FontImage.setMaterialIcon(btnHelp, FontImage.MATERIAL_HELP);
-        btnHelp.addActionListener((e) -> {
-            if (!isLandscape()) {
-                return;
-            }
-            showHelp(lang);
-        });
-
-        btnTutor = new Button(Dict.get(lang, "Tutorial"));
-        btnTutor.getStyle().setFgColor(menuColor);
-        btnTutor.getAllStyles().setFont(Hand.fontRank);
-        FontImage.setMaterialIcon(btnTutor, FontImage.MATERIAL_TOUCH_APP);
-        btnTutor.addActionListener((e) -> {
-            if (!isLandscape()) {
-                return;
-            }
-            this.switchScene("tutor");
-        });
-
-        btnSetting = new Button(Dict.get(lang, "Settings"));
-        btnSetting.getStyle().setFgColor(menuColor);
-        btnSetting.getAllStyles().setFont(Hand.fontRank);
-        FontImage.setMaterialIcon(btnSetting, FontImage.MATERIAL_SETTINGS);
-        btnSetting.addActionListener((e) -> {
-            showSettings();
-        });
-
-        RadioButton rbEn = new RadioButton("English");
-        RadioButton rbZh = new RadioButton("中文");
-        ButtonGroup btnGroup = new ButtonGroup(rbEn, rbZh);
-        btnGroup.addActionListener((e) -> {
-            if (rbEn.isSelected()) {
-                this.lang = "en";
-            } else if (rbZh.isSelected()) {
-                this.lang = "zh";
-            }
-            Storage.getInstance().writeObject("lang", this.lang);
-            refreshButtons();
-            this.formSetting = null;
-            this.formView.resetTableList();
-            this.player.sendRequest(this.player.initRequest(Request.LIST));
-        });
-        if (lang.equalsIgnoreCase("zh")) {
-            rbZh.setSelected(true);
-        } else {
-            rbEn.setSelected(true);
-        }
-
-        entry.add(this.btnTutor);
-        entry.add(this.btnPlay);
-        entry.add(this.btnHelp)
-                .add(this.btnSetting);
-        entry.add(BoxLayout.encloseX(rbEn, rbZh));
-
-        mainForm.add(BorderLayout.CENTER, entry);
-        this.currentComp = entry;
-        mainForm.show();
-
-        this.formTable = new Form("Table", new BorderLayout());
-        this.formTable.getStyle().setBgColor(BACKGROUND_COLOR);
-        this.formTable.getToolbar().hideToolbar();
-        this.formTable.add(BorderLayout.CENTER, this.table);
-        this.formTable.revalidate();
 
         this.formView = new TableView(this);
 //        this.formView.getStyle().setBgColor(BACKGROUND_COLOR);
@@ -383,10 +288,155 @@ public class TuoLaJiPro {
         this.player.connectServer(Player.OPTION_CHECK);
     }
 
+    private void showMainForm() {
+        if (this.formMain == null) {
+            Form mainForm = new Form(Dict.get(lang, title), new BorderLayout());
+            mainForm.setSafeArea(true);
+            if (DEBUG) {
+                Rectangle safeRect = mainForm.getSafeArea();
+                System.out.print(" x=" + safeRect.getX());
+                System.out.print(" y=" + safeRect.getY());
+                System.out.print(" w=" + safeRect.getWidth());
+                System.out.print(" h=" + safeRect.getHeight());
+            }
+            this.formMain = mainForm;
+            mainForm.getAllStyles().setBgColor(BACKGROUND_COLOR);
+//            mainForm.getToolbar().hideToolbar();
+
+            Toolbar topTool = mainForm.getToolbar();
+            topTool.setUIID("myTool");
+
+            int menuColor = Player.BUTTON_COLOR;
+            Button bPlay = new Button(Dict.get(lang, "Connecting") + "...");
+            bPlay.getStyle().setFgColor(menuColor);
+            bPlay.getAllStyles().setFont(Hand.fontRank);
+            bPlay.setEnabled(false);
+            this.btnPlay = bPlay;
+
+            FontImage.setMaterialIcon(bPlay, FontImage.MATERIAL_PEOPLE);
+            bPlay.addActionListener((e) -> {
+                if (!isLandscape()) {
+                    return;
+                }
+                player.sendRequest(Request.create(Request.JOIN, "opt", "").setReSend(true));
+            });
+
+            btnBrowse = new Button(Dict.get(lang, "Browse"));
+            btnBrowse.getStyle().setFgColor(menuColor);
+            btnBrowse.getAllStyles().setFont(Hand.fontRank);
+            FontImage.setMaterialIcon(btnBrowse, FontImage.MATERIAL_VIEW_MODULE);
+            btnBrowse.addActionListener((e) -> {
+                if (!isLandscape()) {
+                    return;
+                }
+                this.switchScene("view");
+            });
+
+            btnPrivateTable = new Button(Dict.get(lang, Dict.PRIVATE_TABLE));
+            btnPrivateTable.getStyle().setFgColor(menuColor);
+            btnPrivateTable.getAllStyles().setFont(Hand.fontRank);
+            FontImage.setMaterialIcon(btnPrivateTable, FontImage.MATERIAL_LOCK);
+            btnPrivateTable.addActionListener((e) -> {
+                if (!isLandscape()) {
+                    return;
+                }
+                this.formView.inputPassword(this.player);
+            });
+
+            btnHelp = new Button(Dict.get(lang, "Help"));
+            btnHelp.getStyle().setFgColor(menuColor);
+//            btnHelp.getAllStyles().setFont(Hand.fontRank);
+            FontImage.setMaterialIcon(btnHelp, FontImage.MATERIAL_HELP);
+            btnHelp.addActionListener((e) -> {
+                if (!isLandscape()) {
+                    return;
+                }
+                showHelp(lang);
+            });
+
+            btnAccount = new Button(Dict.get(lang, "Account"));
+            btnAccount.getStyle().setFgColor(menuColor);
+//            btnAccount.getAllStyles().setFont(Hand.fontRank);
+            FontImage.setMaterialIcon(btnAccount, FontImage.MATERIAL_ACCOUNT_CIRCLE);
+            btnAccount.addActionListener((e) -> {
+                topTool.closeRightSideMenu();
+            });
+
+            btnTutor = new Button(Dict.get(lang, "Tutorial"));
+            btnTutor.getStyle().setFgColor(menuColor);
+            btnTutor.getAllStyles().setFont(Hand.fontRank);
+            FontImage.setMaterialIcon(btnTutor, FontImage.MATERIAL_TOUCH_APP);
+            btnTutor.addActionListener((e) -> {
+                if (!isLandscape()) {
+                    return;
+                }
+                this.switchScene("tutor");
+            });
+
+            btnSetting = new Button(Dict.get(lang, "Settings"));
+            btnSetting.getStyle().setFgColor(menuColor);
+//            btnSetting.getAllStyles().setFont(Hand.fontRank);
+            FontImage.setMaterialIcon(btnSetting, FontImage.MATERIAL_SETTINGS);
+            btnSetting.addActionListener((e) -> {
+                showSettings();
+            });
+
+            RadioButton rbEn = new RadioButton("English");
+            RadioButton rbZh = new RadioButton("中文");
+            ButtonGroup btnGroup = new ButtonGroup(rbEn, rbZh);
+            btnGroup.addActionListener((e) -> {
+                if (rbEn.isSelected()) {
+                    this.lang = "en";
+                } else if (rbZh.isSelected()) {
+                    this.lang = "zh";
+                }
+                Storage.getInstance().writeObject("lang", this.lang);
+                refreshButtons();
+                this.formSetting = null;
+                this.formView.resetTableList();
+                this.player.sendRequest(this.player.initRequest(Request.LIST));
+            });
+            if (lang.equalsIgnoreCase("zh")) {
+                rbZh.setSelected(true);
+            } else {
+                rbEn.setSelected(true);
+            }
+
+            this.entry = new Container(BoxLayout.yLast());
+            this.entry.setSafeArea(true);
+
+//            lbTitle = new Label(Dict.get(lang, title));
+//            lbTitle.getStyle().setFont(Hand.fontRank);
+//            lbTitle.getAllStyles().setFgColor(0);
+//            entry.add(lbTitle);
+            entry.add(this.btnTutor);
+            entry.add(this.btnPlay);
+            entry.add(this.btnBrowse);
+            entry.add(this.btnPrivateTable);
+//            entry.add(this.btnHelp);
+//            entry.add(this.btnSetting);
+            entry.add(BoxLayout.encloseX(rbEn, rbZh));
+
+            mainForm.add(BorderLayout.CENTER, entry);
+            this.currentComp = entry;
+
+            topTool.addComponentToRightSideMenu(btnSetting);
+            topTool.addComponentToRightSideMenu(btnHelp);
+            topTool.addComponentToRightSideMenu(btnAccount);
+        }
+        this.formMain.show();
+    }
+
     private void setupTable() {
         this.table = new Container(new LayeredLayout());
         this.table.setSafeArea(true);
         this.player.createTable(this.table);
+
+        this.formTable = new Form("Table", new BorderLayout());
+        this.formTable.getStyle().setBgColor(BACKGROUND_COLOR);
+        this.formTable.getToolbar().hideToolbar();
+        this.formTable.add(BorderLayout.CENTER, this.table);
+        this.formTable.revalidate();
     }
 
     private void inputPlayName(String name) {
@@ -539,10 +589,6 @@ public class TuoLaJiPro {
     private void showSettings() {
         if (this.formSetting == null) {
             this.formSetting = new Form(Dict.get(lang, "Settings"));
-            Toolbar tbar = this.formSetting.getToolbar();
-            tbar.setBackCommand("", (e) -> {
-                switchScene("entry");
-            });
             TextField pName = new TextField("", Dict.get(lang, "Your Name"), 16, TextArea.ANY);
             pName.setMaxSize(16);
             pName.setText(this.myName);
@@ -565,17 +611,18 @@ public class TuoLaJiPro {
             this.formSetting.add(tl.createConstraint().widthPercentage(30).horizontalAlign(Component.RIGHT), new Label(Dict.get(lang, "Player Name"))).add(pName)
                     .add(tl.createConstraint().widthPercentage(30).horizontalAlign(Component.RIGHT), new Label(Dict.get(lang, "Background"))).add(strPicker)
                     .add(tl.createConstraint().widthPercentage(30).horizontalAlign(Component.RIGHT), new Label(Dict.get(lang, "Version"))).add(new Label(this.version));
-            Command okCmd = new Command(Dict.get(lang, "Save")) {
-                @Override
-                public void actionPerformed(ActionEvent ev) {
-                    String playerName = savePlayerName(pName);
-                    if (playerName == null) return;
-                    saveBackground(strPicker);
-                    switchScene("entry");
-                }
-            };
-            tbar.addCommandToRightBar(okCmd);
-            Display.getInstance().editString(pName, pName.getMaxSize(), TextArea.ANY, this.myName);
+
+            Toolbar tbar = this.formSetting.getToolbar();
+            tbar.setUIID("myTool");
+            tbar.setBackCommand("", (e) -> {
+                switchScene("entry");
+            });
+            tbar.addMaterialCommandToRightBar(Dict.get(lang, "Save"), FontImage.MATERIAL_SAVE, (ev) -> {
+                String playerName = savePlayerName(pName);
+                if (playerName == null) return;
+                saveBackground(strPicker);
+                switchScene("entry");
+            });
         }
 
         this.formSetting.show();

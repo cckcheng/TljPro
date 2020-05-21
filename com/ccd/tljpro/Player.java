@@ -322,7 +322,7 @@ public class Player {
 
     public final List<PlayerInfo> infoLst = new ArrayList<>();
     public Map<Integer, PlayerInfo> playerMap = new HashMap<>();
-    public boolean tableOn = true;
+    public boolean tableOn = false;
     private boolean robotOn = false;
     private boolean watching = false;
     public boolean tableEnded = false;
