@@ -5,6 +5,8 @@ import com.codename1.components.SpanLabel;
 import com.codename1.io.Log;
 import com.codename1.io.Storage;
 import com.codename1.l10n.L10NManager;
+import com.codename1.social.AppleLogin;
+import com.codename1.social.GoogleConnect;
 import com.codename1.ui.Button;
 import com.codename1.ui.ButtonGroup;
 import static com.codename1.ui.CN.*;
@@ -40,7 +42,7 @@ import java.util.Map;
  * of building native mobile applications using Java.
  */
 public class TuoLaJiPro {
-    static public final boolean DEBUG = false;
+    static public final boolean DEBUG = true;
 
     static public final int GREEN = 0x008000;
 //    static public final int DARK_GREEN = 0x0a300a;
@@ -171,8 +173,8 @@ public class TuoLaJiPro {
     }
 
     private Player player = null;
-    private String myId = null;
-    private String myName = null;
+    private String myId = "TljProNoID";
+    private String myName = "";
     private int tryTimes = 0;
     static final int MAX_TRY_TIMES = 3;
 
@@ -216,13 +218,22 @@ public class TuoLaJiPro {
             current.show();
             return;
         }
-
-        Display disp = Display.getInstance();
-        if (DEBUG) {
-//            Storage.getInstance().writeObject("playerName", null);
-//            Storage.getInstance().writeObject("lang", null);
-//            Storage.getInstance().writeObject("myColor", null);
+        if (Card.FOR_IOS) {
+            AppleLogin login = new AppleLogin();
+            if (login.isUserLoggedIn()) {
+                System.out.println("Apple: Logged in");
+            } else {
+                System.out.println("Apple: Not Logged in");
+            }
+        } else {
+            GoogleConnect login = GoogleConnect.getInstance();
+            if (login.isUserLoggedIn()) {
+                System.out.println("Google: Logged in");
+            } else {
+                System.out.println("Google: Not Logged in");
+            }
         }
+        Display disp = Display.getInstance();
 
         Object sObj = Storage.getInstance().readObject("lang");
         if (sObj != null) {
@@ -269,6 +280,8 @@ public class TuoLaJiPro {
         }
         this.myId = playerId;
 
+        this.createMainForm();
+
         this.player = new Player(this);
 
         String playerName = getPlayerName();
@@ -276,9 +289,9 @@ public class TuoLaJiPro {
             this.inputPlayName(playerName);
         } else {
             this.myName = playerName;
+            this.formMain.show();
         }
 
-        this.showMainForm();
         this.setupTable();
 
         this.formView = new TableView(this);
@@ -288,7 +301,7 @@ public class TuoLaJiPro {
         this.player.connectServer(Player.OPTION_CHECK);
     }
 
-    private void showMainForm() {
+    private void createMainForm() {
         if (this.formMain == null) {
             Form mainForm = new Form(Dict.get(lang, title), new BorderLayout());
             mainForm.setSafeArea(true);
@@ -301,7 +314,6 @@ public class TuoLaJiPro {
             }
             this.formMain = mainForm;
             mainForm.getAllStyles().setBgColor(BACKGROUND_COLOR);
-//            mainForm.getToolbar().hideToolbar();
 
             Toolbar topTool = mainForm.getToolbar();
             topTool.setUIID("myTool");
@@ -405,16 +417,10 @@ public class TuoLaJiPro {
             this.entry = new Container(BoxLayout.yLast());
             this.entry.setSafeArea(true);
 
-//            lbTitle = new Label(Dict.get(lang, title));
-//            lbTitle.getStyle().setFont(Hand.fontRank);
-//            lbTitle.getAllStyles().setFgColor(0);
-//            entry.add(lbTitle);
             entry.add(this.btnTutor);
             entry.add(this.btnPlay);
             entry.add(this.btnBrowse);
             entry.add(this.btnPrivateTable);
-//            entry.add(this.btnHelp);
-//            entry.add(this.btnSetting);
             entry.add(BoxLayout.encloseX(rbEn, rbZh));
 
             mainForm.add(BorderLayout.CENTER, entry);
@@ -423,8 +429,16 @@ public class TuoLaJiPro {
             topTool.addComponentToRightSideMenu(btnSetting);
             topTool.addComponentToRightSideMenu(btnHelp);
             topTool.addComponentToRightSideMenu(btnAccount);
+
+            if (DEBUG) {
+                topTool.addMaterialCommandToRightBar("Reset", FontImage.MATERIAL_RESTORE, (ev) -> {
+                    Storage.getInstance().writeObject("playerName", null);
+                    Storage.getInstance().writeObject("lang", null);
+                    Storage.getInstance().writeObject("myColor", null);
+                    stop();
+                });
+            }
         }
-        this.formMain.show();
     }
 
     private void setupTable() {
@@ -449,11 +463,13 @@ public class TuoLaJiPro {
                 if (playerName == null || playerName.isEmpty()) {
                     Display.getInstance().exitApplication();
                 }
+                Display.getInstance().callSerially(() -> {
+                    switchScene("entry");
+                });
             }
         };
         Dialog dlg = new Dialog(Dict.get(lang, "Player Name"));
         dlg.add(pName).add(new Button(okCmd));
-//        Display.getInstance().editString(pName, pName.getMaxSize(), TextArea.ANY, "");
         dlg.show();
     }
 
@@ -538,12 +554,6 @@ public class TuoLaJiPro {
         refreshButtons();
     }
 
-    private void restartApp() {
-//        if (this.player != null) this.player.disconnect();
-        this.formSetting = null;
-        this.start();
-    }
-
     private Component currentComp;
     public boolean isMainForm = true;
 
@@ -554,6 +564,7 @@ public class TuoLaJiPro {
             case "entry":
                 app.formMain.showBack();
                 isMainForm = true;
+                app.formMain.setGlassPane(null);
                 break;
             case "view":
                 app.formView.show();
