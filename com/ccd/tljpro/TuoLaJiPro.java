@@ -2,11 +2,14 @@ package com.ccd.tljpro;
 
 
 import com.codename1.components.SpanLabel;
+import com.codename1.components.ToastBar;
 import com.codename1.io.Log;
+import com.codename1.io.Preferences;
 import com.codename1.io.Storage;
 import com.codename1.l10n.L10NManager;
 import com.codename1.social.AppleLogin;
 import com.codename1.social.GoogleConnect;
+import com.codename1.social.LoginCallback;
 import com.codename1.ui.Button;
 import com.codename1.ui.ButtonGroup;
 import static com.codename1.ui.CN.*;
@@ -27,6 +30,7 @@ import com.codename1.ui.events.ActionEvent;
 import com.codename1.ui.geom.Rectangle;
 import com.codename1.ui.layouts.BorderLayout;
 import com.codename1.ui.layouts.BoxLayout;
+import com.codename1.ui.layouts.FlowLayout;
 import com.codename1.ui.layouts.LayeredLayout;
 import com.codename1.ui.plaf.UIManager;
 import com.codename1.ui.spinner.Picker;
@@ -43,6 +47,10 @@ import java.util.Map;
  */
 public class TuoLaJiPro {
     static public final boolean DEBUG = true;
+    static public final boolean BYPASS_LOGIN = false;
+    static public final boolean INTERNAL = true;
+
+    static public final String STORAGE_PROFILE = "profile";
 
     static public final int GREEN = 0x008000;
 //    static public final int DARK_GREEN = 0x0a300a;
@@ -68,8 +76,6 @@ public class TuoLaJiPro {
     private Form current;
     public Resources theme;
 
-    private String uniqueID = null;
-
     public void init(Object context) {
         // use two network threads instead of one
         updateNetworkThreadCount(2);
@@ -91,7 +97,6 @@ public class TuoLaJiPro {
             Log.sendLogAsync();
             Dialog.show("Connection Error", "There was a networking error in the connection to " + err.getConnectionRequest().getUrl(), "OK", null);
         });
-
     }
 
     public Form formMain = null;
@@ -125,9 +130,6 @@ public class TuoLaJiPro {
             this.btnPlay.setText(Dict.get(lang, "Play"));
 //            this.formMain.revalidate();
             if (TuoLaJiPro.DEBUG) Log.p("Enable play button");
-        }
-        if (this.btnHelp != null) {
-            this.btnHelp.setEnabled(true);
         }
         this.tryTimes = 0;
     }
@@ -172,9 +174,10 @@ public class TuoLaJiPro {
         return this.isMainForm ? this.formMain : this.formTable;
     }
 
+    static final String DEFAULT_PLAYER_NAME = "NewPlayer";
     private Player player = null;
     private String myId = "TljProNoID";
-    private String myName = "";
+    private String myName = DEFAULT_PLAYER_NAME;
     private int tryTimes = 0;
     static final int MAX_TRY_TIMES = 3;
 
@@ -209,6 +212,8 @@ public class TuoLaJiPro {
     private Container help;
     private Tutor tutor;
 
+    private String errMsg = "";
+
     private Map<Integer, String> colorIdx = new HashMap<>();
     private String currentColorKey;
 
@@ -218,21 +223,13 @@ public class TuoLaJiPro {
             current.show();
             return;
         }
-        if (Card.FOR_IOS) {
-            AppleLogin login = new AppleLogin();
-            if (login.isUserLoggedIn()) {
-                System.out.println("Apple: Logged in");
-            } else {
-                System.out.println("Apple: Not Logged in");
-            }
-        } else {
-            GoogleConnect login = GoogleConnect.getInstance();
-            if (login.isUserLoggedIn()) {
-                System.out.println("Google: Logged in");
-            } else {
-                System.out.println("Google: Not Logged in");
-            }
+
+        Preferences.setPreferencesLocation(STORAGE_PROFILE);
+        if (BYPASS_LOGIN) {
+            Preferences.set("UserID", "TestUserID");
+            Preferences.set("Email", "TestEmail");
         }
+
         Display disp = Display.getInstance();
 
         Object sObj = Storage.getInstance().readObject("lang");
@@ -259,7 +256,6 @@ public class TuoLaJiPro {
         back = theme.getImage("btn.png");
 //        back = back.scaledHeight(Hand.fontRank.getHeight());
 //        String onlineHelp = getHelp();
-        disp.lockOrientation(false);
         disp.requestFullScreen();
         disp.setNoSleep(true);
         disp.setScreenSaverEnabled(false);
@@ -273,32 +269,110 @@ public class TuoLaJiPro {
             System.out.println("OS=" + this.OS);
         }
 
-        String playerId = getPlayerID(disp);
+        String playerId = getPlayerID();
         if (playerId == null) {
             Dialog.show(Dict.get(lang, "Error"), "Failed to generate Player ID", Dict.get(lang, "OK"), "");
-            disp.exitApplication();;
+            disp.exitApplication();
         }
         this.myId = playerId;
 
-        this.createMainForm();
-
         this.player = new Player(this);
 
-        String playerName = getPlayerName();
-        if (playerName.isEmpty()) {
-            this.inputPlayName(playerName);
-        } else {
-            this.myName = playerName;
-            this.formMain.show();
+        this.player.connectServer(true);
+    }
+
+    public void showLogin() {
+        if (BYPASS_LOGIN) {
+            startMain();
+            return;
         }
 
-        this.setupTable();
+        if (Card.FOR_IOS) {
+            AppleLogin login = new AppleLogin();
+            if (login.isUserLoggedIn()) {
+                startMain();
+            } else {
+                showAppleLogin(login);
+            }
+        } else {
+            showGoogleLogin();
+        }
+    }
 
-        this.formView = new TableView(this);
-//        this.formView.getStyle().setBgColor(BACKGROUND_COLOR);
-        this.formView.init();
+    private boolean registered = false;
+    private boolean setupDone = false;
 
-        this.player.connectServer(Player.OPTION_CHECK);
+    private boolean doRegistration() {
+        if (registered) return false;
+        registered = Preferences.get("registered", false);
+        if (registered) return false;
+
+        String globalId = Preferences.get("UserID", "");
+        if (globalId.isEmpty()) {
+            Display.getInstance().callSerially(() -> {
+                Form frm = new Form("Registration");
+                frm.getToolbar().addMaterialCommandToRightBar("Next", FontImage.MATERIAL_STAR, (e) -> {
+                    if (DEBUG) registered = true;
+                    if (formMain == null) {
+                        startMain();
+                    } else {
+                        formMain.showBack();
+                    }
+                });
+                frm.show();
+            });
+        } else {
+            this.myName = Preferences.get("Name", this.myName);
+            player.sendRequest(player.initRequest(Request.REGISTER)
+                    .append("gid", globalId)
+                    .append("email", Preferences.get("Email", ""))
+                    .append("keyid", Preferences.get("KeyID", ""))
+                    .setReSend(true));
+        }
+        return true;
+    }
+
+    public void finishRegistration() {
+        Preferences.set("registered", true);
+        registered = true;
+        if (!initSetup()) startMain();
+    }
+
+    private boolean initSetup() {
+        if (setupDone) return false;
+        setupDone = Preferences.get("setup", false);
+        if (setupDone) return false;
+
+        Display.getInstance().callSerially(() -> {
+            showSettings();
+        });
+        return true;
+    }
+
+    private void startMain() {
+        if (this.doRegistration()) return;
+        if (this.initSetup()) return;
+
+        Display.getInstance().lockOrientation(false);
+        Display.getInstance().callSerially(() -> {
+            this.createMainForm();
+
+            String playerName = getPlayerName();
+            if (playerName.isEmpty()) {
+//                this.inputPlayName(playerName);
+            } else {
+                this.myName = playerName;
+            }
+            this.formMain.show();
+
+            this.setupTable();
+
+            this.formView = new TableView(this);
+//            this.formView.getStyle().setBgColor(BACKGROUND_COLOR);
+            this.formView.init();
+
+            this.player.connectServer(Player.OPTION_CHECK);
+        });
     }
 
     private void createMainForm() {
@@ -322,7 +396,11 @@ public class TuoLaJiPro {
             Button bPlay = new Button(Dict.get(lang, "Connecting") + "...");
             bPlay.getStyle().setFgColor(menuColor);
             bPlay.getAllStyles().setFont(Hand.fontRank);
-            bPlay.setEnabled(false);
+            if (this.player.isConnected()) {
+                bPlay.setText(Dict.get(lang, "Play"));
+            } else {
+                bPlay.setEnabled(false);
+            }
             this.btnPlay = bPlay;
 
             FontImage.setMaterialIcon(bPlay, FontImage.MATERIAL_PEOPLE);
@@ -418,8 +496,8 @@ public class TuoLaJiPro {
             this.entry.setSafeArea(true);
 
             entry.add(this.btnTutor);
-            entry.add(this.btnPlay);
             entry.add(this.btnBrowse);
+            entry.add(this.btnPlay);
             entry.add(this.btnPrivateTable);
             entry.add(BoxLayout.encloseX(rbEn, rbZh));
 
@@ -430,12 +508,9 @@ public class TuoLaJiPro {
             topTool.addComponentToRightSideMenu(btnHelp);
             topTool.addComponentToRightSideMenu(btnAccount);
 
-            if (DEBUG) {
-                topTool.addMaterialCommandToRightBar("Reset", FontImage.MATERIAL_RESTORE, (ev) -> {
-                    Storage.getInstance().writeObject("playerName", null);
-                    Storage.getInstance().writeObject("lang", null);
-                    Storage.getInstance().writeObject("myColor", null);
-                    stop();
+            if (INTERNAL) {
+                topTool.addMaterialCommandToRightBar("Storage", FontImage.MATERIAL_ECO, (ev) -> {
+                    showStorage();
                 });
             }
         }
@@ -526,15 +601,25 @@ public class TuoLaJiPro {
 
     private String savePlayerName(TextField pName) {
         String playerName = pName.getText().trim();
-        if (playerName.isEmpty()) return null;
+        if (playerName.isEmpty()) {
+            this.errMsg = Dict.get(lang, Dict.PLAYER_NAME_REQUIRED);
+            return null;
+        }
         pName.stopEditing();
         playerName = StringUtil.replaceAll(playerName, "\"", "");
         playerName = StringUtil.replaceAll(playerName, "\\", "");
         playerName = StringUtil.replaceAll(playerName, "'", "");
         playerName = StringUtil.replaceAll(playerName, ":", " ");
-        if (playerName.isEmpty()) return null;
+        if (playerName.isEmpty()) {
+            this.errMsg = Dict.get(lang, Dict.INVALID_PLAYER_NAME);
+            return null;
+        }
+        pName.setText(playerName);
+        if (playerName.equals(this.myName)) return playerName;
+
         Storage.getInstance().writeObject("playerName", playerName);
         this.myName = playerName;
+        if (setupDone) player.sendRequest(this.player.initRequest(Request.LIST));
         return playerName;
     }
 
@@ -548,6 +633,9 @@ public class TuoLaJiPro {
 //        restartApp();
         this.currentColor = AvailableColors.get(this.currentColorKey);
         BACKGROUND_COLOR = this.currentColor.backColor;
+
+        if (!setupDone) return;
+
         this.formMain.getStyle().setBgColor(BACKGROUND_COLOR);
         this.formTable.getStyle().setBgColor(BACKGROUND_COLOR);
         if (this.formTutor != null) this.formTutor.getStyle().setBgColor(BACKGROUND_COLOR);
@@ -599,10 +687,11 @@ public class TuoLaJiPro {
 
     private void showSettings() {
         if (this.formSetting == null) {
-            this.formSetting = new Form(Dict.get(lang, "Settings"));
+            this.formSetting = new Form(Dict.get(lang, "Settings")
+                    + " (" + Dict.get(lang, "Version") + " " + this.version + ")");
             TextField pName = new TextField("", Dict.get(lang, "Your Name"), 16, TextArea.ANY);
             pName.setMaxSize(16);
-            pName.setText(this.myName);
+            pName.setText(this.myName.equals(DEFAULT_PLAYER_NAME) ? "" : this.myName);
             TableLayout tl = new TableLayout(2, 2);
             this.formSetting.setLayout(tl);
 
@@ -620,19 +709,30 @@ public class TuoLaJiPro {
             strPicker.setSelectedString(this.currentColor.getName(lang));
 
             this.formSetting.add(tl.createConstraint().widthPercentage(30).horizontalAlign(Component.RIGHT), new Label(Dict.get(lang, "Player Name"))).add(pName)
-                    .add(tl.createConstraint().widthPercentage(30).horizontalAlign(Component.RIGHT), new Label(Dict.get(lang, "Background"))).add(strPicker)
-                    .add(tl.createConstraint().widthPercentage(30).horizontalAlign(Component.RIGHT), new Label(Dict.get(lang, "Version"))).add(new Label(this.version));
+                    .add(tl.createConstraint().widthPercentage(30).horizontalAlign(Component.RIGHT), new Label(Dict.get(lang, "Background"))).add(strPicker);
+//                    .add(tl.createConstraint().widthPercentage(30).horizontalAlign(Component.RIGHT), new Label(Dict.get(lang, "Version"))).add(new Label(this.version));
 
             Toolbar tbar = this.formSetting.getToolbar();
             tbar.setUIID("myTool");
-            tbar.setBackCommand("", (e) -> {
-                switchScene("entry");
-            });
+            if (setupDone) {
+                tbar.setBackCommand("", (e) -> {
+                    switchScene("entry");
+                });
+            }
             tbar.addMaterialCommandToRightBar(Dict.get(lang, "Save"), FontImage.MATERIAL_SAVE, (ev) -> {
                 String playerName = savePlayerName(pName);
-                if (playerName == null) return;
+                if (playerName == null) {
+                    Dialog.show(Dict.get(lang, "Error"), this.errMsg, Dict.get(lang, "OK"), "");
+                    return;
+                }
                 saveBackground(strPicker);
-                switchScene("entry");
+                if (setupDone) {
+                    switchScene("entry");
+                } else {
+                    setupDone = true;
+                    Preferences.set("setup", true);
+                    startMain();
+                }
             });
         }
 
@@ -644,7 +744,7 @@ public class TuoLaJiPro {
         return sgObj == null ? "" : sgObj.toString();
     }
 
-    private String getPlayerID(Display disp) {
+    private String getPlayerID() {
         String playerId = null;
         try {
 //        List<NetworkInterface> all = Collections.list(NetworkInterface.getNetworkInterfaces());
@@ -901,6 +1001,159 @@ public class TuoLaJiPro {
             Dialog.show("Landscape", "Please rotate to landscape", Dict.get(lang, "OK"), null);
         }
         return false;
+    }
+
+    private void showAppleLogin(AppleLogin login) {
+        if (login.isNativeLoginSupported()) {
+            ToastBar.showErrorMessage("Native login not supported");
+            showStorage();
+            return;
+        }
+
+        Form frm = new Form(BoxLayout.y());
+        frm.add(FlowLayout.encloseCenter(new Label(AppleLogin.createAppleLogo(0x0, 15f))));
+        Button loginBtn = new Button(Dict.get(lang, Dict.SIGNIN_APPLE));
+        AppleLogin.decorateLoginButton(loginBtn, 0x0, 0xffffff);
+
+        login.addScopes("fullName", "email");
+        loginBtn.addActionListener(evt -> {
+            ToastBar.showInfoMessage(Dict.get(lang, Dict.PLEASE_WAIT));
+
+            login.doLogin(new LoginCallback() {
+                @Override
+                public void loginFailed(String errorMessage) {
+                    ToastBar.showErrorMessage(errorMessage);
+                    showStorage();
+                }
+
+                @Override
+                public void loginSuccessful() {
+                    Preferences.set("UserID", login.getUserId());
+                    Preferences.set("Email", login.getEmail());
+                    Preferences.set("Name", login.getFullName());
+                    Preferences.set("KeyID", login.getKeyId());
+                    startMain();
+                }
+            });
+        });
+
+        frm.add(FlowLayout.encloseCenter(loginBtn));
+        frm.show();
+    }
+
+    private void showGoogleLogin() {
+        Form frm = new Form(BoxLayout.y());
+
+//        frm.add(FlowLayout.encloseCenter(new Label(login.));
+        Button loginBtn = new Button(Dict.get(lang, Dict.SIGNIN_GOOGLE));
+
+//        login.addScopes("fullName", "email");
+        loginBtn.addActionListener(evt -> {
+            ToastBar.showInfoMessage(Dict.get(lang, Dict.PLEASE_WAIT));
+
+            MyGoogleLogin lg = MyGoogleLogin.getInstance();
+            lg.init();
+
+            GoogleData uData = new GoogleData();
+            lg.setCallback(new LoginCallback() {
+                @Override
+                public void loginFailed(String errorMessage) {
+//                    System.out.println("Login failed: " + errorMessage);
+                    ToastBar.showErrorMessage("FAIL: " + errorMessage, 5000);
+                    showStorage();
+                }
+
+                @Override
+                public void loginSuccessful() {
+                    uData.fetchData(lg.getAccessToken().getToken(), () -> {
+                        Preferences.set("fullName", uData.getName());
+                        Preferences.set("uniqueId", uData.getId());
+//                        Preferences.set("email", uData.getEmail());
+                        startMain();
+                    });
+//                    ToastBar.showMessage(lg.getAccessToken().getToken(), FontImage.MATERIAL_DONE);
+//                    String plName = Player.trimmedString(login.getAccessToken());
+//                    Storage.getInstance().writeObject("playerName", plName);
+//                    myName = plName;
+//                    startMain();
+                }
+            });
+
+            if (lg.isUserLoggedIn()) {
+                ToastBar.showInfoMessage("Loggin already");
+                startMain();
+            } else {
+                lg.doLogin();
+            }
+        });
+
+        Button loginBtn1 = new Button(Dict.get(lang, Dict.SIGNIN_GOOGLE) + " Org");
+        loginBtn1.addActionListener(evt -> {
+            ToastBar.showInfoMessage(Dict.get(lang, Dict.PLEASE_WAIT));
+
+            GoogleConnect lg = GoogleConnect.getInstance();
+            lg.setClientId(Card.GOOGLE_CLIENT_ID);
+            lg.setClientSecret(Card.GOOGLE_CLIENT_SECRET);
+//            gc.setRedirectURI("https://www.codenameone.com/oauth2callback");
+//            lg.setRedirectURI(DEBUG ? "http://localhost" : "urn:ietf:wg:oauth:2.0:oob");
+            lg.setRedirectURI("http://localhost");
+            GoogleData uData = new GoogleData();
+            lg.setCallback(new LoginCallback() {
+                @Override
+                public void loginFailed(String errorMessage) {
+//                    System.out.println("Login failed: " + errorMessage);
+                    ToastBar.showErrorMessage("FAIL: " + errorMessage, 5000);
+                    showStorage();
+                }
+
+                @Override
+                public void loginSuccessful() {
+                    uData.fetchData(lg.getAccessToken().getToken(), () -> {
+                        Preferences.set("fullName", uData.getName());
+                        Preferences.set("uniqueId", uData.getId());
+//                        Preferences.set("email", uData.getEmail());
+                        startMain();
+                    });
+                }
+            });
+
+            if (lg.isUserLoggedIn()) {
+                ToastBar.showInfoMessage("Loggin already");
+                startMain();
+            } else {
+                lg.doLogin();
+            }
+        });
+
+        if (INTERNAL) frm.add(FlowLayout.encloseCenter(loginBtn));
+        frm.add(FlowLayout.encloseCenter(loginBtn1));
+        frm.show();
+    }
+
+    private void showStorage() {
+        Form frm = new Form("Storage", BoxLayout.y());
+        frm.setScrollableX(true);
+        frm.setScrollableY(true);
+        Storage sr = Storage.getInstance();
+        for (String k : sr.listEntries()) {
+            if (k == null || k.isEmpty()) continue;
+            String v = Player.trimmedString(sr.readObject(k));
+            frm.add(BoxLayout.encloseX(new Label(k), new Label(v.isEmpty() ? "Null" : v),
+                    new Button(Command.createMaterial("", FontImage.MATERIAL_DELETE, (ev) -> {
+                        sr.writeObject(k, null);
+                    }))
+            ));
+
+        }
+
+        frm.getToolbar().addMaterialCommandToRightBar("Start", FontImage.MATERIAL_STAR, (e) -> {
+            if (formMain == null) {
+                startMain();
+            } else {
+                formMain.showBack();
+            }
+        });
+        frm.show();
     }
 
     static class CustomColor {

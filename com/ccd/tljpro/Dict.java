@@ -134,6 +134,18 @@ public class Dict {
     public static final int NEW_TABLE = 12;
     public static final int PRIVATE_TABLE = 13;
 
+    public static final int TABLE_CODE = 21;
+
+    public static final int SIGNIN_APPLE = 31;
+    public static final int SIGNIN_GOOGLE = 32;
+    public static final int SIGNIN_FACEBOOK = 33;
+    public static final int PLEASE_WAIT = 36;
+
+    public static final int PLAYER_NAME_REQUIRED = 51;
+    public static final int INVALID_PLAYER_NAME = 52;
+
+    public static final int FAIL_CONNECT_SERVER = 99;
+
     static public String get(final String lang, int k) {
         switch (k) {
             case PLAY:
@@ -147,6 +159,25 @@ public class Dict {
                 return lang.equals("zh") ? "开新桌" : "New Table";
             case PRIVATE_TABLE:
                 return lang.equals("zh") ? "私有桌" : "Private Table";
+            case TABLE_CODE:
+                return lang.equals("zh") ? "本桌密码" : "Table Pass";
+
+            case SIGNIN_APPLE:
+                return lang.equals("zh") ? "使用Apple登录" : "Sign in with Apple";
+            case SIGNIN_GOOGLE:
+                return lang.equals("zh") ? "使用Google登录" : "Sign in with Google";
+            case SIGNIN_FACEBOOK:
+                return lang.equals("zh") ? "使用Facebook登录" : "Sign in with Facebook";
+
+            case PLAYER_NAME_REQUIRED:
+                return lang.equals("zh") ? "请填写昵称" : "Player name is required";
+            case INVALID_PLAYER_NAME:
+                return lang.equals("zh") ? "昵称含有非法字符" : "Invalid player name";
+
+            case PLEASE_WAIT:
+                return lang.equals("zh") ? "请稍候..." : "Please wait...";
+            case FAIL_CONNECT_SERVER:
+                return lang.equals("zh") ? "服务器连接失败" : "Failed to connection server";
         }
 
         return "Unknown";

@@ -23,6 +23,8 @@ public class Request {
     static final String WATCH = "watch";
     static final String LIST = "list";
 
+    static final String REGISTER = "reg";
+
     private String msg;
     private final String action;
     private final boolean checkReply;
@@ -58,6 +60,10 @@ public class Request {
 
     public String getMsg() {
         return "{" + msg + "}";
+    }
+
+    public String getAction() {
+        return action;
     }
 
     public boolean isCheckReply() {

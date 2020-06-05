@@ -69,7 +69,10 @@ public class Player {
     private Runnable notifyPlayer = new Runnable() {
         @Override
         public void run() {
-            Display.getInstance().vibrate(1000);  // this works
+            Display.getInstance().callSerially(() -> {
+                Display.getInstance().playBuiltinSound(Display.SOUND_TYPE_ALARM);
+                Display.getInstance().vibrate(1000);  // this works
+            });
             gameTimer = null;
         }
     };
@@ -78,12 +81,17 @@ public class Player {
         this.main = main;
     }
 
-//    public void sendRequest(String action, String data) {
-//        mySocket.addRequest0(action, data);
-//    }
-
     public void sendRequest(Request req) {
+        if (mySocket == null || !mySocket.isConnected()) {
+            this.connectServer(req);
+            return;
+        }
         mySocket.addRequest(req);
+    }
+
+    public boolean isConnected() {
+        if (mySocket == null) return false;
+        return mySocket.isConnected();
     }
 
     private MySocket mySocket = null;
@@ -95,6 +103,26 @@ public class Player {
 
     static boolean checkOnce = true;
     static String tljHost = Card.TLJ_HOST;
+
+    private boolean initConnect = true;
+
+    public void connectServer(boolean init) {
+        if (!Socket.isSupported()) {
+            Dialog.show("Alert", "Socket is not supported", "OK", "");
+            return;
+        }
+
+        if (this.mySocket == null) {
+            this.mySocket = new MySocket();
+        }
+        if (!this.mySocket.isConnected()) {
+            initConnect = init;
+            Socket.connect(tljHost, Card.TLJ_PORT, mySocket);
+        } else {
+            main.showLogin();
+        }
+    }
+
     public void connectServer(String option) {
         if (!Socket.isSupported()) {
             Dialog.show("Alert", "Socket is not supported", "OK", "");
@@ -469,6 +497,10 @@ public class Player {
         if (!this.currentPass.isEmpty()) {
             lbPass.setText(this.currentPass);
             lbPass.setVisible(true);
+            String passInfo = Dict.get(main.lang, Dict.TABLE_CODE) + ": " + this.currentPass;
+            p0.userHelp.showInfo(passInfo);
+//            showInfo(passInfo);
+//            ToastBar.showInfoMessage(Dict.get(main.lang, Dict.TABLE_CODE) + ": " + this.currentPass); //not work
         } else {
             lbPass.setVisible(false);
 //            FontImage.setMaterialIcon(lbPass, '\0');
@@ -552,6 +584,7 @@ public class Player {
                 gameTimer = new UITimer(this.notifyPlayer);
                 gameTimer.schedule((pauseSeconds - 5) * 1000, false, main.formTable);
             }
+            this.infoLst.get(0).showTimer(pauseSeconds, 0, "wait");
         }
     }
 
@@ -928,10 +961,13 @@ public class Player {
     }
 
     private void showInfo(Map<String, Object> data) {
+        showInfo(trimmedString(data.get("info")));
+    }
+
+    private void showInfo(String info) {
 //        final Form curForm = main.getCurForm();
         final Player thisPlayer = this;
         final Form curForm = getCurrentForm();
-        final String info = trimmedString(data.get("info"));
         Rectangle safeRect = curForm.getSafeArea();
         if (!info.isEmpty() && !info.equals(".")) {
             int fontHeight = Hand.fontGeneral.getHeight();
@@ -1150,6 +1186,10 @@ public class Player {
 
                     Display.getInstance().callSeriallyAndWait(() -> {
                         switch (action) {
+                            case "reg": // registered
+                                main.finishRegistration();
+                                break;
+
                             case "list":
                                 // list current tables
                                 main.formView.refreshTableList(data);
@@ -1180,8 +1220,8 @@ public class Player {
                             case "gameover":
                                 if (tableOn) {
                                     hand.clearCards();
-                                    startNotifyTimer(data);
                                     cancelTimers();
+                                    startNotifyTimer(data);
                                     gameSummary(data);
                                 }
                                 break;
@@ -1207,7 +1247,11 @@ public class Player {
                 }
             } catch (Exception err) {
                 // to prevent break the connection by accident
-                err.printStackTrace();
+                if (TuoLaJiPro.DEBUG) {
+                    err.printStackTrace();
+                } else {
+                    Log.p(err.getMessage());
+                }
             }
         }
 
@@ -1221,16 +1265,29 @@ public class Player {
                 } else {
                     tljHost = Card.TLJ_HOST;
                 }
+                if (initConnect) checkOnce = false;
+            } else {
+                if (initConnect) {
+                    Dialog.show(Dict.get(main.lang, "Error"), Dict.get(main.lang, Dict.FAIL_CONNECT_SERVER), Dict.get(main.lang, "OK"), "");
+                    Display.getInstance().exitApplication();
+                    return;
+                }
             }
+
             //mySocket = null;    // reset connection
-            if (tableOn) {
+            if (tableOn || initConnect) {
                 cancelTimers();
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException ex) {
 
                 }
-                connectServer("");
+
+                if (initConnect) {
+                    connectServer(initConnect);
+                } else {
+                    connectServer("");
+                }
             } else {
                 main.onConnectionError();
             }
@@ -1240,7 +1297,14 @@ public class Player {
         public void connectionEstablished(InputStream is, OutputStream os) {
             closeRequested = false;
             checkOnce = false;
-            main.enableButtons();
+
+            if (initConnect) {
+                initConnect = false;
+                main.showLogin();
+            } else {
+                main.enableButtons();
+            }
+
             byte[] buffer = new byte[4096];
             int count = 0;
             try {
@@ -1838,8 +1902,9 @@ public class Player {
                         buttonContainer.revalidate();
                     }
                 } else {
-                    // not supported
-                    Log.p("Unknown act: " + act);
+                    // just wait
+                    parent.revalidate();
+                    return;
                 }
 
                 actionButtons.setVisible(true);
