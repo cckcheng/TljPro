@@ -47,10 +47,10 @@ import java.util.Map;
  */
 public class TuoLaJiPro {
     static public final boolean DEBUG = true;
-    static public final boolean BYPASS_LOGIN = false;
+    static public final boolean BYPASS_LOGIN = true;
     static public final boolean INTERNAL = true;
 
-    static public final String STORAGE_PROFILE = "profile";
+//    static public final String STORAGE_PROFILE = "profile";
 
     static public final int GREEN = 0x008000;
 //    static public final int DARK_GREEN = 0x0a300a;
@@ -224,7 +224,7 @@ public class TuoLaJiPro {
             return;
         }
 
-        Preferences.setPreferencesLocation(STORAGE_PROFILE);
+//        Preferences.setPreferencesLocation(STORAGE_PROFILE);
         if (BYPASS_LOGIN) {
             Preferences.set("UserID", "TestUserID");
             Preferences.set("Email", "TestEmail");
@@ -282,21 +282,18 @@ public class TuoLaJiPro {
     }
 
     public void showLogin() {
-        if (BYPASS_LOGIN) {
-            startMain();
-            return;
-        }
-
-        if (Card.FOR_IOS) {
-            AppleLogin login = new AppleLogin();
-            if (login.isUserLoggedIn()) {
-                startMain();
+        Display.getInstance().callSerially(() -> {
+            if (Card.FOR_IOS) {
+                AppleLogin login = new AppleLogin();
+                if (login.isUserLoggedIn()) {
+                    startMain();
+                } else {
+                    showAppleLogin(login);
+                }
             } else {
-                showAppleLogin(login);
+                showGoogleLogin();
             }
-        } else {
-            showGoogleLogin();
-        }
+        });
     }
 
     private boolean registered = false;
@@ -311,6 +308,7 @@ public class TuoLaJiPro {
         if (globalId.isEmpty()) {
             Display.getInstance().callSerially(() -> {
                 Form frm = new Form("Registration");
+                frm.setSafeArea(true);
                 frm.getToolbar().addMaterialCommandToRightBar("Next", FontImage.MATERIAL_STAR, (e) -> {
                     if (DEBUG) registered = true;
                     if (formMain == null) {
@@ -328,6 +326,7 @@ public class TuoLaJiPro {
                     .append("email", Preferences.get("Email", ""))
                     .append("keyid", Preferences.get("KeyID", ""))
                     .setReSend(true));
+            ToastBar.showInfoMessage(Dict.get(lang, Dict.PLEASE_WAIT));
         }
         return true;
     }
@@ -689,6 +688,7 @@ public class TuoLaJiPro {
         if (this.formSetting == null) {
             this.formSetting = new Form(Dict.get(lang, "Settings")
                     + " (" + Dict.get(lang, "Version") + " " + this.version + ")");
+            this.formSetting.setSafeArea(true);
             TextField pName = new TextField("", Dict.get(lang, "Your Name"), 16, TextArea.ANY);
             pName.setMaxSize(16);
             pName.setText(this.myName.equals(DEFAULT_PLAYER_NAME) ? "" : this.myName);
@@ -1004,26 +1004,31 @@ public class TuoLaJiPro {
     }
 
     private void showAppleLogin(AppleLogin login) {
-        if (login.isNativeLoginSupported()) {
-            ToastBar.showErrorMessage("Native login not supported");
-            showStorage();
-            return;
-        }
-
         Form frm = new Form(BoxLayout.y());
+        frm.setSafeArea(true);
         frm.add(FlowLayout.encloseCenter(new Label(AppleLogin.createAppleLogo(0x0, 15f))));
         Button loginBtn = new Button(Dict.get(lang, Dict.SIGNIN_APPLE));
         AppleLogin.decorateLoginButton(loginBtn, 0x0, 0xffffff);
 
-        login.addScopes("fullName", "email");
+//        login.addScopes("fullName", "email");
         loginBtn.addActionListener(evt -> {
             ToastBar.showInfoMessage(Dict.get(lang, Dict.PLEASE_WAIT));
+            if (BYPASS_LOGIN) {
+                startMain();
+                return;
+            }
+
+            if (!login.isNativeLoginSupported()) {
+                ToastBar.showErrorMessage("Native login not supported, please upgrade to IOS 13");
+                if (DEBUG && INTERNAL) showStorage();
+                return;
+            }
 
             login.doLogin(new LoginCallback() {
                 @Override
                 public void loginFailed(String errorMessage) {
                     ToastBar.showErrorMessage(errorMessage);
-                    showStorage();
+                    if (DEBUG && INTERNAL) showStorage();
                 }
 
                 @Override
@@ -1050,6 +1055,11 @@ public class TuoLaJiPro {
 //        login.addScopes("fullName", "email");
         loginBtn.addActionListener(evt -> {
             ToastBar.showInfoMessage(Dict.get(lang, Dict.PLEASE_WAIT));
+
+            if (BYPASS_LOGIN) {
+                startMain();
+                return;
+            }
 
             MyGoogleLogin lg = MyGoogleLogin.getInstance();
             lg.init();
@@ -1090,6 +1100,11 @@ public class TuoLaJiPro {
         Button loginBtn1 = new Button(Dict.get(lang, Dict.SIGNIN_GOOGLE) + " Org");
         loginBtn1.addActionListener(evt -> {
             ToastBar.showInfoMessage(Dict.get(lang, Dict.PLEASE_WAIT));
+
+            if (BYPASS_LOGIN) {
+                startMain();
+                return;
+            }
 
             GoogleConnect lg = GoogleConnect.getInstance();
             lg.setClientId(Card.GOOGLE_CLIENT_ID);
@@ -1132,6 +1147,7 @@ public class TuoLaJiPro {
 
     private void showStorage() {
         Form frm = new Form("Storage", BoxLayout.y());
+        frm.setSafeArea(true);
         frm.setScrollableX(true);
         frm.setScrollableY(true);
         Storage sr = Storage.getInstance();
