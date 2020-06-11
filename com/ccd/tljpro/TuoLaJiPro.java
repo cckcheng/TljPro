@@ -47,7 +47,7 @@ import java.util.Map;
  */
 public class TuoLaJiPro {
     static public final boolean DEBUG = true;
-    static public final boolean BYPASS_LOGIN = true;
+    static public final boolean BYPASS_LOGIN = false;
     static public final boolean INTERNAL = true;
 
 //    static public final String STORAGE_PROFILE = "profile";
@@ -291,7 +291,8 @@ public class TuoLaJiPro {
                     showAppleLogin(login);
                 }
             } else {
-                showGoogleLogin();
+//                showGoogleLogin();
+                startMain();
             }
         });
     }
@@ -306,19 +307,7 @@ public class TuoLaJiPro {
 
         String globalId = Preferences.get("UserID", "");
         if (globalId.isEmpty()) {
-            Display.getInstance().callSerially(() -> {
-                Form frm = new Form("Registration");
-                frm.setSafeArea(true);
-                frm.getToolbar().addMaterialCommandToRightBar("Next", FontImage.MATERIAL_STAR, (e) -> {
-                    if (DEBUG) registered = true;
-                    if (formMain == null) {
-                        startMain();
-                    } else {
-                        formMain.showBack();
-                    }
-                });
-                frm.show();
-            });
+            this.startRegistration();
         } else {
             this.myName = Preferences.get("Name", this.myName);
             player.sendRequest(player.initRequest(Request.REGISTER)
@@ -1019,8 +1008,15 @@ public class TuoLaJiPro {
             }
 
             if (!login.isNativeLoginSupported()) {
-                ToastBar.showErrorMessage("Native login not supported, please upgrade to IOS 13");
-                if (DEBUG && INTERNAL) showStorage();
+                ToastBar.showErrorMessage(Dict.get(lang, Dict.UPGRADE_IOS));
+                if (DEBUG && INTERNAL) {
+                    new UITimer(new Runnable() {
+                        @Override
+                        public void run() {
+                            showStorage();
+                        }
+                    }).schedule(5000, false, frm);
+                }
                 return;
             }
 
@@ -1028,7 +1024,14 @@ public class TuoLaJiPro {
                 @Override
                 public void loginFailed(String errorMessage) {
                     ToastBar.showErrorMessage(errorMessage);
-                    if (DEBUG && INTERNAL) showStorage();
+                    if (DEBUG && INTERNAL) {
+                        new UITimer(new Runnable() {
+                            @Override
+                            public void run() {
+                                showStorage();
+                            }
+                        }).schedule(5000, false, frm);
+                    }
                 }
 
                 @Override
@@ -1042,7 +1045,50 @@ public class TuoLaJiPro {
             });
         });
 
+        Button regBtn = new Button(Dict.get(lang, Dict.SIGNIN_EMAIL));
+//        AppleLogin.decorateLoginButton(regBtn, 0x0, 0xffffff);
+        regBtn.addActionListener(evt -> {
+            startMain();
+        });
+
         frm.add(FlowLayout.encloseCenter(loginBtn));
+        frm.add(FlowLayout.encloseCenter(regBtn));
+        frm.show();
+    }
+
+    private void startRegistration() {
+        String email = Preferences.get("Email", "");
+        Form frm;
+        if (email.isEmpty()) {
+            frm = new Form(Dict.get(lang, Dict.REGISTER), BoxLayout.y());
+            TextField tf = new TextField("", Dict.get(lang, Dict.INPUT_EMAIL));
+            frm.add(BoxLayout.encloseXCenter(tf, new Button(Command.create(Dict.get(lang, "OK"), null, (ev) -> {
+                String s = tf.getText().trim();
+                if (s.isEmpty()) return;
+                player.sendRequest(player.initRequest(Request.REGISTER)
+                        .append("email", s)
+                        .setReSend(true));
+            })
+            )));
+        } else {
+            frm = new Form(Dict.get(lang, Dict.AUTH), BoxLayout.y());
+            TextField tf = new TextField(email, Dict.get(lang, Dict.INPUT_EMAIL));
+            frm.add(BoxLayout.encloseXCenter(tf, new Button(Command.create(Dict.get(lang, "OK"), null, (ev) -> {
+                String s = tf.getText().trim();
+                if (s.isEmpty()) return;
+                player.sendRequest(player.initRequest(Request.REGISTER)
+                        .append("email", s)
+                        .setReSend(true));
+            })
+            )));
+        }
+
+        frm.setSafeArea(true);
+        if (INTERNAL) {
+            frm.getToolbar().addMaterialCommandToRightBar("Storage", FontImage.MATERIAL_ECO, (ev) -> {
+                showStorage();
+            });
+        }
         frm.show();
     }
 

@@ -129,6 +129,9 @@ public class Dict {
 
     public static final int PLAY = 1;
     public static final int PNAME = 2;
+    public static final int INPUT_EMAIL = 5;
+    public static final int REGISTER = 8;
+    public static final int AUTH = 9;
 
     public static final int QUICK_JOIN = 11;
     public static final int NEW_TABLE = 12;
@@ -139,10 +142,12 @@ public class Dict {
     public static final int SIGNIN_APPLE = 31;
     public static final int SIGNIN_GOOGLE = 32;
     public static final int SIGNIN_FACEBOOK = 33;
+    public static final int SIGNIN_EMAIL = 35;
     public static final int PLEASE_WAIT = 36;
 
     public static final int PLAYER_NAME_REQUIRED = 51;
     public static final int INVALID_PLAYER_NAME = 52;
+    public static final int UPGRADE_IOS = 55;
 
     public static final int FAIL_CONNECT_SERVER = 99;
 
@@ -168,16 +173,28 @@ public class Dict {
                 return lang.equals("zh") ? "使用Google登录" : "Sign in with Google";
             case SIGNIN_FACEBOOK:
                 return lang.equals("zh") ? "使用Facebook登录" : "Sign in with Facebook";
+            case SIGNIN_EMAIL:
+                return lang.equals("zh") ? "使用Email登录" : "Sign in with Your Email";
 
             case PLAYER_NAME_REQUIRED:
                 return lang.equals("zh") ? "请填写昵称" : "Player name is required";
             case INVALID_PLAYER_NAME:
                 return lang.equals("zh") ? "昵称含有非法字符" : "Invalid player name";
 
+            case REGISTER:
+                return lang.equals("zh") ? "注册" : "Register";
+            case AUTH:
+                return lang.equals("zh") ? "验证" : "Verify";
+            case INPUT_EMAIL:
+                return lang.equals("zh") ? "您的邮箱" : "Your Email";
+
             case PLEASE_WAIT:
                 return lang.equals("zh") ? "请稍候..." : "Please wait...";
             case FAIL_CONNECT_SERVER:
                 return lang.equals("zh") ? "服务器连接失败" : "Failed to connection server";
+            case UPGRADE_IOS:
+                return lang.equals("zh") ? "无法登录，请升级到IOS 13"
+                        : "Native login not supported, please upgrade to IOS 13";
         }
 
         return "Unknown";
