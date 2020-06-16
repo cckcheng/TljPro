@@ -178,7 +178,6 @@ public class TableView extends Form {
         dlg.setBackCommand("", null, (ev) -> {
             dlg.dispose();
         });
-//        Display.getInstance().editString(tf, tf.getMaxSize(), TextArea.NUMERIC, ""); // not work well
         dlg.setDialogPosition(BorderLayout.NORTH);
         dlg.showModeless();
         Display.getInstance().callSerially(() -> {

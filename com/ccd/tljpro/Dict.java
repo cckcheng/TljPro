@@ -1,5 +1,7 @@
 package com.ccd.tljpro;
 
+import com.codename1.util.regex.RE;
+
 /**
  *
  * @author ccheng
@@ -72,6 +74,8 @@ public class Dict {
                     case "start over":
                         return "重新开始";
 
+                    case "submit":
+                        return "提交";
                     case "save":
                         return "保存";
                     case "join":
@@ -130,6 +134,7 @@ public class Dict {
     public static final int PLAY = 1;
     public static final int PNAME = 2;
     public static final int INPUT_EMAIL = 5;
+    public static final int AUTH_CODE = 6;
     public static final int REGISTER = 8;
     public static final int AUTH = 9;
 
@@ -147,7 +152,14 @@ public class Dict {
 
     public static final int PLAYER_NAME_REQUIRED = 51;
     public static final int INVALID_PLAYER_NAME = 52;
+    public static final int INVALID_EMAIL = 54;
     public static final int UPGRADE_IOS = 55;
+
+    public static final int RESEND = 61;
+    public static final int VERIFY_AUTHCODE = 62;
+    public static final int CORRECT_EMAIL = 63;
+    public static final int MISSING_AUTHCODE = 64;
+    public static final int VERIFY_INSTRUCTION = 65;
 
     public static final int FAIL_CONNECT_SERVER = 99;
 
@@ -180,13 +192,29 @@ public class Dict {
                 return lang.equals("zh") ? "请填写昵称" : "Player name is required";
             case INVALID_PLAYER_NAME:
                 return lang.equals("zh") ? "昵称含有非法字符" : "Invalid player name";
+            case INVALID_EMAIL:
+                return lang.equals("zh") ? "非法Email" : "Invalid Email address";
 
             case REGISTER:
                 return lang.equals("zh") ? "注册" : "Register";
             case AUTH:
                 return lang.equals("zh") ? "验证" : "Verify";
+            case AUTH_CODE:
+                return lang.equals("zh") ? "验证码" : "Verification Code";
             case INPUT_EMAIL:
                 return lang.equals("zh") ? "您的邮箱" : "Your Email";
+
+            case RESEND:
+                return lang.equals("zh") ? "重新发送" : "Resend";
+            case VERIFY_AUTHCODE:
+                return lang.equals("zh") ? "验证" : "Verify";
+
+            case VERIFY_INSTRUCTION:
+                return lang.equals("zh") ? "验证码已发至您的邮箱" : "The verification code has been emailed to you";
+            case CORRECT_EMAIL:
+                return lang.equals("zh") ? "请输入正确的Email：" : "Please input your correct Email address:";
+            case MISSING_AUTHCODE:
+                return lang.equals("zh") ? "未收到验证码! 请确认邮箱无误" : "Verification Code not received! Please correct your email address";
 
             case PLEASE_WAIT:
                 return lang.equals("zh") ? "请稍候..." : "Please wait...";
@@ -198,5 +226,12 @@ public class Dict {
         }
 
         return "Unknown";
+    }
+
+//    static Pattern ptnEmail = Pattern.compile("^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$");
+    static RE reEmail = new RE("^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$");
+    static public boolean validEmail(String email) {
+//        return ptnEmail.matcher(email).matches();
+        return reEmail.match(email);
     }
 }

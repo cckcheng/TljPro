@@ -454,6 +454,8 @@ public class Hand extends Component {
     }
 
     synchronized public void clearCards() {
+        this.upperList.clear();
+        this.lowerList.clear();
         this.selected.clear();
         this.trumps.clear();
         for (int i = 0; i < TOTAL_SUITES; i++) {

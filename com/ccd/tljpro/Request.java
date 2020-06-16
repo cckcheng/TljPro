@@ -24,6 +24,7 @@ public class Request {
     static final String LIST = "list";
 
     static final String REGISTER = "reg";
+    static final String VERIFY = "auth";
 
     private String msg;
     private final String action;

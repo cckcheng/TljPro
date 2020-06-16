@@ -282,17 +282,23 @@ public class TuoLaJiPro {
     }
 
     public void showLogin() {
+        registered = Preferences.get("registered", false);
+        String globalId = Preferences.get("UserID", "");
         Display.getInstance().callSerially(() -> {
-            if (Card.FOR_IOS) {
-                AppleLogin login = new AppleLogin();
-                if (login.isUserLoggedIn()) {
-                    startMain();
-                } else {
-                    showAppleLogin(login);
-                }
-            } else {
-//                showGoogleLogin();
+            if (registered && globalId.isEmpty()) {
                 startMain();
+            } else {
+                if (Card.FOR_IOS) {
+                    AppleLogin login = new AppleLogin();
+                    if (login.isUserLoggedIn()) {
+                        startMain();
+                    } else {
+                        showAppleLogin(login);
+                    }
+                } else {
+//                    showGoogleLogin();
+                    startMain();
+                }
             }
         });
     }
@@ -1056,31 +1062,52 @@ public class TuoLaJiPro {
         frm.show();
     }
 
-    private void startRegistration() {
+    public void startRegistration() {
         String email = Preferences.get("Email", "");
         Form frm;
+        TextField tf = new TextField(email, Dict.get(lang, Dict.INPUT_EMAIL));
+        Button btnOk = new Button(Dict.get(lang, "OK"));
+        btnOk.addActionListener(ev -> {
+            String s = tf.getText().trim();
+            if (s.isEmpty()) return;
+            if (!Dict.validEmail(s)) {
+                Dialog.show(Dict.get(lang, Dict.INVALID_EMAIL), null, Dict.get(lang, "OK"), null);
+                return;
+            }
+            btnOk.setEnabled(false);
+            Preferences.set("Email", s);
+            player.sendRequest(player.initRequest(Request.REGISTER)
+                    .append("email", s)
+                    .setReSend(true));
+        });
+
         if (email.isEmpty()) {
             frm = new Form(Dict.get(lang, Dict.REGISTER), BoxLayout.y());
-            TextField tf = new TextField("", Dict.get(lang, Dict.INPUT_EMAIL));
-            frm.add(BoxLayout.encloseXCenter(tf, new Button(Command.create(Dict.get(lang, "OK"), null, (ev) -> {
-                String s = tf.getText().trim();
-                if (s.isEmpty()) return;
-                player.sendRequest(player.initRequest(Request.REGISTER)
-                        .append("email", s)
-                        .setReSend(true));
-            })
-            )));
+            frm.add(Dict.get(lang, Dict.CORRECT_EMAIL));
+            frm.add(BoxLayout.encloseXCenter(tf, btnOk));
         } else {
             frm = new Form(Dict.get(lang, Dict.AUTH), BoxLayout.y());
-            TextField tf = new TextField(email, Dict.get(lang, Dict.INPUT_EMAIL));
-            frm.add(BoxLayout.encloseXCenter(tf, new Button(Command.create(Dict.get(lang, "OK"), null, (ev) -> {
-                String s = tf.getText().trim();
-                if (s.isEmpty()) return;
-                player.sendRequest(player.initRequest(Request.REGISTER)
-                        .append("email", s)
+            frm.add(Dict.get(lang, Dict.VERIFY_INSTRUCTION));
+            frm.add(BoxLayout.encloseXCenter(tf));
+            TextField tAuthcode = new TextField("", Dict.get(lang, Dict.AUTH_CODE), 10, TextArea.NUMERIC);
+            Button btnVerify = new Button(Dict.get(lang, "Submit"));
+            btnVerify.addActionListener(ev -> {
+                String code = tAuthcode.getText().trim();
+                if (code.isEmpty()) return;
+                btnVerify.setEnabled(false);
+                player.sendRequest(player.initRequest(Request.VERIFY)
+                        .append("code", code)
                         .setReSend(true));
-            })
-            )));
+                new UITimer(new Runnable() {
+                    @Override
+                    public void run() {
+                        btnVerify.setEnabled(true);
+                    }
+                }).schedule(5000, false, frm);
+            });
+            frm.add(BoxLayout.encloseXCenter(tAuthcode, btnVerify));
+            btnOk.setText(Dict.get(lang, Dict.RESEND));
+            frm.add(BoxLayout.encloseXCenter(new Label(Dict.get(lang, Dict.MISSING_AUTHCODE)), btnOk));
         }
 
         frm.setSafeArea(true);

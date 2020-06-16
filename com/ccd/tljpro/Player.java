@@ -1189,6 +1189,9 @@ public class Player {
                             case "reg": // registered
                                 main.finishRegistration();
                                 break;
+                            case "auth": // need verify auth code
+                                main.startRegistration();
+                                break;
 
                             case "list":
                                 // list current tables
