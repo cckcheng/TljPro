@@ -1245,6 +1245,10 @@ public class Player {
                                 tableOn = false;
                                 main.showPlayOption();
                                 break;
+
+                            case "priv":
+                                main.showPrivacy(trimmedString(data.get("msg")));
+                                break;
                         }
                     });
                 }

@@ -74,6 +74,8 @@ public class Dict {
                     case "start over":
                         return "重新开始";
 
+                    case "privacy policy":
+                        return "隐私政策";
                     case "submit":
                         return "提交";
                     case "save":

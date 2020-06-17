@@ -241,6 +241,8 @@ public class TuoLaJiPro {
         }
         if (this.lang == null || this.lang.trim().isEmpty()) this.lang = "en";
 
+        if (DEBUG) this.lang = "en";  // only for testing
+
         sObj = Storage.getInstance().readObject("myColor");
         if (sObj != null) {
             this.currentColorKey = sObj.toString();
@@ -1082,13 +1084,13 @@ public class TuoLaJiPro {
         });
 
         if (email.isEmpty()) {
-            frm = new Form(Dict.get(lang, Dict.REGISTER), BoxLayout.y());
+            frm = new Form(Dict.get(lang, Dict.REGISTER), BoxLayout.yLast());
             frm.add(Dict.get(lang, Dict.CORRECT_EMAIL));
-            frm.add(BoxLayout.encloseXCenter(tf, btnOk));
+            frm.add(tf).add(btnOk);
         } else {
-            frm = new Form(Dict.get(lang, Dict.AUTH), BoxLayout.y());
+            frm = new Form(Dict.get(lang, Dict.AUTH), BoxLayout.yLast());
             frm.add(Dict.get(lang, Dict.VERIFY_INSTRUCTION));
-            frm.add(BoxLayout.encloseXCenter(tf));
+            frm.add(tf);
             TextField tAuthcode = new TextField("", Dict.get(lang, Dict.AUTH_CODE), 10, TextArea.NUMERIC);
             Button btnVerify = new Button(Dict.get(lang, "Submit"));
             btnVerify.addActionListener(ev -> {
@@ -1105,11 +1107,24 @@ public class TuoLaJiPro {
                     }
                 }).schedule(5000, false, frm);
             });
-            frm.add(BoxLayout.encloseXCenter(tAuthcode, btnVerify));
+            frm.add(tAuthcode).add(btnVerify);
             btnOk.setText(Dict.get(lang, Dict.RESEND));
-            frm.add(BoxLayout.encloseXCenter(new Label(Dict.get(lang, Dict.MISSING_AUTHCODE)), btnOk));
+//            frm.add(BoxLayout.encloseXCenter(new Label(Dict.get(lang, Dict.MISSING_AUTHCODE)), btnOk));
+            frm.add(Dict.get(lang, Dict.MISSING_AUTHCODE)).add(btnOk);
         }
 
+        Button btnPrivacy = new Button(Dict.get(lang, "Privacy Policy"));
+        btnPrivacy.addActionListener(ev -> {
+            showPrivacy(null);
+            btnPrivacy.setEnabled(false);
+            new UITimer(new Runnable() {
+                @Override
+                public void run() {
+                    btnPrivacy.setEnabled(true);
+                }
+            }).schedule(5000, false, frm);
+        });
+        frm.add(btnPrivacy);
         frm.setSafeArea(true);
         if (INTERNAL) {
             frm.getToolbar().addMaterialCommandToRightBar("Storage", FontImage.MATERIAL_ECO, (ev) -> {
@@ -1117,6 +1132,19 @@ public class TuoLaJiPro {
             });
         }
         frm.show();
+    }
+
+    private String strPrivacy;
+
+    public void showPrivacy(String msg) {
+        if (msg != null) {
+            this.strPrivacy = msg;
+        }
+        if (strPrivacy != null) {
+            Dialog.show(Dict.get(lang, "Privacy Policy"), strPrivacy, Dict.get(lang, "OK"), null);
+        } else {
+            player.sendRequest(player.initRequest("priv"));
+        }
     }
 
     private void showGoogleLogin() {
