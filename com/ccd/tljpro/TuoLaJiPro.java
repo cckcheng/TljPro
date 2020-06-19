@@ -46,9 +46,9 @@ import java.util.Map;
  * of building native mobile applications using Java.
  */
 public class TuoLaJiPro {
-    static public final boolean DEBUG = true;
+    static public final boolean DEBUG = false;
     static public final boolean BYPASS_LOGIN = false;
-    static public final boolean INTERNAL = true;
+    static public final boolean INTERNAL = false;
 
 //    static public final String STORAGE_PROFILE = "profile";
 
@@ -226,6 +226,7 @@ public class TuoLaJiPro {
 
 //        Preferences.setPreferencesLocation(STORAGE_PROFILE);
         if (BYPASS_LOGIN) {
+            Preferences.set("registered", false);
             Preferences.set("UserID", "TestUserID");
             Preferences.set("Email", "TestEmail");
         }
@@ -241,7 +242,7 @@ public class TuoLaJiPro {
         }
         if (this.lang == null || this.lang.trim().isEmpty()) this.lang = "en";
 
-        if (DEBUG) this.lang = "en";  // only for testing
+//        if (DEBUG) this.lang = "en";  // only for testing
 
         sObj = Storage.getInstance().readObject("myColor");
         if (sObj != null) {
@@ -292,7 +293,7 @@ public class TuoLaJiPro {
             } else {
                 if (Card.FOR_IOS) {
                     AppleLogin login = new AppleLogin();
-                    if (login.isUserLoggedIn()) {
+                    if (BYPASS_LOGIN || login.isUserLoggedIn()) {
                         startMain();
                     } else {
                         showAppleLogin(login);
@@ -323,7 +324,6 @@ public class TuoLaJiPro {
                     .append("email", Preferences.get("Email", ""))
                     .append("keyid", Preferences.get("KeyID", ""))
                     .setReSend(true));
-            ToastBar.showInfoMessage(Dict.get(lang, Dict.PLEASE_WAIT));
         }
         return true;
     }
@@ -331,7 +331,7 @@ public class TuoLaJiPro {
     public void finishRegistration() {
         Preferences.set("registered", true);
         registered = true;
-        if (!initSetup()) startMain();
+        startMain();
     }
 
     private boolean initSetup() {
@@ -1006,6 +1006,7 @@ public class TuoLaJiPro {
         frm.add(FlowLayout.encloseCenter(new Label(AppleLogin.createAppleLogo(0x0, 15f))));
         Button loginBtn = new Button(Dict.get(lang, Dict.SIGNIN_APPLE));
         AppleLogin.decorateLoginButton(loginBtn, 0x0, 0xffffff);
+        Button regBtn = new Button(Dict.get(lang, Dict.SIGNIN_EMAIL));
 
 //        login.addScopes("fullName", "email");
         loginBtn.addActionListener(evt -> {
@@ -1044,6 +1045,8 @@ public class TuoLaJiPro {
 
                 @Override
                 public void loginSuccessful() {
+                    loginBtn.setEnabled(false);
+                    regBtn.setEnabled(false);
                     Preferences.set("UserID", login.getUserId());
                     Preferences.set("Email", login.getEmail());
                     Preferences.set("Name", login.getFullName());
@@ -1053,7 +1056,6 @@ public class TuoLaJiPro {
             });
         });
 
-        Button regBtn = new Button(Dict.get(lang, Dict.SIGNIN_EMAIL));
 //        AppleLogin.decorateLoginButton(regBtn, 0x0, 0xffffff);
         regBtn.addActionListener(evt -> {
             startMain();
@@ -1061,6 +1063,11 @@ public class TuoLaJiPro {
 
         frm.add(FlowLayout.encloseCenter(loginBtn));
         frm.add(FlowLayout.encloseCenter(regBtn));
+        if (INTERNAL) {
+            frm.getToolbar().addMaterialCommandToRightBar("Storage", FontImage.MATERIAL_ECO, (ev) -> {
+                showStorage();
+            });
+        }
         frm.show();
     }
 
