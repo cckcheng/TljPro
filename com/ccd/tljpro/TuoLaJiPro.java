@@ -48,7 +48,7 @@ import java.util.Map;
 public class TuoLaJiPro {
     static public final boolean DEBUG = false;
     static public final boolean BYPASS_LOGIN = false;
-    static public final boolean INTERNAL = false;
+    static public final boolean INTERNAL = true;
 
 //    static public final String STORAGE_PROFILE = "profile";
 
@@ -203,7 +203,7 @@ public class TuoLaJiPro {
     }
 
     public String version = "1.0";
-    public final static String title = "Langley TuoLaJi Premium";
+    public final static String title = "Langley TuoLaJi";
     public String OS = "";
 
     public String lang = "en";
@@ -306,11 +306,11 @@ public class TuoLaJiPro {
         });
     }
 
-    private boolean registered = false;
+    protected boolean registered = false;
     private boolean setupDone = false;
 
     private boolean doRegistration() {
-        if (registered) return false;
+        if (registered || skipRegistration) return false;
         registered = Preferences.get("registered", false);
         if (registered) return false;
 
@@ -371,6 +371,10 @@ public class TuoLaJiPro {
         });
     }
 
+    public void infoRegisterRequired() {
+        Dialog.show(Dict.get(lang, Dict.REGISTER_REQUIRED), null, Dict.get(lang, "OK"), "");
+    }
+
     private void createMainForm() {
         if (this.formMain == null) {
             Form mainForm = new Form(Dict.get(lang, title), new BorderLayout());
@@ -404,7 +408,11 @@ public class TuoLaJiPro {
                 if (!isLandscape()) {
                     return;
                 }
-                player.sendRequest(Request.create(Request.JOIN, "opt", "").setReSend(true));
+                if (registered) {
+                    player.sendRequest(Request.create(Request.JOIN, "opt", "").setReSend(true));
+                } else {
+                    this.switchScene("view");
+                }
             });
 
             btnBrowse = new Button(Dict.get(lang, "Browse"));
@@ -426,7 +434,12 @@ public class TuoLaJiPro {
                 if (!isLandscape()) {
                     return;
                 }
-                this.formView.inputPassword(this.player);
+
+                if (registered) {
+                    this.formView.inputPassword(this.player);
+                } else {
+                    infoRegisterRequired();
+                }
             });
 
             btnHelp = new Button(Dict.get(lang, "Help"));
@@ -1001,7 +1014,7 @@ public class TuoLaJiPro {
     }
 
     private void showAppleLogin(AppleLogin login) {
-        Form frm = new Form(BoxLayout.y());
+        Form frm = new Form(Dict.get(lang, title), BoxLayout.yLast());
         frm.setSafeArea(true);
         frm.add(FlowLayout.encloseCenter(new Label(AppleLogin.createAppleLogo(0x0, 15f))));
         Button loginBtn = new Button(Dict.get(lang, Dict.SIGNIN_APPLE));
@@ -1063,6 +1076,21 @@ public class TuoLaJiPro {
 
         frm.add(FlowLayout.encloseCenter(loginBtn));
         frm.add(FlowLayout.encloseCenter(regBtn));
+
+        frm.add(skipButton());
+        Button btnPrivacy = new Button(Dict.get(lang, "Privacy Policy"));
+        btnPrivacy.addActionListener(ev -> {
+            showPrivacy(null);
+            btnPrivacy.setEnabled(false);
+            new UITimer(new Runnable() {
+                @Override
+                public void run() {
+                    btnPrivacy.setEnabled(true);
+                }
+            }).schedule(5000, false, frm);
+        });
+        frm.add(btnPrivacy);
+
         if (INTERNAL) {
             frm.getToolbar().addMaterialCommandToRightBar("Storage", FontImage.MATERIAL_ECO, (ev) -> {
                 showStorage();
@@ -1120,6 +1148,7 @@ public class TuoLaJiPro {
             frm.add(Dict.get(lang, Dict.MISSING_AUTHCODE)).add(btnOk);
         }
 
+        frm.add(skipButton());
         Button btnPrivacy = new Button(Dict.get(lang, "Privacy Policy"));
         btnPrivacy.addActionListener(ev -> {
             showPrivacy(null);
@@ -1139,6 +1168,16 @@ public class TuoLaJiPro {
             });
         }
         frm.show();
+    }
+
+    private boolean skipRegistration = false;
+    private Button skipButton() {
+        Button btnSkip = new Button(Dict.get(lang, "Skip"));
+        btnSkip.addActionListener(ev -> {
+            skipRegistration = true;
+            startMain();
+        });
+        return btnSkip;
     }
 
     private String strPrivacy;

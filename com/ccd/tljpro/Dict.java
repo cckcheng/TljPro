@@ -11,7 +11,7 @@ public class Dict {
         if (src == null || src.isEmpty()) return "";
         if (src.equals(TuoLaJiPro.title)) {
             if (lang.equals("zh")) {
-                return "兰里拖拉机专业版";
+                return "兰里拖拉机";
             }
             return src;
         }
@@ -78,6 +78,8 @@ public class Dict {
                         return "隐私政策";
                     case "submit":
                         return "提交";
+                    case "skip":
+                        return "跳过";
                     case "save":
                         return "保存";
                     case "join":
@@ -162,6 +164,11 @@ public class Dict {
     public static final int CORRECT_EMAIL = 63;
     public static final int MISSING_AUTHCODE = 64;
     public static final int VERIFY_INSTRUCTION = 65;
+    public static final int REGISTER_REQUIRED = 69;
+
+    public static final int SUGGEST = 71;
+    public static final int CHANGE_TO = 72;
+    public static final int NO_CHANGE = 73;
 
     public static final int FAIL_CONNECT_SERVER = 99;
 
@@ -180,6 +187,13 @@ public class Dict {
                 return lang.equals("zh") ? "私有桌" : "Private Table";
             case TABLE_CODE:
                 return lang.equals("zh") ? "本桌密码" : "Table Pass";
+
+            case SUGGEST:
+                return lang.equals("zh") ? "更改提示" : "Recommendation";
+            case CHANGE_TO:
+                return lang.equals("zh") ? "改为" : "Change To";
+            case NO_CHANGE:
+                return lang.equals("zh") ? "不变" : "Keep";
 
             case SIGNIN_APPLE:
                 return lang.equals("zh") ? "使用Apple登录" : "Sign in with Apple";
@@ -217,6 +231,9 @@ public class Dict {
                 return lang.equals("zh") ? "请输入正确的Email：" : "Please input your correct Email address:";
             case MISSING_AUTHCODE:
                 return lang.equals("zh") ? "未收到验证码! 请确认邮箱无误" : "Verification Code not received! Please correct your email address";
+
+            case REGISTER_REQUIRED:
+                return lang.equals("zh") ? "请先注册" : "Please sign in first";
 
             case PLEASE_WAIT:
                 return lang.equals("zh") ? "请稍候..." : "Please wait...";

@@ -26,6 +26,7 @@ import com.codename1.ui.events.ActionListener;
 import com.codename1.ui.geom.Rectangle;
 import com.codename1.ui.layouts.BorderLayout;
 import com.codename1.ui.layouts.BoxLayout;
+import com.codename1.ui.layouts.FlowLayout;
 import com.codename1.ui.layouts.LayeredLayout;
 import com.codename1.ui.util.UITimer;
 import com.codename1.util.Base64;
@@ -242,12 +243,14 @@ public class Player {
         infoLst.get(0).showTimer(actTime, 100, "bury");
     }
 
+    private String defRecommend = "";
     private void buryCards(Map<String, Object> data) {
         if (this.hand.isEmpty()) return;
         String strCards = trimmedString(data.get("cards"));
         if (strCards.isEmpty()) return;
         hand.removeCards(strCards);
 
+        this.defRecommend = trimmedString(data.get("def"));
         infoLst.get(0).showTimer(this.timeout, 100, "partner");
     }
 
@@ -271,7 +274,7 @@ public class Player {
                     part = Dict.get(main.lang, " 4th ") + part;
                     break;
             }
-            part = Dict.get(main.lang, "Partner") + ":" + part;
+//            part = Dict.get(main.lang, "Partner") + ":" + part;
         }
         return part;
     }
@@ -717,7 +720,8 @@ public class Player {
 //        this.widget.add(bExit).add(this.lbGeneral).add(this.gameInfo).add(this.partnerInfo).add(this.pointsInfo);
         this.widget.add(bExit).add(this.lbGeneral).add(this.lbPass).add(this.trumpInfo).add(this.contractInfo)
                 .add(this.partnerCardSeq).add(this.partnerCard).add(this.pointsInfo);
-        this.widget.add(bRobot).add(bSit);
+        this.widget.add(bRobot);
+        if (main.registered) this.widget.add(bSit);
         this.widget.revalidate();
 
         table.add(hand);
@@ -728,7 +732,7 @@ public class Player {
         LayeredLayout ll = (LayeredLayout) table.getLayout();
         ll.setInsets(bExit, "0 0 auto auto");   //top right bottom left
         ll.setInsets(bRobot, "auto 0 0 auto");   //top right bottom left
-        ll.setInsets(bSit, "auto 0 0 auto");   //top right bottom left
+        if (main.registered) ll.setInsets(bSit, "auto 0 0 auto");   //top right bottom left
         ll.setInsets(this.lbGeneral, "-" + Hand.deltaGeneral + " auto auto 0")
                 .setInsets(this.lbPass, "-" + Hand.deltaGeneral + " auto auto 0")
                 .setInsets(this.partnerCardSeq, "auto 0 " + Hand.deltaGeneral + " auto")
@@ -826,6 +830,7 @@ public class Player {
         pp.showPoints(bidToString(bid));
     }
 
+    private String trumpRecommend = "";
     private void displayBid(Map<String, Object> data) {
         int seat = parseInteger(data.get("seat"));
         int actionSeat = parseInteger(data.get("next"));
@@ -837,6 +842,7 @@ public class Player {
         pp = this.playerMap.get(actionSeat);
         if (pp != null) {
             boolean bidOver = parseBoolean(data.get("bidOver"));
+            trumpRecommend = trimmedString(data.get("itrump"));
             int actTime = parseInteger(data.get("acttime"));
             pp.showTimer(actTime > 1 ? actTime : this.timeout, this.contractPoint, bidOver ? "dim" : "bid");
         }
@@ -1816,9 +1822,30 @@ public class Player {
                         }
                         buttons.add(btn);
                         btn.addActionListener((e) -> {
-                            cancelTimer();
-//                            mySocket.addRequest(actionSetTrump, "\"trump\":\"" + c + "\"");
-                            mySocket.addRequest(Request.create(Request.TRUMP, "trump", c));
+                            if (!trumpRecommend.isEmpty() && c != trumpRecommend.charAt(0)) {
+                                Dialog dlg = new Dialog(Dict.get(main.lang, Dict.SUGGEST));
+                                dlg.setBackCommand("", null, (ev) -> {
+                                    dlg.dispose();
+                                });
+                                dlg.add(BoxLayout.encloseX(
+                                        new Label(Dict.get(main.lang, Dict.CHANGE_TO)),
+                                        dimButton(trumpRecommend.charAt(0), dlg))
+                                );
+                                dlg.add(BoxLayout.encloseX(
+                                        new Label(Dict.get(main.lang, Dict.NO_CHANGE)),
+                                        dimButton(c, dlg))
+                                );
+                                Button bCancel = new Button(Dict.get(main.lang, "Cancel"));
+                                bCancel.addActionListener((ev) -> {
+                                    dlg.dispose();
+                                });
+                                dlg.add(bCancel);
+                                dlg.setDialogPosition(BorderLayout.NORTH);
+                                dlg.showModeless();
+                            } else {
+                                cancelTimer();
+                                mySocket.addRequest(Request.create(Request.TRUMP, "trump", c));
+                            }
                         });
                     }
 
@@ -1923,6 +1950,46 @@ public class Player {
             parent.revalidate();
         }
 
+        private Button dimButton(char c, Dialog dlg) {
+            Button btn = new Button();
+            if (c == Card.JOKER) {
+                btn.setText(Dict.get(main.lang, "NT"));
+            } else {
+                btn.setText(Card.suiteSign(c));
+            }
+            btn.getAllStyles().setFont(Hand.fontRank);
+            if (c == Card.HEART || c == Card.DIAMOND) {
+                btn.getAllStyles().setFgColor(RED_COLOR);
+            } else {
+                btn.getAllStyles().setFgColor(BLACK_COLOR);
+            }
+            btn.addActionListener((ev) -> {
+                dlg.dispose();
+                cancelTimer();
+                mySocket.addRequest(Request.create(Request.TRUMP, "trump", c));
+            });
+
+            return btn;
+        }
+
+        private Button defButton(String def, Dialog dlg) {
+            String txt = partnerDef(def);
+            Button btn = new Button(txt);
+            char c = def.charAt(0);
+            btn.getAllStyles().setFont(Hand.fontRank);
+            if (c == Card.HEART || c == Card.DIAMOND) {
+                btn.getAllStyles().setFgColor(RED_COLOR);
+            } else {
+                btn.getAllStyles().setFgColor(BLACK_COLOR);
+            }
+            btn.addActionListener((ev) -> {
+                dlg.dispose();
+                cancelTimer();
+                mySocket.addRequest(Request.create(Request.PARTNER, "def", def));
+            });
+            return btn;
+        }
+
         private void addCardButton(Container buttons, char suite, String rnk, ButtonGroup btnGroup) {
             if(suite != currentTrump) {
                 Button btn = new Button(Card.suiteSign(suite) + rnk, "suite" + suite);
@@ -1938,10 +2005,31 @@ public class Player {
                     if(!btnGroup.isSelected()) {
                         userHelp.showHelp(userHelp.PARTNER_DEF);
                     } else {
-                        cancelTimer();
-//                        mySocket.addRequest(actionPartner,
-//                                "\"def\":\"" + suite + rnk + btnGroup.getSelectedIndex() + "\"");
-                        mySocket.addRequest(Request.create(Request.PARTNER, "def", suite + rnk + btnGroup.getSelectedIndex()));
+                        String def = suite + rnk + btnGroup.getSelectedIndex();
+                        if (!defRecommend.isEmpty() && !def.equalsIgnoreCase(defRecommend)) {
+                            Dialog dlg = new Dialog(Dict.get(main.lang, Dict.SUGGEST));
+                            dlg.setBackCommand("", null, (ev) -> {
+                                dlg.dispose();
+                            });
+                            dlg.add(BoxLayout.encloseX(
+                                    new Label(Dict.get(main.lang, Dict.CHANGE_TO)),
+                                    defButton(defRecommend, dlg))
+                            );
+                            dlg.add(BoxLayout.encloseX(
+                                    new Label(Dict.get(main.lang, Dict.NO_CHANGE)),
+                                    defButton(def, dlg))
+                            );
+                            Button bCancel = new Button(Dict.get(main.lang, "Cancel"));
+                            bCancel.addActionListener((ev) -> {
+                                dlg.dispose();
+                            });
+                            dlg.add(bCancel);
+                            dlg.setDialogPosition(BorderLayout.NORTH);
+                            dlg.showModeless();
+                        } else {
+                            cancelTimer();
+                            mySocket.addRequest(Request.create(Request.PARTNER, "def", def));
+                        }
                     }
                 });
             }

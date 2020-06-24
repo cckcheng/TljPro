@@ -62,6 +62,10 @@ public class TableView extends Form {
         this.setLayout(new BorderLayout());
         cmdQuickJoin = Command.createMaterial(Dict.get(main.lang, Dict.QUICK_JOIN), FontImage.MATERIAL_PLAY_ARROW, (e) -> {
             int idx = this.listTabs.getSelectedIndex();
+            if (idx > 0 && !main.registered) {
+                main.infoRegisterRequired();
+                return;
+            }
             TableContainer t = this.tableList.get(idx);
             player.sendRequest(Request.create(Request.JOIN, "opt", t.category).setReSend(true));
             Storage.getInstance().writeObject("category", t.category);
@@ -75,10 +79,18 @@ public class TableView extends Form {
             }
         });
         cmdPrivateTable = Command.createMaterial(Dict.get(main.lang, Dict.PRIVATE_TABLE), FontImage.MATERIAL_LOCK, (e) -> {
-            inputPassword(this.player);
+            if (main.registered) {
+                inputPassword(this.player);
+            } else {
+                main.infoRegisterRequired();
+            }
         });
         cmdNewTable = Command.createMaterial(Dict.get(main.lang, Dict.NEW_TABLE), FontImage.MATERIAL_ADD_CIRCLE, (e) -> {
 //        cmdNewTable = Command.createMaterial(Dict.get(main.lang, Dict.NEW_TABLE), (char) 57669, (e) -> {
+            if (!main.registered) {
+                main.infoRegisterRequired();
+                return;
+            }
             int idx = this.listTabs.getSelectedIndex();
             TableContainer t = this.tableList.get(idx);
             TableLayout tl = new TableLayout(2, 1);
