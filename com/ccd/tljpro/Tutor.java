@@ -48,7 +48,7 @@ public class Tutor extends Container {
         if (Card.DEBUG_MODE) {
             Storage.getInstance().clearStorage();
         }
-        totalScore = Player.parseInteger(Storage.getInstance().readObject("tutor_score"));
+        totalScore = Func.parseInteger(Storage.getInstance().readObject("tutor_score"));
         if (totalScore < 0) {
             totalScore = 0;
         }
@@ -60,7 +60,7 @@ public class Tutor extends Container {
 
             int idx = 0;
             Object sObj = Storage.getInstance().readObject("tutor");
-            if (sObj != null) idx = Player.parseInteger(sObj);
+            if (sObj != null) idx = Func.parseInteger(sObj);
             if (idx < 0) idx = 0;
             currentIndex = idx;
 
@@ -208,7 +208,7 @@ public class Tutor extends Container {
                 main.showPlayButton();
             }
 
-            int score = Player.parseInteger(Storage.getInstance().readObject(this.id));
+            int score = Func.parseInteger(Storage.getInstance().readObject(this.id));
             scored = score >= 0;
 
             Component content = null;

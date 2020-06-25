@@ -229,7 +229,7 @@ public class TableView extends Form {
 
     public void refreshTableList(Map<String, Object> data) {
         if (this.listTabs.getTabCount() < 1) {
-            String category = Player.trimmedString(data.get("category"));
+            String category = Func.trimmedString(data.get("category"));
             if (category.isEmpty()) return; // should not happen
             while (category.length() > 0) {
                 int idx = category.indexOf(',');
@@ -258,25 +258,30 @@ public class TableView extends Form {
         }
 
         for (TableContainer c : this.tableList) {
-            c.addContent(Player.trimmedString(data.get(c.category)), data);
+            c.addContent(Func.trimmedString(data.get(c.category)), data);
         }
         this.revalidate();
     }
 
     private void addCategoryTab(String cStr) {
-        int idx = cStr.indexOf('|');
-        if (idx <= 0) return;
-        String category = cStr.substring(0, idx);
+        List<String> lst = Func.toStringList(cStr, '|');
+        if (lst.isEmpty()) return;
+
+        int idx = 0, n = lst.size();
+        String category = lst.get(idx++);
         this.tableList.add(new TableContainer(category));
 
-        String tabName = cStr.substring(idx + 1);
-        idx = tabName.indexOf('|');
+        if (idx >= n) return;
+        String tabName = lst.get(idx++);
+
         char icon = FontImage.MATERIAL_CASINO;
-        if (idx > 0) {
-            icon = (char) Player.parseInteger(tabName.substring(idx + 1));
+        if (idx < n) {
+            icon = (char) Func.parseInteger(tabName.substring(idx + 1));
             tabName = tabName.substring(0, idx);
         }
 
+//        tabName += ": $200 " + FontImage.MATERIAL_MONETIZATION_ON;
+        if (true) tabName += " $200";
         int idxTab = this.listTabs.getTabCount();
         this.categoryIndex.put(category, idxTab);
         this.listTabs.addTab(tabName, this.tableList.get(idxTab));
@@ -319,7 +324,7 @@ public class TableView extends Form {
         }
 
         private Button toTableButton(String tableId, Map<String, Object> data) {
-            Button btn = new Button(Player.trimmedString(data.get(tableId)));
+            Button btn = new Button(Func.trimmedString(data.get(tableId)));
             btn.addActionListener((ev) -> {
                 player.sendRequest(Request.create(Request.WATCH, "tid", tableId.substring(1)).setReSend(true));
                 Storage.getInstance().writeObject("category", category);

@@ -975,7 +975,7 @@ public class Hand extends Component {
                 int nextRank = tRank0 + 1;
                 for (int i = 0; i < highers.size(); i++) {
                     String ck = highers.get(i);
-                    int rnk = Player.parseInteger(ck.substring(0, 2));
+                    int rnk = Func.parseInteger(ck.substring(0, 2));
                     if (rnk == nextRank) {
                         if (countMap.get(ck) < 3) {
                             continue;
@@ -993,7 +993,7 @@ public class Hand extends Component {
                 int nextRank = tRank0 - 1;
                 for (int i = 0; i < lowers.size(); i++) {
                     String ck = lowers.get(i);
-                    int rnk = Player.parseInteger(ck.substring(0, 2));
+                    int rnk = Func.parseInteger(ck.substring(0, 2));
                     if (rnk == nextRank) {
                         if (countMap.get(ck) < 3) {
                             continue;
@@ -1041,7 +1041,7 @@ public class Hand extends Component {
             int nextRank = tRank0 + 1;
             for (int i = 0; i < highers.size(); i++) {
                 String ck = highers.get(i);
-                int rnk = Player.parseInteger(ck.substring(0, 2));
+                int rnk = Func.parseInteger(ck.substring(0, 2));
                 if (rnk == nextRank) {
                     if (countMap.get(ck) < 2) {
                         continue;
@@ -1059,7 +1059,7 @@ public class Hand extends Component {
             int nextRank = tRank0 - 1;
             for (int i = 0; i < lowers.size(); i++) {
                 String ck = lowers.get(i);
-                int rnk = Player.parseInteger(ck.substring(0, 2));
+                int rnk = Func.parseInteger(ck.substring(0, 2));
                 if (rnk == nextRank) {
                     if (countMap.get(ck) < 2) {
                         continue;

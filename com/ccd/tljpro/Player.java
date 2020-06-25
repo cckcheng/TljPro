@@ -207,7 +207,7 @@ public class Player {
             return;
         }
         for (Object d : lst) {
-            int rank = parseInteger(d);
+            int rank = Func.parseInteger(d);
             if (rank > 0) {
                 hand.addCard(new Card(suite, rank));
             }
@@ -224,7 +224,7 @@ public class Player {
 
     synchronized private void addRemains(Map<String, Object> data) {
         if (this.hand.isEmpty()) return;
-        String cards = trimmedString(data.get("cards"));
+        String cards = Func.trimmedString(data.get("cards"));
         if (cards.isEmpty()) return;
         int x = cards.indexOf(',');
         while (x > 0) {
@@ -239,18 +239,18 @@ public class Player {
         }
 
         hand.sortCards(currentTrump, playerRank, true);
-        int actTime = parseInteger(data.get("acttime"));
+        int actTime = Func.parseInteger(data.get("acttime"));
         infoLst.get(0).showTimer(actTime, 100, "bury");
     }
 
     private String defRecommend = "";
     private void buryCards(Map<String, Object> data) {
         if (this.hand.isEmpty()) return;
-        String strCards = trimmedString(data.get("cards"));
+        String strCards = Func.trimmedString(data.get("cards"));
         if (strCards.isEmpty()) return;
         hand.removeCards(strCards);
 
-        this.defRecommend = trimmedString(data.get("def"));
+        this.defRecommend = Func.trimmedString(data.get("def"));
         infoLst.get(0).showTimer(this.timeout, 100, "partner");
     }
 
@@ -316,10 +316,10 @@ public class Player {
     }
 
     private void definePartner(Map<String, Object> data) {
-        int seat = parseInteger(data.get("seat"));
+        int seat = Func.parseInteger(data.get("seat"));
         PlayerInfo pp = this.playerMap.get(seat);
         if (pp != null) pp.showTimer(timeout, 0, "play");
-        String def = trimmedString(data.get("def"));
+        String def = Func.trimmedString(data.get("def"));
 //        this.partnerCard.setText(partnerDef(def));
         this.displayPartnerDef(def);
     }
@@ -334,21 +334,6 @@ public class Player {
             return false;
         }
         return true;
-    }
-
-    public static int parseInteger(Object obj) {
-        if (obj == null) return -1;
-        try {
-            return (int) Double.parseDouble(obj.toString());
-        } catch (Exception e) {
-            return -1;
-        }
-    }
-
-    public static boolean parseBoolean(Object obj) {
-        if (obj == null) return false;
-        String r = obj.toString();
-        return r.equalsIgnoreCase("yes") || r.equalsIgnoreCase("true");
     }
 
     public final List<PlayerInfo> infoLst = new ArrayList<>();
@@ -412,23 +397,23 @@ public class Player {
         this.tableOn = true;
         this.resetTable();
 
-        this.currentTableId = trimmedString(data.get("tid"));
-        String stage = trimmedString(data.get("stage"));
+        this.currentTableId = Func.trimmedString(data.get("tid"));
+        String stage = Func.trimmedString(data.get("stage"));
         this.isPlaying = stage.equalsIgnoreCase(PLAYING_STAGE);
-        currentSeat = parseInteger(data.get("seat"));
+        currentSeat = Func.parseInteger(data.get("seat"));
 
-        String visit = trimmedString(data.get("visit"));
+        String visit = Func.trimmedString(data.get("visit"));
         this.watching = visit.equals("Y");
         this.bRobot.setVisible(!this.watching);
         this.bSit.setVisible(this.watching);
         if (this.watching) {
-            this.numCardsLeft = parseInteger(data.get("cnum"));
+            this.numCardsLeft = Func.parseInteger(data.get("cnum"));
         } else {
             this.numCardsLeft = 0;
             if (this.currentTableId.startsWith("L")) {
-                this.currentPass = trimmedString(data.get("pass"));
+                this.currentPass = Func.trimmedString(data.get("pass"));
             }
-            String pTrumps = trimmedString(data.get("ptrumps"));
+            String pTrumps = Func.trimmedString(data.get("ptrumps"));
             if (!pTrumps.isEmpty()) {
                 for (int i = 0, n = pTrumps.length(); i < n; i++) {
                     this.candidateTrumps.add(pTrumps.charAt(i));
@@ -436,26 +421,26 @@ public class Player {
             }
         }
 
-        int actionSeat = parseInteger(data.get("next"));
-        this.playerRank = parseInteger(data.get("rank"));
-        int game = parseInteger(data.get("game"));
-        int defaultTimeout = parseInteger(data.get("timeout"));
+        int actionSeat = Func.parseInteger(data.get("next"));
+        this.playerRank = Func.parseInteger(data.get("rank"));
+        int game = Func.parseInteger(data.get("game"));
+        int defaultTimeout = Func.parseInteger(data.get("timeout"));
         if (defaultTimeout > 0) this.timeout = defaultTimeout;
 
         if (!this.watching) this.addCards(data);
 
         PlayerInfo p0 = this.infoLst.get(0);
-        String myName = trimmedString(data.get("name"));
+        String myName = Func.trimmedString(data.get("name"));
         p0.setMainInfo(currentSeat, myName, this.playerRank);
         this.playerMap.put(currentSeat, p0);
         char trumpSuite = Card.JOKER;
 
-        String info = trimmedString(data.get("info"));
+        String info = Func.trimmedString(data.get("info"));
         if (info.isEmpty()) {
-            this.gameRank = parseInteger(data.get("gameRank"));
-            this.contractPoint = parseInteger(data.get("contract"));
+            this.gameRank = Func.parseInteger(data.get("gameRank"));
+            this.contractPoint = Func.parseInteger(data.get("contract"));
 
-            String trump = trimmedString(data.get("trump"));
+            String trump = Func.trimmedString(data.get("trump"));
             if (!trump.isEmpty()) trumpSuite = trump.charAt(0);
 
             if (gameRank > 0) {
@@ -465,15 +450,15 @@ public class Player {
             }
 
             if (!this.isPlaying) {
-                int minBid = parseInteger(data.get("minBid"));
+                int minBid = Func.parseInteger(data.get("minBid"));
                 if (minBid > 0) p0.addMinBid(minBid);
-                displayBidInfo(p0, trimmedString(data.get("bid")));
+                displayBidInfo(p0, Func.trimmedString(data.get("bid")));
             } else {
-                List<Card> lst = Card.fromString(trimmedString(data.get("cards")), this.currentTrump, this.gameRank);
+                List<Card> lst = Card.fromString(Func.trimmedString(data.get("cards")), this.currentTrump, this.gameRank);
                 if (lst != null) {
                     this.hand.addPlayCards(p0, lst);
                 }
-                int point1 = parseInteger(data.get("pt1")); // points earned by player itself
+                int point1 = Func.parseInteger(data.get("pt1")); // points earned by player itself
                 if (point1 != -1) {
                     if (point1 == 0) {
                         p0.contractor.setText("");
@@ -481,7 +466,7 @@ public class Player {
                         p0.contractor.setText(point1 + "");
                     }
                 }
-                int lead = parseInteger(data.get("lead"));
+                int lead = Func.parseInteger(data.get("lead"));
                 if (lead > 0) {
                     p0.setLeadSign(true);
                 }
@@ -512,8 +497,8 @@ public class Player {
         String strTrump = "";
 //        String ptInfo = " ";
         String pointInfo = " ";
-        int actTime = parseInteger(data.get("acttime"));
-        String act = trimmedString(data.get("act"));
+        int actTime = Func.parseInteger(data.get("acttime"));
+        String act = Func.trimmedString(data.get("act"));
         if (this.isPlaying) {
             p0.needChangeActions = true;
             if (!act.equals("dim")) {
@@ -524,9 +509,9 @@ public class Player {
                 }
                 strTrump += Card.rankToString(gameRank);
             }
-//            ptInfo = this.partnerDef(trimmedString(data.get("def")));
-            this.displayPartnerDef(trimmedString(data.get("def")));
-            int points = parseInteger(data.get("pt0"));
+//            ptInfo = this.partnerDef(Func.trimmedString(data.get("def")));
+            this.displayPartnerDef(Func.trimmedString(data.get("def")));
+            int points = Func.parseInteger(data.get("pt0"));
             pointInfo = points + Dict.get(main.lang, " points");
 
             this.contractInfo.setText(this.contractPoint + "");
@@ -552,10 +537,10 @@ public class Player {
         }
 
         if (this.isPlaying) {
-            int seatContractor = parseInteger(data.get("seatContractor"));
+            int seatContractor = Func.parseInteger(data.get("seatContractor"));
             pp = this.playerMap.get(seatContractor);
             if (pp != null) pp.setContractor(CONTRACTOR);
-            int seatPartner = parseInteger(data.get("seatPartner"));
+            int seatPartner = Func.parseInteger(data.get("seatPartner"));
             pp = this.playerMap.get(seatPartner);
             if (pp != null) {
                 if (pp.isContractSide) {
@@ -582,7 +567,7 @@ public class Player {
 
     private void startNotifyTimer(Map<String, Object> data) {
         if (gameTimer == null) {
-            int pauseSeconds = parseInteger(data.get("pause"));
+            int pauseSeconds = Func.parseInteger(data.get("pause"));
             if (pauseSeconds - 5 > 0) {
                 gameTimer = new UITimer(this.notifyPlayer);
                 gameTimer.schedule((pauseSeconds - 5) * 1000, false, main.formTable);
@@ -774,19 +759,19 @@ public class Player {
     }
 
     private void parsePlayerInfo(PlayerInfo pp, Map<String, Object> rawData) {
-        int seat = parseInteger(rawData.get("seat"));
-        String name = trimmedString(rawData.get("name"));
+        int seat = Func.parseInteger(rawData.get("seat"));
+        String name = Func.trimmedString(rawData.get("name"));
         if (name.isEmpty()) name = "#" + seat;
-        pp.setMainInfo(seat, name, parseInteger(rawData.get("rank")));
+        pp.setMainInfo(seat, name, Func.parseInteger(rawData.get("rank")));
         this.playerMap.put(seat, pp);
         if (!this.isPlaying) {
-            displayBidInfo(pp, trimmedString(rawData.get("bid")));
+            displayBidInfo(pp, Func.trimmedString(rawData.get("bid")));
         } else {
-            List<Card> lst = Card.fromString(trimmedString(rawData.get("cards")), this.currentTrump, this.gameRank);
+            List<Card> lst = Card.fromString(Func.trimmedString(rawData.get("cards")), this.currentTrump, this.gameRank);
             if (lst != null) {
                 this.hand.addPlayCards(pp, lst);
             }
-            int point1 = parseInteger(rawData.get("pt1")); // points earned by player itself
+            int point1 = Func.parseInteger(rawData.get("pt1")); // points earned by player itself
             if (point1 != -1) {
                 if (point1 == 0) {
                     pp.contractor.setText("");
@@ -794,7 +779,7 @@ public class Player {
                     pp.contractor.setText(point1 + "");
                 }
             }
-            int lead = parseInteger(rawData.get("lead"));
+            int lead = Func.parseInteger(rawData.get("lead"));
             if (lead > 0) {
                 pp.setLeadSign(true);
             }
@@ -807,7 +792,7 @@ public class Player {
             return "Pass";
         }
 
-        return "" + parseInteger(bid);
+        return "" + Func.parseInteger(bid);
     }
 
     private PlayerInfo leadingPlayer;
@@ -832,18 +817,18 @@ public class Player {
 
     private String trumpRecommend = "";
     private void displayBid(Map<String, Object> data) {
-        int seat = parseInteger(data.get("seat"));
-        int actionSeat = parseInteger(data.get("next"));
-        this.contractPoint = parseInteger(data.get("contract"));   // send contract point every time to avoid error
-        String bid = trimmedString(data.get("bid"));
+        int seat = Func.parseInteger(data.get("seat"));
+        int actionSeat = Func.parseInteger(data.get("next"));
+        this.contractPoint = Func.parseInteger(data.get("contract"));   // send contract point every time to avoid error
+        String bid = Func.trimmedString(data.get("bid"));
         PlayerInfo pp = this.playerMap.get(seat);
         if (pp != null) displayBidInfo(pp, bid);
 
         pp = this.playerMap.get(actionSeat);
         if (pp != null) {
-            boolean bidOver = parseBoolean(data.get("bidOver"));
-            trumpRecommend = trimmedString(data.get("itrump"));
-            int actTime = parseInteger(data.get("acttime"));
+            boolean bidOver = Func.parseBoolean(data.get("bidOver"));
+            trumpRecommend = Func.trimmedString(data.get("itrump"));
+            int actTime = Func.parseInteger(data.get("acttime"));
             pp.showTimer(actTime > 1 ? actTime : this.timeout, this.contractPoint, bidOver ? "dim" : "bid");
         }
     }
@@ -865,11 +850,6 @@ public class Player {
         pp.cancelTimer();
     }
 
-    public static String trimmedString(Object obj) {
-        if(obj == null) return "";
-        return obj.toString().trim();
-    }
-
     private void gameSummary(Map<String, Object> data) {
         if (!this.tableOn) {
             return;
@@ -878,22 +858,22 @@ public class Player {
         bRobot.setSelected(false);
         this.robotOn = false;
 
-        int points = parseInteger(data.get("pt0"));
+        int points = Func.parseInteger(data.get("pt0"));
         if (points != -1) {
             this.pointsInfo.setText(points + Dict.get(main.lang, " points"));
         } else {
             this.tableEnded = true;
-            int finPrac = Player.parseInteger(Storage.getInstance().readObject("finprac"));
+            int finPrac = Func.parseInteger(Storage.getInstance().readObject("finprac"));
             if (finPrac < 1) {
                 Storage.getInstance().writeObject("finprac", 1);
             }
         }
-        final String summary = trimmedString(data.get("summary"));
-        int seat = parseInteger(data.get("seat"));  // the contractor
+        final String summary = Func.trimmedString(data.get("summary"));
+        int seat = Func.parseInteger(data.get("seat"));  // the contractor
         for (PlayerInfo pp : this.infoLst) {
             this.hand.clearPlayCards(pp);
             if (pp.seat == seat) {
-                String cards = trimmedString(data.get("hole"));
+                String cards = Func.trimmedString(data.get("hole"));
                 List<Card> lst = Card.fromString(cards, this.currentTrump, this.gameRank);
                 this.hand.addPlayCards(pp, lst);
             }
@@ -928,15 +908,15 @@ public class Player {
     }
 
     private void playerIn(Map<String, Object> data) {
-        int seat = parseInteger(data.get("seat"));
+        int seat = Func.parseInteger(data.get("seat"));
         PlayerInfo pp = this.playerMap.get(seat);
         if (pp != null) {
-            pp.updateName(trimmedString(data.get("name")), false);
+            pp.updateName(Func.trimmedString(data.get("name")), false);
         }
     }
 
     private void playerOut(Map<String, Object> data) {
-        int seat = parseInteger(data.get("seat"));
+        int seat = Func.parseInteger(data.get("seat"));
         PlayerInfo pp = this.playerMap.get(seat);
         if (pp != null) {
             pp.updateName(pp.playerName, true);
@@ -967,7 +947,7 @@ public class Player {
     }
 
     private void showInfo(Map<String, Object> data) {
-        showInfo(trimmedString(data.get("info")));
+        showInfo(Func.trimmedString(data.get("info")));
     }
 
     private void showInfo(String info) {
@@ -1016,19 +996,19 @@ public class Player {
     }
 
     private void playCards(Map<String, Object> data) {
-        int seat = parseInteger(data.get("seat"));
-        int actionSeat = parseInteger(data.get("next"));
-        int points = parseInteger(data.get("pt0")); // total points by non-contract players
+        int seat = Func.parseInteger(data.get("seat"));
+        int actionSeat = Func.parseInteger(data.get("next"));
+        int points = Func.parseInteger(data.get("pt0")); // total points by non-contract players
         if (points != -1) {
             this.pointsInfo.setText(points + Dict.get(main.lang, " points"));
             this.widget.revalidate();
         }
 
-        int pointSeat = parseInteger(data.get("pseat"));
+        int pointSeat = Func.parseInteger(data.get("pseat"));
         if (pointSeat > 0) {
             PlayerInfo pp = this.playerMap.get(pointSeat);
             if (pp != null && !pp.isContractSide) {
-                int point = parseInteger(data.get("pt")); // points earned by player itself
+                int point = Func.parseInteger(data.get("pt")); // points earned by player itself
                 if (point != -1) {
                     if (point == 0) {
                         pp.contractor.setText("");
@@ -1040,16 +1020,16 @@ public class Player {
         }
 
         if(seat > 0) {
-            String cards = trimmedString(data.get("cards"));
+            String cards = Func.trimmedString(data.get("cards"));
             PlayerInfo pp = this.playerMap.get(seat);
             if (pp != null) {
                 displayCards(pp, cards);
-                int lead = parseInteger(data.get("lead"));
+                int lead = Func.parseInteger(data.get("lead"));
                 if (lead > 0) {
                     setLeadingIcon(pp);
                 }
 
-                boolean isPartner = parseBoolean(data.get("isPartner"));
+                boolean isPartner = Func.parseBoolean(data.get("isPartner"));
                 if (isPartner) {
                     if (pp.isContractSide) {
                         pp.setContractor(CONTRACTOR + "," + PARTNER);
@@ -1058,7 +1038,7 @@ public class Player {
                     }
                 }
                 if (!pp.isContractSide) {
-                    int point1 = parseInteger(data.get("pt1")); // points earned by player itself
+                    int point1 = Func.parseInteger(data.get("pt1")); // points earned by player itself
                     if (point1 != -1) {
                         if (point1 == 0) {
                             pp.contractor.setText("");
@@ -1078,14 +1058,14 @@ public class Player {
         if (actionSeat > 0) {
             PlayerInfo pp = this.playerMap.get(actionSeat);
             if (pp != null) {
-                int actTime = parseInteger(data.get("acttime"));
+                int actTime = Func.parseInteger(data.get("acttime"));
                 pp.showTimer(actTime > 1 ? actTime : this.timeout, this.contractPoint, "play");
                 if (this.leadingPlayer == null) {
                     this.leadingPlayer = pp;
                 }
 
                 if (pp.location.equals("bottom")) {
-                    String sugCards = trimmedString(data.get("sug"));   // suggested cards by AI
+                    String sugCards = Func.trimmedString(data.get("sug"));   // suggested cards by AI
                     if (!sugCards.isEmpty()) {
                         hand.autoSelectCards(sugCards);
                     } else {
@@ -1102,13 +1082,13 @@ public class Player {
     protected int gameRank;
     synchronized private void setTrump(Map<String, Object> data) {
         if (!this.watching && this.hand.isEmpty()) return;
-        String trump = trimmedString(data.get("trump"));
+        String trump = Func.trimmedString(data.get("trump"));
         if (trump.isEmpty()) return;
         this.currentTrump = trump.charAt(0);
-        int seat = parseInteger(data.get("seat"));
-        this.gameRank = parseInteger(data.get("gameRank"));
-        int actTime = parseInteger(data.get("acttime"));
-        int contractPoint = parseInteger(data.get("contract"));
+        int seat = Func.parseInteger(data.get("seat"));
+        this.gameRank = Func.parseInteger(data.get("gameRank"));
+        int actTime = Func.parseInteger(data.get("acttime"));
+        int contractPoint = Func.parseInteger(data.get("contract"));
         this.hand.sortCards(currentTrump, this.gameRank, true);
 //        this.hand.repaint();
 
@@ -1188,7 +1168,7 @@ public class Player {
 
                     if (TuoLaJiPro.DEBUG) Log.p("Received: " + subMsg);
                     Map<String, Object> data = parser.parseJSON(new StringReader(subMsg));
-                    final String action = trimmedString(data.get("action"));
+                    final String action = Func.trimmedString(data.get("action"));
 
                     Display.getInstance().callSeriallyAndWait(() -> {
                         switch (action) {
@@ -1253,7 +1233,7 @@ public class Player {
                                 break;
 
                             case "priv":
-                                main.showPrivacy(trimmedString(data.get("msg")));
+                                main.showPrivacy(Func.trimmedString(data.get("msg")));
                                 break;
                         }
                     });
@@ -1536,18 +1516,18 @@ public class Player {
                 btnBid.addActionListener((e) -> {
                     cancelTimer();
 //                    mySocket.addRequest(actionBid, "\"bid\":" + btnBid.getText().trim());
-                    mySocket.addRequest(Request.create(Request.BID, "bid", parseInteger(btnBid.getText())));
+                    mySocket.addRequest(Request.create(Request.BID, "bid", Func.parseInteger(btnBid.getText())));
                 });
 
                 btnPlus.addActionListener((e) -> {
-                    int point = parseInteger(btnBid.getText());
+                    int point = Func.parseInteger(btnBid.getText());
                     if (point < this.maxBid) {
                         point += 5;
                         btnBid.setText("" + point);
                     }
                 });
                 btnMinus.addActionListener((e) -> {
-                    int point = parseInteger(btnBid.getText());
+                    int point = Func.parseInteger(btnBid.getText());
                     if (point > 0) {
                         point -= 5;
                         btnBid.setText("" + point);

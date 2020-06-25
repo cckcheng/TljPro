@@ -351,6 +351,10 @@ public class TuoLaJiPro {
 
         Display.getInstance().lockOrientation(false);
         Display.getInstance().callSerially(() -> {
+            if (this.formMain != null) {
+                switchScene("entry");
+                return;
+            }
             this.createMainForm();
 
             String playerName = getPlayerName();
@@ -372,7 +376,20 @@ public class TuoLaJiPro {
     }
 
     public void infoRegisterRequired() {
-        Dialog.show(Dict.get(lang, Dict.REGISTER_REQUIRED), null, Dict.get(lang, "OK"), "");
+        Dialog dlg = new Dialog(Dict.get(lang, Dict.REGISTER_REQUIRED));
+        dlg.add(new Button(Command.create(Dict.get(lang, Dict.REGISTER), null,
+                (ev) -> {
+                    skipRegistration = false;
+                    showLogin();
+                }))
+        );
+        dlg.add(new Button(Command.create(Dict.get(lang, "Cancel"), null,
+                (ev) -> {
+                }))
+        );
+        dlg.setBackCommand("", null, (ev) -> {
+        });
+        dlg.show();
     }
 
     private void createMainForm() {
@@ -591,9 +608,9 @@ public class TuoLaJiPro {
             }
         };
         FontImage.setMaterialIcon(matchCmd, FontImage.MATERIAL_DIRECTIONS_RUN, "Button");
-        int finPrac = Player.parseInteger(Storage.getInstance().readObject("finprac"));
+        int finPrac = Func.parseInteger(Storage.getInstance().readObject("finprac"));
         if (finPrac < 1) {
-            int totalScore = Player.parseInteger(Storage.getInstance().readObject("tutor_score"));
+            int totalScore = Func.parseInteger(Storage.getInstance().readObject("tutor_score"));
             if (totalScore >= 80) {
                 finPrac = 1;
                 Storage.getInstance().writeObject("finprac", 1);
@@ -1300,7 +1317,7 @@ public class TuoLaJiPro {
         Storage sr = Storage.getInstance();
         for (String k : sr.listEntries()) {
             if (k == null || k.isEmpty()) continue;
-            String v = Player.trimmedString(sr.readObject(k));
+            String v = Func.trimmedString(sr.readObject(k));
             frm.add(BoxLayout.encloseX(new Label(k), new Label(v.isEmpty() ? "Null" : v),
                     new Button(Command.createMaterial("", FontImage.MATERIAL_DELETE, (ev) -> {
                         sr.writeObject(k, null);
