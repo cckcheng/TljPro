@@ -170,6 +170,9 @@ public class Dict {
     public static final int CHANGE_TO = 72;
     public static final int NO_CHANGE = 73;
 
+    public static final int COIN_NOT_ENOUGH = 81;
+    public static final int TOPUP = 82;
+
     public static final int FAIL_CONNECT_SERVER = 99;
 
     static public String get(final String lang, int k) {
@@ -234,6 +237,11 @@ public class Dict {
 
             case REGISTER_REQUIRED:
                 return lang.equals("zh") ? "请先注册" : "Please sign in first";
+
+            case COIN_NOT_ENOUGH:
+                return lang.equals("zh") ? "账户余额不足" : "No enough diamonds";
+            case TOPUP:
+                return lang.equals("zh") ? "充值" : "Top up";
 
             case PLEASE_WAIT:
                 return lang.equals("zh") ? "请稍候..." : "Please wait...";

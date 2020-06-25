@@ -63,6 +63,7 @@ public class Player {
 //    private final ButtonImage backImage = new ButtonImage(0xbcbcbc);
     static final int TIME_OUT_SECONDS = 25;
     private final TuoLaJiPro main;
+    public int coins = 0;
 
     private String option;
 
@@ -1179,6 +1180,12 @@ public class Player {
                                 main.startRegistration();
                                 break;
 
+                            case "acc": // account info
+                                coins = Func.parseInteger(data.get("coin"));
+                                break;
+                            case "coin":
+                                Func.noEnoughCoin(main.lang);
+                                break;
                             case "list":
                                 // list current tables
                                 main.formView.refreshTableList(data);

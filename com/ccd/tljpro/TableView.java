@@ -67,6 +67,10 @@ public class TableView extends Form {
                 return;
             }
             TableContainer t = this.tableList.get(idx);
+            if (t.coins > 0 && player.coins < t.coins) {
+                Func.noEnoughCoin(main.lang);
+                return;
+            }
             player.sendRequest(Request.create(Request.JOIN, "opt", t.category).setReSend(true));
             Storage.getInstance().writeObject("category", t.category);
         });
@@ -93,6 +97,11 @@ public class TableView extends Form {
             }
             int idx = this.listTabs.getSelectedIndex();
             TableContainer t = this.tableList.get(idx);
+            if (t.coins > 0 && player.coins < t.coins) {
+                Func.noEnoughCoin(main.lang);
+                return;
+            }
+
             TableLayout tl = new TableLayout(2, 1);
             Container props = new Container(tl);
             String lang = main.lang;
@@ -269,19 +278,27 @@ public class TableView extends Form {
 
         int idx = 0, n = lst.size();
         String category = lst.get(idx++);
-        this.tableList.add(new TableContainer(category));
+        TableContainer tc = new TableContainer(category);
+        this.tableList.add(tc);
 
         if (idx >= n) return;
         String tabName = lst.get(idx++);
 
         char icon = FontImage.MATERIAL_CASINO;
         if (idx < n) {
-            icon = (char) Func.parseInteger(tabName.substring(idx + 1));
-            tabName = tabName.substring(0, idx);
+            icon = (char) Func.parseInteger(lst.get(idx++));
         }
 
-//        tabName += ": $200 " + FontImage.MATERIAL_MONETIZATION_ON;
-        if (true) tabName += " $200";
+        int coins = 0;
+        if (n > 3) {
+            coins = Func.parseInteger(lst.get(3));
+        }
+
+        if (coins > 0) {
+            tabName += " " + Card.suiteSign(Card.DIAMOND) + coins;
+            tc.coins = coins;
+//            tabName += " " + FontImage.MATERIAL_MONETIZATION_ON + coins;
+        }
         int idxTab = this.listTabs.getTabCount();
         this.categoryIndex.put(category, idxTab);
         this.listTabs.addTab(tabName, this.tableList.get(idxTab));
@@ -293,6 +310,7 @@ public class TableView extends Form {
 
         String category;
         String dispName;
+        int coins = 0;
 
         TableContainer(String category) {
             this.category = category;

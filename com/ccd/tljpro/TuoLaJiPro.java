@@ -46,7 +46,7 @@ import java.util.Map;
  * of building native mobile applications using Java.
  */
 public class TuoLaJiPro {
-    static public final boolean DEBUG = false;
+    static public final boolean DEBUG = true;
     static public final boolean BYPASS_LOGIN = false;
     static public final boolean INTERNAL = true;
 

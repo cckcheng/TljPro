@@ -1,5 +1,8 @@
 package com.ccd.tljpro;
 
+import com.codename1.ui.Button;
+import com.codename1.ui.Command;
+import com.codename1.ui.Dialog;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,4 +47,21 @@ public class Func {
         } while (true);
         return lst;
     }
+
+    static public void noEnoughCoin(String lang) {
+        Dialog dlg = new Dialog(Dict.get(lang, Dict.COIN_NOT_ENOUGH));
+        dlg.add(new Button(Command.create(Dict.get(lang, Dict.TOPUP), null,
+                (ev) -> {
+
+                }))
+        );
+        dlg.add(new Button(Command.create(Dict.get(lang, "Cancel"), null,
+                (ev) -> {
+                }))
+        );
+        dlg.setBackCommand("", null, (ev) -> {
+        });
+        dlg.show();
+    }
+
 }
