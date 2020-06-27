@@ -20,6 +20,8 @@ public class Dict {
         switch (lang) {
             case "zh":
                 switch (lowerSrc) {
+                    case "language":
+                        return "语言";
                     case "background":
                         return "背景";
                     case "match":

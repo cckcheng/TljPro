@@ -1182,6 +1182,7 @@ public class Player {
 
                             case "acc": // account info
                                 coins = Func.parseInteger(data.get("coin"));
+                                main.updateAccountInfo(coins);
                                 break;
                             case "coin":
                                 Func.noEnoughCoin(main.lang);
@@ -1257,6 +1258,8 @@ public class Player {
 
         @Override
         public void connectionError(int errorCode, String message) {
+            if (TuoLaJiPro.DEBUG) System.out.println("ConnectErr: " + message);
+
             closeRequested = true;
 //            main.enableButtons();
             if (checkOnce) {

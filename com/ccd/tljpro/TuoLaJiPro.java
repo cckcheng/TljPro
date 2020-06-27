@@ -5,7 +5,9 @@ import com.codename1.components.SpanLabel;
 import com.codename1.components.ToastBar;
 import com.codename1.io.Log;
 import com.codename1.io.Preferences;
+import com.codename1.io.Socket;
 import com.codename1.io.Storage;
+import com.codename1.io.URL;
 import com.codename1.l10n.L10NManager;
 import com.codename1.social.AppleLogin;
 import com.codename1.social.GoogleConnect;
@@ -38,6 +40,7 @@ import com.codename1.ui.table.TableLayout;
 import com.codename1.ui.util.Resources;
 import com.codename1.ui.util.UITimer;
 import com.codename1.util.StringUtil;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,7 +49,7 @@ import java.util.Map;
  * of building native mobile applications using Java.
  */
 public class TuoLaJiPro {
-    static public final boolean DEBUG = true;
+    static public final boolean DEBUG = false;
     static public final boolean BYPASS_LOGIN = false;
     static public final boolean INTERNAL = true;
 
@@ -266,6 +269,8 @@ public class TuoLaJiPro {
         this.version = disp.getProperty("AppVersion", this.version);
 
         if (DEBUG) {
+            System.out.println("getHostOrIP=" + Socket.getHostOrIP());
+
             System.out.println("Platform=" + disp.getProperty("Platform", ""));
             System.out.println("User-Agent=" + disp.getProperty("User-Agent", ""));
             this.OS = disp.getProperty("OS", "");
@@ -392,6 +397,8 @@ public class TuoLaJiPro {
         dlg.show();
     }
 
+    private Label lblStat;
+    private Label lblAccount;
     private void createMainForm() {
         if (this.formMain == null) {
             Form mainForm = new Form(Dict.get(lang, title), new BorderLayout());
@@ -497,38 +504,24 @@ public class TuoLaJiPro {
                 showSettings();
             });
 
-            RadioButton rbEn = new RadioButton("English");
-            RadioButton rbZh = new RadioButton("中文");
-            ButtonGroup btnGroup = new ButtonGroup(rbEn, rbZh);
-            btnGroup.addActionListener((e) -> {
-                if (rbEn.isSelected()) {
-                    this.lang = "en";
-                } else if (rbZh.isSelected()) {
-                    this.lang = "zh";
-                }
-                Storage.getInstance().writeObject("lang", this.lang);
-                refreshButtons();
-                this.formSetting = null;
-                this.formView.resetTableList();
-                this.player.sendRequest(this.player.initRequest(Request.LIST));
-            });
-            if (lang.equalsIgnoreCase("zh")) {
-                rbZh.setSelected(true);
-            } else {
-                rbEn.setSelected(true);
-            }
-
-            this.entry = new Container(BoxLayout.yLast());
+            this.entry = new Container(BoxLayout.y());
             this.entry.setSafeArea(true);
 
             entry.add(this.btnTutor);
             entry.add(this.btnBrowse);
             entry.add(this.btnPlay);
             entry.add(this.btnPrivateTable);
-            entry.add(BoxLayout.encloseX(rbEn, rbZh));
 
             mainForm.add(BorderLayout.CENTER, entry);
             this.currentComp = entry;
+
+            Toolbar statusBar = new Toolbar(true);
+            statusBar.setUIID("user_status");
+            this.lblStat = new Label("");
+            this.lblAccount = new Label("");
+            statusBar.addComponent(BorderLayout.EAST, this.lblStat);
+            statusBar.addComponent(BorderLayout.WEST, this.lblAccount);
+            mainForm.add(BorderLayout.SOUTH, statusBar);
 
             topTool.addComponentToRightSideMenu(btnSetting);
             topTool.addComponentToRightSideMenu(btnHelp);
@@ -540,6 +533,16 @@ public class TuoLaJiPro {
                 });
             }
         }
+    }
+
+    public void updateAccountInfo(int coins) {
+        this.lblAccount.setText(this.myName + ": " + Card.suiteSign(Card.DIAMOND) + coins);
+        this.formMain.revalidate();
+    }
+
+    public void updateStatInfo(String stat) {
+        this.lblStat.setText(stat);
+        this.formMain.revalidate();
     }
 
     private void setupTable() {
@@ -735,9 +738,37 @@ public class TuoLaJiPro {
             strPicker.setStrings(bkColors);
             strPicker.setSelectedString(this.currentColor.getName(lang));
 
-            this.formSetting.add(tl.createConstraint().widthPercentage(30).horizontalAlign(Component.RIGHT), new Label(Dict.get(lang, "Player Name"))).add(pName)
-                    .add(tl.createConstraint().widthPercentage(30).horizontalAlign(Component.RIGHT), new Label(Dict.get(lang, "Background"))).add(strPicker);
-//                    .add(tl.createConstraint().widthPercentage(30).horizontalAlign(Component.RIGHT), new Label(Dict.get(lang, "Version"))).add(new Label(this.version));
+            RadioButton rbEn = new RadioButton("English");
+            RadioButton rbZh = new RadioButton("中文");
+            ButtonGroup btnGroup = new ButtonGroup(rbEn, rbZh);
+            btnGroup.addActionListener((e) -> {
+                if (rbEn.isSelected()) {
+                    this.lang = "en";
+                } else if (rbZh.isSelected()) {
+                    this.lang = "zh";
+                }
+                Storage.getInstance().writeObject("lang", this.lang);
+                if (setupDone) {
+                    refreshButtons();
+                    this.formView.resetTableList();
+                    this.player.sendRequest(this.player.initRequest(Request.LIST));
+                }
+                this.formSetting = null;
+                showSettings();
+            });
+            if (lang.equalsIgnoreCase("zh")) {
+                rbZh.setSelected(true);
+            } else {
+                rbEn.setSelected(true);
+            }
+
+            this.formSetting.add(tl.createConstraint().widthPercentage(30).horizontalAlign(Component.RIGHT),
+                    new Label(Dict.get(lang, "Language"))).add(BoxLayout.encloseX(rbEn, rbZh));
+
+            this.formSetting.add(tl.createConstraint().widthPercentage(30).horizontalAlign(Component.RIGHT),
+                    new Label(Dict.get(lang, "Player Name"))).add(pName)
+                    .add(tl.createConstraint().widthPercentage(30).horizontalAlign(Component.RIGHT),
+                            new Label(Dict.get(lang, "Background"))).add(strPicker);
 
             Toolbar tbar = this.formSetting.getToolbar();
             tbar.setUIID("myTool");

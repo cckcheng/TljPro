@@ -266,6 +266,8 @@ public class TableView extends Form {
             }
         }
 
+        String stat = Func.trimmedString(data.get("stat"));
+        main.updateStatInfo(stat);
         for (TableContainer c : this.tableList) {
             c.addContent(Func.trimmedString(data.get(c.category)), data);
         }
