@@ -7,7 +7,6 @@ import com.codename1.io.Log;
 import com.codename1.io.Preferences;
 import com.codename1.io.Socket;
 import com.codename1.io.Storage;
-import com.codename1.io.URL;
 import com.codename1.l10n.L10NManager;
 import com.codename1.social.AppleLogin;
 import com.codename1.social.GoogleConnect;
@@ -20,6 +19,7 @@ import com.codename1.ui.Component;
 import com.codename1.ui.Container;
 import com.codename1.ui.Dialog;
 import com.codename1.ui.Display;
+import com.codename1.ui.Font;
 import com.codename1.ui.FontImage;
 import com.codename1.ui.Form;
 import com.codename1.ui.Image;
@@ -28,11 +28,13 @@ import com.codename1.ui.RadioButton;
 import com.codename1.ui.TextArea;
 import com.codename1.ui.TextField;
 import com.codename1.ui.Toolbar;
+import com.codename1.ui.animations.CommonTransitions;
 import com.codename1.ui.events.ActionEvent;
 import com.codename1.ui.geom.Rectangle;
 import com.codename1.ui.layouts.BorderLayout;
 import com.codename1.ui.layouts.BoxLayout;
 import com.codename1.ui.layouts.FlowLayout;
+import com.codename1.ui.layouts.GridLayout;
 import com.codename1.ui.layouts.LayeredLayout;
 import com.codename1.ui.plaf.UIManager;
 import com.codename1.ui.spinner.Picker;
@@ -40,7 +42,6 @@ import com.codename1.ui.table.TableLayout;
 import com.codename1.ui.util.Resources;
 import com.codename1.ui.util.UITimer;
 import com.codename1.util.StringUtil;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -51,7 +52,7 @@ import java.util.Map;
 public class TuoLaJiPro {
     static public final boolean DEBUG = false;
     static public final boolean BYPASS_LOGIN = false;
-    static public final boolean INTERNAL = true;
+    static public final boolean INTERNAL = false;
 
 //    static public final String STORAGE_PROFILE = "profile";
 
@@ -116,7 +117,6 @@ public class TuoLaJiPro {
     private Button btnPrivateTable = null;
     private Button btnHelp = null;
     private Button btnAccount = null;
-//    private Button btnExit = null;
     private Button btnSetting = null;
 
     public String getMyId() {
@@ -161,7 +161,6 @@ public class TuoLaJiPro {
         this.btnPrivateTable.setText(Dict.get(lang, Dict.PRIVATE_TABLE));
         this.btnHelp.setText(Dict.get(lang, "Help"));
         this.btnAccount.setText(Dict.get(lang, "Account"));
-//        this.btnExit.setText(Dict.get(lang, "Exit"));
         this.btnTutor.setText(Dict.get(lang, "Tutorial"));
         this.btnSetting.setText(Dict.get(lang, "Settings"));
         if (this.player != null) {
@@ -284,9 +283,52 @@ public class TuoLaJiPro {
         }
         this.myId = playerId;
 
+        frmStart = new Form();
+        frmStart.getToolbar().hideToolbar();
+
         this.player = new Player(this);
 
         this.player.connectServer(true);
+
+        startupShow();
+    }
+
+    static final int bigJoker = 0x1F0CF;
+    Form frmStart;
+
+    private void startupShow() {
+        BorderLayout border = new BorderLayout();
+        border.setCenterBehavior(BorderLayout.CENTER_BEHAVIOR_SCALE);
+//        border.setCenterBehavior(BorderLayout.CENTER_BEHAVIOR_CENTER_ABSOLUTE);
+        frmStart.setLayout(border);
+
+        LayeredLayout ll = new LayeredLayout();
+        GridLayout gl = new GridLayout(3, 3);
+
+        Font materialFont = FontImage.getMaterialDesignFont();
+        FontImage redJoker = FontImage.createFixed(new String(Character.toChars(bigJoker)), materialFont, Hand.redColor, 200, 300);
+        Container center = new Container(ll);
+        int total = 9;
+        for (int i = 0; i < total; i++) {
+            center.add(redJoker);
+        }
+
+        frmStart.addComponent(BorderLayout.CENTER, center);
+        frmStart.show();
+//        frm.setTransitionOutAnimator(CommonTransitions.createCover(CommonTransitions.SLIDE_VERTICAL, true, 800));
+        boolean isLayered = true;   // toggle layout
+//        center.setShouldCalcPreferredSize(true);
+
+        do {
+            if (isLayered) {
+                center.setLayout(gl);
+            } else {
+                center.setLayout(ll);
+            }
+            center.animateLayoutAndWait(3000);
+//            frm.getContentPane().animateHierarchyAndWait(3000);
+            isLayered = !isLayered;
+        } while (this.formMain == null);
     }
 
     public void showLogin() {
@@ -368,7 +410,10 @@ public class TuoLaJiPro {
             } else {
                 this.myName = playerName;
             }
+
             this.formMain.show();
+            this.entry.setLayout(BoxLayout.yCenter());
+            this.entry.animateLayout(2000);
 
             this.setupTable();
 
@@ -504,7 +549,7 @@ public class TuoLaJiPro {
                 showSettings();
             });
 
-            this.entry = new Container(BoxLayout.y());
+            this.entry = new Container(new LayeredLayout());
             this.entry.setSafeArea(true);
 
             entry.add(this.btnTutor);
@@ -519,6 +564,10 @@ public class TuoLaJiPro {
             statusBar.setUIID("user_status");
             this.lblStat = new Label("");
             this.lblAccount = new Label("");
+            this.lblAccount.getStyle().setFgColor(this.currentColor.generalColor);
+            this.lblStat.getStyle().setFgColor(this.currentColor.generalColor);
+            this.lblStat.getAllStyles().setFont(Hand.fontGeneral);
+            this.lblAccount.getAllStyles().setFont(Hand.fontGeneral);
             statusBar.addComponent(BorderLayout.EAST, this.lblStat);
             statusBar.addComponent(BorderLayout.WEST, this.lblAccount);
             mainForm.add(BorderLayout.SOUTH, statusBar);
@@ -537,12 +586,12 @@ public class TuoLaJiPro {
 
     public void updateAccountInfo(int coins) {
         this.lblAccount.setText(this.myName + ": " + Card.suiteSign(Card.DIAMOND) + coins);
-        this.formMain.revalidate();
+        this.lblAccount.getParent().revalidate();
     }
 
     public void updateStatInfo(String stat) {
         this.lblStat.setText(stat);
-        this.formMain.revalidate();
+        this.lblStat.getParent().revalidate();
     }
 
     private void setupTable() {
@@ -668,6 +717,9 @@ public class TuoLaJiPro {
         this.formMain.getStyle().setBgColor(BACKGROUND_COLOR);
         this.formTable.getStyle().setBgColor(BACKGROUND_COLOR);
         if (this.formTutor != null) this.formTutor.getStyle().setBgColor(BACKGROUND_COLOR);
+
+        this.lblAccount.getStyle().setFgColor(this.currentColor.generalColor);
+        this.lblStat.getStyle().setFgColor(this.currentColor.generalColor);
         refreshButtons();
     }
 

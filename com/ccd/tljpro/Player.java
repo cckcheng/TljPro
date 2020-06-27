@@ -22,11 +22,9 @@ import com.codename1.ui.Graphics;
 import com.codename1.ui.Label;
 import com.codename1.ui.RadioButton;
 import com.codename1.ui.events.ActionEvent;
-import com.codename1.ui.events.ActionListener;
 import com.codename1.ui.geom.Rectangle;
 import com.codename1.ui.layouts.BorderLayout;
 import com.codename1.ui.layouts.BoxLayout;
-import com.codename1.ui.layouts.FlowLayout;
 import com.codename1.ui.layouts.LayeredLayout;
 import com.codename1.ui.util.UITimer;
 import com.codename1.util.Base64;
@@ -1303,7 +1301,12 @@ public class Player {
 
             if (initConnect) {
                 initConnect = false;
-                main.showLogin();
+                new UITimer(new Runnable() {
+                    public void run() {
+                        main.showLogin();
+                    }
+                }).schedule(2500, false, main.frmStart);
+
             } else {
                 main.enableButtons();
             }
