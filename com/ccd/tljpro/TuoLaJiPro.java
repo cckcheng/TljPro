@@ -36,13 +36,16 @@ import com.codename1.ui.layouts.BoxLayout;
 import com.codename1.ui.layouts.FlowLayout;
 import com.codename1.ui.layouts.GridLayout;
 import com.codename1.ui.layouts.LayeredLayout;
+import com.codename1.ui.layouts.Layout;
 import com.codename1.ui.plaf.UIManager;
 import com.codename1.ui.spinner.Picker;
 import com.codename1.ui.table.TableLayout;
 import com.codename1.ui.util.Resources;
 import com.codename1.ui.util.UITimer;
 import com.codename1.util.StringUtil;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -52,7 +55,7 @@ import java.util.Map;
 public class TuoLaJiPro {
     static public final boolean DEBUG = false;
     static public final boolean BYPASS_LOGIN = false;
-    static public final boolean INTERNAL = false;
+    static public final boolean INTERNAL = true;
 
 //    static public final String STORAGE_PROFILE = "profile";
 
@@ -282,7 +285,39 @@ public class TuoLaJiPro {
             disp.exitApplication();
         }
         this.myId = playerId;
+        if (!INTERNAL) {
+            startup();
+        } else {
+            selectHost();
+        }
+    }
 
+    private void selectHost() {
+        Form frm = new Form("Select Host", BoxLayout.y());
+        RadioButton rb1 = new RadioButton("");
+        rb1.setSelected(true);
+        RadioButton rb2 = new RadioButton("");
+        new ButtonGroup(rb1, rb2);
+        TextField tf1 = new TextField(Card.TLJ_DOMAIN);
+        TextField tf2 = new TextField(Card.TLJ_IP);
+
+        frm.add(BoxLayout.encloseX(rb1, tf1));
+        frm.add(BoxLayout.encloseX(rb2, tf2));
+        frm.add(new Button(Command.create("Ok", null, (ev) -> {
+            String host = "";
+            if (rb1.isSelected()) {
+                host = tf1.getText().trim();
+            } else if (rb2.isSelected()) {
+                host = tf2.getText().trim();
+            }
+            if (host.isEmpty()) return;
+            Card.TLJ_HOST = Card.TLJ_HOST_IP = host;
+            startup();
+        })));
+        frm.show();
+    }
+
+    private void startup() {
         frmStart = new Form();
         frmStart.getToolbar().hideToolbar();
 
@@ -303,7 +338,6 @@ public class TuoLaJiPro {
         frmStart.setLayout(border);
 
         LayeredLayout ll = new LayeredLayout();
-        GridLayout gl = new GridLayout(3, 3);
 
         Font materialFont = FontImage.getMaterialDesignFont();
         FontImage redJoker = FontImage.createFixed(new String(Character.toChars(bigJoker)), materialFont, Hand.redColor, 200, 300);
@@ -316,18 +350,20 @@ public class TuoLaJiPro {
         frmStart.addComponent(BorderLayout.CENTER, center);
         frmStart.show();
 //        frm.setTransitionOutAnimator(CommonTransitions.createCover(CommonTransitions.SLIDE_VERTICAL, true, 800));
-        boolean isLayered = true;   // toggle layout
 //        center.setShouldCalcPreferredSize(true);
 
+        List<Layout> layouts = new ArrayList<>();
+        layouts.add(new GridLayout(3, 3));
+        layouts.add(new GridLayout(1, 9));
+        layouts.add(new GridLayout(9, 1));
+        layouts.add(ll);
+
+        int x = 0;
         do {
-            if (isLayered) {
-                center.setLayout(gl);
-            } else {
-                center.setLayout(ll);
-            }
+            center.setLayout(layouts.get(x++));
+            if (x >= layouts.size()) x = 0;
             center.animateLayoutAndWait(3000);
 //            frm.getContentPane().animateHierarchyAndWait(3000);
-            isLayered = !isLayered;
         } while (this.formMain == null);
     }
 
@@ -396,7 +432,6 @@ public class TuoLaJiPro {
         if (this.doRegistration()) return;
         if (this.initSetup()) return;
 
-        Display.getInstance().lockOrientation(false);
         Display.getInstance().callSerially(() -> {
             if (this.formMain != null) {
                 switchScene("entry");
@@ -413,7 +448,8 @@ public class TuoLaJiPro {
 
             this.formMain.show();
             this.entry.setLayout(BoxLayout.yCenter());
-            this.entry.animateLayout(2000);
+            this.entry.animateLayoutAndWait(2000);
+            Display.getInstance().lockOrientation(false);
 
             this.setupTable();
 
@@ -586,12 +622,12 @@ public class TuoLaJiPro {
 
     public void updateAccountInfo(int coins) {
         this.lblAccount.setText(this.myName + ": " + Card.suiteSign(Card.DIAMOND) + coins);
-        this.lblAccount.getParent().revalidate();
+        this.lblAccount.getParent().animateLayout(500);
     }
 
     public void updateStatInfo(String stat) {
         this.lblStat.setText(stat);
-        this.lblStat.getParent().revalidate();
+        this.lblStat.getParent().animateLayout(500);
     }
 
     private void setupTable() {

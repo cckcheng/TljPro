@@ -185,11 +185,11 @@ public class Dict {
                 return lang.equals("zh") ? "必填" : "Required";
 
             case QUICK_JOIN:
-                return lang.equals("zh") ? "快速加入" : "Quick Join";
+                return lang.equals("zh") ? "快速加入" : "Join";
             case NEW_TABLE:
-                return lang.equals("zh") ? "开新桌" : "New Table";
+                return lang.equals("zh") ? "开新桌" : "New";
             case PRIVATE_TABLE:
-                return lang.equals("zh") ? "私有桌" : "Private Table";
+                return lang.equals("zh") ? "私有桌" : "Private";
             case TABLE_CODE:
                 return lang.equals("zh") ? "本桌密码" : "Table Pass";
 
@@ -241,7 +241,7 @@ public class Dict {
                 return lang.equals("zh") ? "请先注册" : "Please sign in first";
 
             case COIN_NOT_ENOUGH:
-                return lang.equals("zh") ? "账户余额不足" : "No enough diamonds";
+                return lang.equals("zh") ? "账户余额不足" : "Insufficient balance";
             case TOPUP:
                 return lang.equals("zh") ? "充值" : "Top up";
 

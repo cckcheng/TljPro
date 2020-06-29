@@ -1269,8 +1269,10 @@ public class Player {
                 if (initConnect) checkOnce = false;
             } else {
                 if (initConnect) {
-                    Dialog.show(Dict.get(main.lang, "Error"), Dict.get(main.lang, Dict.FAIL_CONNECT_SERVER), Dict.get(main.lang, "OK"), "");
-                    Display.getInstance().exitApplication();
+                    Display.getInstance().callSerially(() -> {
+                        Dialog.show(Dict.get(main.lang, "Error"), Dict.get(main.lang, Dict.FAIL_CONNECT_SERVER), Dict.get(main.lang, "OK"), "");
+                        Display.getInstance().exitApplication();
+                    });
                     return;
                 }
             }
@@ -1821,11 +1823,11 @@ public class Player {
                                     dlg.dispose();
                                 });
                                 dlg.add(BoxLayout.encloseX(
-                                        new Label(Dict.get(main.lang, Dict.CHANGE_TO)),
+                                        new Label(Dict.get(main.lang, Dict.CHANGE_TO) + ":"),
                                         dimButton(trumpRecommend.charAt(0), dlg))
                                 );
                                 dlg.add(BoxLayout.encloseX(
-                                        new Label(Dict.get(main.lang, Dict.NO_CHANGE)),
+                                        new Label(Dict.get(main.lang, Dict.NO_CHANGE) + ":"),
                                         dimButton(c, dlg))
                                 );
                                 Button bCancel = new Button(Dict.get(main.lang, "Cancel"));
@@ -2005,11 +2007,11 @@ public class Player {
                                 dlg.dispose();
                             });
                             dlg.add(BoxLayout.encloseX(
-                                    new Label(Dict.get(main.lang, Dict.CHANGE_TO)),
+                                    new Label(Dict.get(main.lang, Dict.CHANGE_TO) + ":"),
                                     defButton(defRecommend, dlg))
                             );
                             dlg.add(BoxLayout.encloseX(
-                                    new Label(Dict.get(main.lang, Dict.NO_CHANGE)),
+                                    new Label(Dict.get(main.lang, Dict.NO_CHANGE) + ":"),
                                     defButton(def, dlg))
                             );
                             Button bCancel = new Button(Dict.get(main.lang, "Cancel"));
