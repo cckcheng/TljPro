@@ -112,15 +112,17 @@ public class Player {
             return;
         }
 
+        if (this.mySocket != null && this.mySocket.isConnected()) {
+            main.showLogin();
+            return;
+        }
+
         if (this.mySocket == null) {
             this.mySocket = new MySocket();
         }
-        if (!this.mySocket.isConnected()) {
-            initConnect = init;
-            Socket.connect(tljHost, Card.TLJ_PORT, mySocket);
-        } else {
-            main.showLogin();
-        }
+
+        initConnect = init;
+        Socket.connect(tljHost, Card.TLJ_PORT, this.mySocket);
     }
 
     public void connectServer(String option) {
@@ -1181,6 +1183,7 @@ public class Player {
                             case "acc": // account info
                                 coins = Func.parseInteger(data.get("coin"));
                                 main.updateAccountInfo(coins);
+                                main.formView.updateBalance(coins);
                                 break;
                             case "coin":
                                 Func.noEnoughCoin(main.lang);
@@ -1307,7 +1310,7 @@ public class Player {
                     public void run() {
                         main.showLogin();
                     }
-                }).schedule(2500, false, main.frmStart);
+                }).schedule(2500, false, main.formStart);
 
             } else {
                 main.enableButtons();

@@ -318,8 +318,8 @@ public class TuoLaJiPro {
     }
 
     private void startup() {
-        frmStart = new Form();
-        frmStart.getToolbar().hideToolbar();
+        formStart = new Form();
+        formStart.getToolbar().hideToolbar();
 
         this.player = new Player(this);
 
@@ -329,13 +329,13 @@ public class TuoLaJiPro {
     }
 
     static final int bigJoker = 0x1F0CF;
-    Form frmStart;
+    Form formStart;
 
     private void startupShow() {
         BorderLayout border = new BorderLayout();
         border.setCenterBehavior(BorderLayout.CENTER_BEHAVIOR_SCALE);
 //        border.setCenterBehavior(BorderLayout.CENTER_BEHAVIOR_CENTER_ABSOLUTE);
-        frmStart.setLayout(border);
+        formStart.setLayout(border);
 
         LayeredLayout ll = new LayeredLayout();
 
@@ -347,8 +347,8 @@ public class TuoLaJiPro {
             center.add(redJoker);
         }
 
-        frmStart.addComponent(BorderLayout.CENTER, center);
-        frmStart.show();
+        formStart.addComponent(BorderLayout.CENTER, center);
+        formStart.show();
 //        frm.setTransitionOutAnimator(CommonTransitions.createCover(CommonTransitions.SLIDE_VERTICAL, true, 800));
 //        center.setShouldCalcPreferredSize(true);
 
@@ -446,11 +446,10 @@ public class TuoLaJiPro {
                 this.myName = playerName;
             }
 
-            this.formMain.show();
-            this.entry.setLayout(BoxLayout.yCenter());
-            this.entry.animateLayoutAndWait(2000);
-            Display.getInstance().lockOrientation(false);
-
+            int h = CommonTransitions.SLIDE_HORIZONTAL;
+//            formMain.setTransitionOutAnimator(CommonTransitions.createSlide(h, true, 1500));
+            formStart.setTransitionOutAnimator(CommonTransitions.createSlide(h, true, 1500));
+            this.formMain.showBack();
             this.setupTable();
 
             this.formView = new TableView(this);
@@ -458,6 +457,10 @@ public class TuoLaJiPro {
             this.formView.init();
 
             this.player.connectServer(Player.OPTION_CHECK);
+
+            this.entry.setLayout(BoxLayout.yCenter());
+            this.entry.animateLayoutAndWait(1500);
+            Display.getInstance().lockOrientation(false);
         });
     }
 
@@ -598,14 +601,14 @@ public class TuoLaJiPro {
 
             Toolbar statusBar = new Toolbar(true);
             statusBar.setUIID("user_status");
-            this.lblStat = new Label("");
             this.lblAccount = new Label("");
             this.lblAccount.getStyle().setFgColor(this.currentColor.generalColor);
+            this.lblAccount.getAllStyles().setFont(Hand.fontGeneral);
+            this.lblStat = new Label("");
             this.lblStat.getStyle().setFgColor(this.currentColor.generalColor);
             this.lblStat.getAllStyles().setFont(Hand.fontGeneral);
-            this.lblAccount.getAllStyles().setFont(Hand.fontGeneral);
-            statusBar.addComponent(BorderLayout.EAST, this.lblStat);
-            statusBar.addComponent(BorderLayout.WEST, this.lblAccount);
+            statusBar.add(EAST, this.lblStat);
+            statusBar.add(WEST, this.lblAccount);
             mainForm.add(BorderLayout.SOUTH, statusBar);
 
             topTool.addComponentToRightSideMenu(btnSetting);
@@ -639,7 +642,8 @@ public class TuoLaJiPro {
         this.formTable.getStyle().setBgColor(BACKGROUND_COLOR);
         this.formTable.getToolbar().hideToolbar();
         this.formTable.add(BorderLayout.CENTER, this.table);
-        this.formTable.revalidate();
+//        this.formTable.revalidate();
+        this.formTable.animateLayout(500);
     }
 
     private void inputPlayName(String name) {

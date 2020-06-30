@@ -1,6 +1,6 @@
 package com.ccd.tljpro;
 
-import com.codename1.io.Log;
+import com.codename1.components.ToastBar;
 import com.codename1.io.Storage;
 import com.codename1.ui.Button;
 import com.codename1.ui.ButtonGroup;
@@ -54,6 +54,8 @@ public class TableView extends Form {
     private Command cmdNewTable;
     private Command cmdRefresh;
 
+    private Label lblAccount;
+
     private long lastRefreshTime = 0;
     private final static long MIN_REFRESH_TIME = 10000; // 10 seconds
 
@@ -96,6 +98,10 @@ public class TableView extends Form {
                 return;
             }
             int idx = this.listTabs.getSelectedIndex();
+            if (idx == 0) {
+                ToastBar.showInfoMessage(Dict.get(main.lang, Dict.NOT_AVAILABLE));
+                return;
+            }
             TableContainer t = this.tableList.get(idx);
             if (t.coins > 0 && player.coins < t.coins) {
                 Func.noEnoughCoin(main.lang);
@@ -151,9 +157,13 @@ public class TableView extends Form {
         });
 
         topTool.addCommandToLeftBar(cmdQuickJoin);
-//        topTool.addCommandToLeftBar(cmdNewTable);
+        topTool.addCommandToLeftBar(cmdNewTable);
         topTool.addCommandToRightBar(cmdRefresh);
         topTool.addCommandToRightBar(cmdPrivateTable);
+
+        this.lblAccount = new Label("");
+        this.lblAccount.getAllStyles().setFont(Hand.fontGeneral);
+        topTool.add(CENTER, BoxLayout.encloseXCenter(this.lblAccount));
 
         this.listTabs.setTabTextPosition(Component.RIGHT);
 //        this.listTabs.setSelectedStyle(UIManager.getInstance().getComponentStyle("RaisedButton"));
@@ -161,13 +171,15 @@ public class TableView extends Form {
 
         this.add(BorderLayout.CENTER, this.listTabs);
 
-        this.listTabs.addSelectionListener((oldIdx, newIdx) -> {
-            if (newIdx == 0) {
-                topTool.removeCommand(cmdNewTable);
-            } else if (oldIdx == 0) {
-                topTool.addCommandToLeftBar(cmdNewTable);
-            }
-        });
+//        this.listTabs.addSelectionListener((oldIdx, newIdx) -> {
+//            Display.getInstance().callSerially(() -> {
+//                if (newIdx == 0) {
+//                    topTool.removeCommand(cmdNewTable);
+//                } else if (oldIdx == 0) {
+//                    topTool.addCommandToLeftBar(cmdNewTable);
+//                }
+//            });
+//        });
 
         new UITimer(new Runnable() {
             @Override
@@ -179,6 +191,11 @@ public class TableView extends Form {
                 }
             }
         }).schedule(TuoLaJiPro.DEBUG ? 15000 : 60000, true, this);
+    }
+
+    public void updateBalance(int coins) {
+        this.lblAccount.setText(Card.suiteSign(Card.DIAMOND) + coins);
+        this.lblAccount.getParent().animateLayout(500);
     }
 
     @Override

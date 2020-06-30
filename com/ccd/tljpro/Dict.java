@@ -147,6 +147,7 @@ public class Dict {
     public static final int QUICK_JOIN = 11;
     public static final int NEW_TABLE = 12;
     public static final int PRIVATE_TABLE = 13;
+    public static final int NOT_AVAILABLE = 17;
 
     public static final int TABLE_CODE = 21;
 
@@ -192,6 +193,8 @@ public class Dict {
                 return lang.equals("zh") ? "私有桌" : "Private";
             case TABLE_CODE:
                 return lang.equals("zh") ? "本桌密码" : "Table Pass";
+            case NOT_AVAILABLE:
+                return lang.equals("zh") ? "此处不支持该功能" : "Not available here";
 
             case SUGGEST:
                 return lang.equals("zh") ? "更改提示" : "Recommendation";
