@@ -44,6 +44,7 @@ import com.codename1.ui.util.Resources;
 import com.codename1.ui.util.UITimer;
 import com.codename1.util.StringUtil;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -339,30 +340,63 @@ public class TuoLaJiPro {
 
         LayeredLayout ll = new LayeredLayout();
 
+        int w = getDisplayWidth();
+        int h = getDisplayHeight();
+        int sw = w < h ? w : h;
+        int cw = sw / 8;
+        int ch = (int) (cw * 1.618);
         Font materialFont = FontImage.getMaterialDesignFont();
-        FontImage redJoker = FontImage.createFixed(new String(Character.toChars(bigJoker)), materialFont, Hand.redColor, 200, 300);
-        Container center = new Container(ll);
+        FontImage redJoker = FontImage.createFixed(new String(Character.toChars(bigJoker)), materialFont, Hand.redColor, cw, ch);
+        Container center = new Container();
         int total = 9;
+//        center.setShouldCalcPreferredSize(true);
+        Label c;
+        int cx = w / 2;
+        int cy = h / 2;
+        int r = sw * 2 / 5;
+        int deg = 360 / total;
+        int dx, dy;
+//        int dr = 40;
         for (int i = 0; i < total; i++) {
-            center.add(redJoker);
+            c = new Label(redJoker);
+            double rad = deg * i * Math.PI / 180;
+//            dx = 50 - (int) (Math.sin(rad) * dr);
+//            dy = 50 - (int) (Math.cos(rad) * dr);
+            dx = cx - cw / 2 - (int) (Math.sin(rad) * r);
+            dy = cy - ch / 2 - (int) (Math.cos(rad) * r);
+            center.add(c);
+//            String inset = dy + "% " + dx + "% auto auto";
+            String inset = dy + " " + dx + " auto auto";
+            ll.setInsets(c, inset);
+//            center.add(BoxLayout.encloseXCenter(new Label(redJoker)));
         }
 
         formStart.addComponent(BorderLayout.CENTER, center);
         formStart.show();
-//        frm.setTransitionOutAnimator(CommonTransitions.createCover(CommonTransitions.SLIDE_VERTICAL, true, 800));
-//        center.setShouldCalcPreferredSize(true);
+//        formStart.setTransitionOutAnimator(CommonTransitions.createCover(CommonTransitions.SLIDE_VERTICAL, true, 800));
+
+        formStart.setTransitionOutAnimator(CommonTransitions.createSlide(CommonTransitions.SLIDE_HORIZONTAL, true, 1000));
 
         List<Layout> layouts = new ArrayList<>();
         layouts.add(new GridLayout(3, 3));
         layouts.add(new GridLayout(1, 9));
-        layouts.add(new GridLayout(9, 1));
         layouts.add(ll);
 
-        int x = 0;
+        layouts.add(new GridLayout(9, 1));
+        layouts.add(new GridLayout(2, 9));
+        layouts.add(ll);
+        int n = layouts.size();
+        int x = (int) (new Date()).getTime() % n;
+
+//        boolean isEven = (x % 2 == 0);
         do {
-            center.setLayout(layouts.get(x++));
-            if (x >= layouts.size()) x = 0;
+            Layout layout = layouts.get(x++);
+            center.setLayout(layout);
+
             center.animateLayoutAndWait(3000);
+
+//            if (isEven) x++;
+            if (x >= n) x = 0;
 //            frm.getContentPane().animateHierarchyAndWait(3000);
         } while (this.formMain == null);
     }
@@ -446,9 +480,9 @@ public class TuoLaJiPro {
                 this.myName = playerName;
             }
 
-            int h = CommonTransitions.SLIDE_HORIZONTAL;
+//            int h = CommonTransitions.SLIDE_HORIZONTAL;
 //            formMain.setTransitionOutAnimator(CommonTransitions.createSlide(h, true, 1500));
-            formStart.setTransitionOutAnimator(CommonTransitions.createSlide(h, true, 1500));
+//            formStart.setTransitionOutAnimator(CommonTransitions.createSlide(h, true, 1000));
             this.formMain.showBack();
             this.setupTable();
 
@@ -459,7 +493,7 @@ public class TuoLaJiPro {
             this.player.connectServer(Player.OPTION_CHECK);
 
             this.entry.setLayout(BoxLayout.yCenter());
-            this.entry.animateLayoutAndWait(1500);
+            this.entry.animateLayoutAndWait(2000);
             Display.getInstance().lockOrientation(false);
         });
     }
@@ -642,8 +676,8 @@ public class TuoLaJiPro {
         this.formTable.getStyle().setBgColor(BACKGROUND_COLOR);
         this.formTable.getToolbar().hideToolbar();
         this.formTable.add(BorderLayout.CENTER, this.table);
-//        this.formTable.revalidate();
-        this.formTable.animateLayout(500);
+        this.formTable.revalidate();
+//        this.formTable.animateHierarchy(500);
     }
 
     private void inputPlayName(String name) {
@@ -842,8 +876,9 @@ public class TuoLaJiPro {
                 Storage.getInstance().writeObject("lang", this.lang);
                 if (setupDone) {
                     refreshButtons();
-                    this.formView.resetTableList();
-                    this.player.sendRequest(this.player.initRequest(Request.LIST));
+//                    this.formView.resetTableList();
+                    this.formView = new TableView(this);
+                    this.formView.init();
                 }
                 this.formSetting = null;
                 showSettings();

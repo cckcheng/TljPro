@@ -1125,6 +1125,14 @@ public class Player {
         this.widget.revalidate();
     }
 
+    private void updateBalance(Map<String, Object> data) {
+        int balance = Func.parseInteger(data.get("coin"));
+        if (balance == coins) return;
+        coins = balance;
+        main.updateAccountInfo(coins);
+        main.formView.updateBalance(coins);
+    }
+
     static int serverWaitCycle = 10; // 10 times
     static int idleWaitCycle = 20; // 20 times
 
@@ -1181,9 +1189,9 @@ public class Player {
                                 break;
 
                             case "acc": // account info
-                                coins = Func.parseInteger(data.get("coin"));
-                                main.updateAccountInfo(coins);
-                                main.formView.updateBalance(coins);
+                                if (main.formMain != null) {
+                                    updateBalance(data);
+                                }
                                 break;
                             case "coin":
                                 Func.noEnoughCoin(main.lang);
@@ -1191,6 +1199,9 @@ public class Player {
                             case "list":
                                 // list current tables
                                 main.formView.refreshTableList(data);
+                                if (data.get("coin") != null) {
+                                    updateBalance(data);
+                                }
                                 break;
 
                             case "init":

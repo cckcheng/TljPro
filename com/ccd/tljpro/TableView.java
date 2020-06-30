@@ -37,7 +37,7 @@ import java.util.Map;
  */
 public class TableView extends Form {
 
-    private final Tabs listTabs = new Tabs(Component.BOTTOM);
+    private Tabs listTabs;
     private final TuoLaJiPro main;
     private final Player player;
 
@@ -93,13 +93,13 @@ public class TableView extends Form {
         });
         cmdNewTable = Command.createMaterial(Dict.get(main.lang, Dict.NEW_TABLE), FontImage.MATERIAL_ADD_CIRCLE, (e) -> {
 //        cmdNewTable = Command.createMaterial(Dict.get(main.lang, Dict.NEW_TABLE), (char) 57669, (e) -> {
-            if (!main.registered) {
-                main.infoRegisterRequired();
-                return;
-            }
             int idx = this.listTabs.getSelectedIndex();
             if (idx == 0) {
                 ToastBar.showInfoMessage(Dict.get(main.lang, Dict.NOT_AVAILABLE));
+                return;
+            }
+            if (!main.registered) {
+                main.infoRegisterRequired();
                 return;
             }
             TableContainer t = this.tableList.get(idx);
@@ -164,7 +164,9 @@ public class TableView extends Form {
         this.lblAccount = new Label("");
         this.lblAccount.getAllStyles().setFont(Hand.fontGeneral);
         topTool.add(CENTER, BoxLayout.encloseXCenter(this.lblAccount));
+        if (player.coins != 0) this.updateBalance(player.coins);
 
+        this.listTabs = new Tabs(Component.BOTTOM);
         this.listTabs.setTabTextPosition(Component.RIGHT);
 //        this.listTabs.setSelectedStyle(UIManager.getInstance().getComponentStyle("RaisedButton"));
         this.listTabs.getStyle().setFont(Hand.fontRank);
@@ -226,7 +228,7 @@ public class TableView extends Form {
     public void pullTableList() {
         // only when the tabs is empty
         if (this.listTabs.getTabCount() < 1) {
-            player.sendRequest(new Request(Request.LIST, true));
+            player.sendRequest(new Request(Request.LIST, true).appendPlayerInfo(main));
         }
         this.setGlassPane(null);
     }
