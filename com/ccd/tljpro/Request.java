@@ -9,6 +9,7 @@ import java.util.Set;
  * @author ccheng
  */
 public class Request {
+    static final String MESSAGE = "msg";
     static final String CREATE = "create";
     static final String JOIN = "join";
     static final String SIT = "sit";

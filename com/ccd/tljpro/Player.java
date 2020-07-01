@@ -1255,6 +1255,9 @@ public class Player {
                             case "priv":
                                 main.showPrivacy(Func.trimmedString(data.get("msg")));
                                 break;
+                            case Request.MESSAGE:
+                                ServerMessage.showMessage(data);
+                                break;
                         }
                     });
                 }
