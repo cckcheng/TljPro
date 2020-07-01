@@ -355,7 +355,9 @@ public class TuoLaJiPro {
         Font materialFont = FontImage.getMaterialDesignFont();
         FontImage redJoker = FontImage.createFixed(new String(Character.toChars(bigJoker)), materialFont, Hand.redColor, cw, ch);
         Container center = new Container();
-        int total = 9;
+        long tm = (new Date()).getTime();
+        boolean even = ((int) tm % 2 == 0);
+        int total = even ? 12 : 9;
 //        center.setShouldCalcPreferredSize(true);
         Label c;
         int cx = w / 2;
@@ -385,18 +387,39 @@ public class TuoLaJiPro {
 
         List<Layout> layouts = new ArrayList<>();
         layouts.add(ll);
-        layouts.add(new GridLayout(3, 3));
+        if (total == 12) {
+            layouts.add(new GridLayout(3, 4));
+        } else {
+            layouts.add(new GridLayout(3, 3));
+        }
         layouts.add(ll);
-        layouts.add(new GridLayout(1, 9));
+        if (total == 12) {
+            layouts.add(new GridLayout(2, 6));
+        } else {
+            layouts.add(new GridLayout(1, 9));
+        }
         layouts.add(ll);
 
-        layouts.add(new GridLayout(3, 3));
-        layouts.add(new GridLayout(9, 1));
+        if (total == 12) {
+            layouts.add(new GridLayout(4, 3));
+            layouts.add(new GridLayout(4, 6));
+        } else {
+            layouts.add(new GridLayout(3, 3));
+        }
+        if (total == 12) {
+            layouts.add(new GridLayout(6, 2));
+        } else {
+            layouts.add(new GridLayout(9, 1));
+        }
         layouts.add(ll);
-        layouts.add(new GridLayout(2, 9));
+        if (total == 12) {
+            layouts.add(new GridLayout(3, 6));
+        } else {
+            layouts.add(new GridLayout(2, 9));
+        }
 
         int n = layouts.size();
-        int x = (int) (new Date()).getTime() % n;
+        int x = (int) tm % n;
 
 //        boolean isEven = (x % 2 == 0);
         do {
