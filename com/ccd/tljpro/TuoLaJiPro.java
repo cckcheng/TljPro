@@ -300,41 +300,42 @@ public class TuoLaJiPro {
         }
     }
 
-    private void selectHost() {
-        Form frm = new Form("Select Host", BoxLayout.y());
-        RadioButton rb1 = new RadioButton("");
-        RadioButton rb2 = new RadioButton("");
-        new ButtonGroup(rb1, rb2);
-        rb1.setSelected(true);
-        TextField tf1 = new TextField(Card.TLJ_DOMAIN);
-        TextField tf2 = new TextField(Card.TLJ_IP);
-        tf1.addPointerPressedListener((e) -> {
-            rb1.setSelected(true);
-        });
-        tf2.addPointerPressedListener((e) -> {
-            rb2.setSelected(true);
-        });
+    protected Form formHost;
 
-        frm.add(BoxLayout.encloseX(rb1, tf1));
-        frm.add(BoxLayout.encloseX(rb2, tf2));
-        frm.add(new Button(Command.create("Ok", null, (ev) -> {
-            String host = "";
-            if (rb1.isSelected()) {
-                host = tf1.getText().trim();
-            } else if (rb2.isSelected()) {
-                host = tf2.getText().trim();
-            }
+    private void selectHost() {
+        formHost = new Form("Select Host", BoxLayout.y());
+        TextField tf1 = new TextField(Card.TLJ_DOMAIN, 8);
+        TextField tf2 = new TextField(Card.TLJ_IP, 8);
+
+        Button btn1 = new Button("Go");
+        btn1.addActionListener(ev -> {
+            String host = tf1.getText().trim();
             if (host.isEmpty()) return;
             Card.TLJ_HOST = Card.TLJ_HOST_IP = host;
             startup();
-        })));
-        frm.show();
+        });
+        Button btn2 = new Button("Go");
+        btn2.addActionListener(ev -> {
+            String host = tf2.getText().trim();
+            if (host.isEmpty()) return;
+            Card.TLJ_HOST = Card.TLJ_HOST_IP = host;
+            startup();
+        });
+        formHost.add(BoxLayout.encloseX(tf1, btn1));
+        formHost.add(BoxLayout.encloseX(tf2, btn2));
+
+        formHost.show();
     }
 
     private void startup() {
-        formStart = new Form();
-        formStart.getToolbar().hideToolbar();
+        if (formStart == null) {
+            formStart = new Form();
+            formStart.getToolbar().hideToolbar();
+        }
 
+        if (this.player != null) {
+            this.player.disconnect();
+        }
         this.player = new Player(this);
 
         this.player.connectServer(true);
@@ -345,13 +346,48 @@ public class TuoLaJiPro {
     static final int bigJoker = 0x1F0CF;
     Form formStart;
 
+    private int orientation = 0; // landscape=1, portrait=2
+
+    private void updateLayerLayout(Container center, LayeredLayout ll, int cw, int ch, int total) {
+        int w = getDisplayWidth();
+        int h = getDisplayHeight();
+        int curOrienation = w > h ? 1 : 2;
+        if (orientation == curOrienation) return;
+        orientation = curOrienation;
+        int sw = w < h ? w : h;
+        int cx = w / 2;
+        int cy = h / 2;
+        int r = sw * 2 / 5;
+        int deg = 360 / total;
+        int dx, dy;
+//        int dr = 40;
+
+        Component c;
+        for (int i = 0; i < total; i++) {
+            c = center.getComponentAt(i);
+            double rad = deg * i * Math.PI / 180;
+//            dx = 50 - (int) (Math.sin(rad) * dr);
+//            dy = 50 - (int) (Math.cos(rad) * dr);
+            dx = cx - cw / 2 - (int) (Math.sin(rad) * r);
+            dy = cy - ch / 2 - (int) (Math.cos(rad) * r);
+//            String inset = dy + "% " + dx + "% auto auto";
+            String inset = dy + " " + dx + " auto auto";
+            ll.setInsets(c, inset);
+//            center.add(BoxLayout.encloseXCenter(new Label(redJoker)));
+        }
+    }
+
+    int idxLayout = 0;
     private void startupShow() {
+        if (this.orientation > 0) {
+            formStart.show();
+            return;
+        }
+
         BorderLayout border = new BorderLayout();
         border.setCenterBehavior(BorderLayout.CENTER_BEHAVIOR_SCALE);
 //        border.setCenterBehavior(BorderLayout.CENTER_BEHAVIOR_CENTER_ABSOLUTE);
         formStart.setLayout(border);
-
-        LayeredLayout ll = new LayeredLayout();
 
         int w = getDisplayWidth();
         int h = getDisplayHeight();
@@ -362,32 +398,20 @@ public class TuoLaJiPro {
 //        FontImage redJoker = FontImage.createFixed(new String(Character.toChars(bigJoker)), materialFont, Hand.redColor, cw, ch);
         FontImage redJoker = FontImage.createFixed(new String(Character.toChars(bigJoker)), materialFont, Hand.redColor, 10, 20);
 //        FontImage redJoker = FontImage.createFixed("🃏", materialFont, Hand.redColor, cw, ch);
-        Container center = new Container();
+
+        LayeredLayout ll0 = new LayeredLayout();
+        Container center = new Container(ll0);
         long tm = (new Date()).getTime() / 1000;
         boolean even = ((int) tm % 2 == 0);
         int total = even ? 12 : 9;
 //        center.setShouldCalcPreferredSize(true);
-        Label c;
-        int cx = w / 2;
-        int cy = h / 2;
-        int r = sw * 2 / 5;
-        int deg = 360 / total;
-        int dx, dy;
-//        int dr = 40;
 
         Image img = redJoker.scaled(cw, ch);
+        Label c;
         for (int i = 0; i < total; i++) {
             c = new Label(img);
-            double rad = deg * i * Math.PI / 180;
-//            dx = 50 - (int) (Math.sin(rad) * dr);
-//            dy = 50 - (int) (Math.cos(rad) * dr);
-            dx = cx - cw / 2 - (int) (Math.sin(rad) * r);
-            dy = cy - ch / 2 - (int) (Math.cos(rad) * r);
             center.add(c);
-//            String inset = dy + "% " + dx + "% auto auto";
-            String inset = dy + " " + dx + " auto auto";
-            ll.setInsets(c, inset);
-//            center.add(BoxLayout.encloseXCenter(new Label(redJoker)));
+            ll0.setInsets(c, "50% 50%");
         }
 
         formStart.addComponent(BorderLayout.CENTER, center);
@@ -395,6 +419,8 @@ public class TuoLaJiPro {
 //        formStart.setTransitionOutAnimator(CommonTransitions.createCover(CommonTransitions.SLIDE_VERTICAL, true, 800));
         formStart.setTransitionOutAnimator(CommonTransitions.createSlide(CommonTransitions.SLIDE_HORIZONTAL, true, 1000));
 
+        LayeredLayout ll = new LayeredLayout();
+        updateLayerLayout(center, ll, cw, ch, total);
         List<Layout> layouts = new ArrayList<>();
         layouts.add(ll);
         if (total == 12) {
@@ -430,18 +456,32 @@ public class TuoLaJiPro {
 
         int n = layouts.size();
         int x = (int) tm % n;
+        center.setLayout(layouts.get(x++));
+        formStart.getContentPane().animateHierarchy(3000);
+        idxLayout = x % n;
 
-//        boolean isEven = (x % 2 == 0);
-        do {
-            Layout layout = layouts.get(x++);
+        UITimer timer = new UITimer(() -> {
+            updateLayerLayout(center, ll, cw, ch, total);
+            if (idxLayout >= n) idxLayout = idxLayout % n;
+            Layout layout = layouts.get(idxLayout++);
             center.setLayout(layout);
 
 //            center.animateLayoutAndWait(3000);
-            formStart.getContentPane().animateHierarchyAndWait(3000);
+            formStart.getContentPane().animateHierarchy(3000);
+        });
+        timer.schedule(3500, true, formStart);
 
-//            if (isEven) x++;
-            if (x >= n) x = 0;
-        } while (this.formMain == null);
+        center.addPointerPressedListener((e) -> {
+            if (formMain != null) {
+                if (player.tableEnded) {
+                    formTable.showBack();
+                } else {
+                    formMain.showBack();
+                }
+            } else if (INTERNAL) {
+                formHost.showBack();
+            }
+        });
     }
 
     public void showLogin() {
@@ -492,7 +532,9 @@ public class TuoLaJiPro {
     public void finishRegistration() {
         Preferences.set("registered", true);
         registered = true;
+        boolean setupAlready = this.setupDone;
         startMain();
+        if (setupAlready) ServerMessage.showMessage(this, "guide");
     }
 
     private boolean initSetup() {
@@ -955,6 +997,9 @@ public class TuoLaJiPro {
                     setupDone = true;
                     Preferences.set("setup", true);
                     startMain();
+                    if (registered) {
+                        ServerMessage.showMessage(this, "guide");
+                    }
                 }
             });
         }

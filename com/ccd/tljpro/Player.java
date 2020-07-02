@@ -79,6 +79,7 @@ public class Player {
 
     public Player(TuoLaJiPro main) {
         this.main = main;
+        this.tljHost = Card.TLJ_HOST;
     }
 
     public void sendRequest(Request req) {
@@ -102,7 +103,7 @@ public class Player {
     static final String OPTION_VIEW = "view";  // get table list
 
     static boolean checkOnce = true;
-    static String tljHost = Card.TLJ_HOST;
+    private String tljHost = Card.TLJ_HOST;
 
     private boolean initConnect = true;
 
@@ -117,7 +118,7 @@ public class Player {
             return;
         }
 
-        if (this.mySocket == null) {
+        if (this.mySocket == null || init) {
             this.mySocket = new MySocket();
         }
 
@@ -390,7 +391,6 @@ public class Player {
 
         this.robotOn = false;
         this.bRobot.setSelected(false);
-        mySocket.addRequest(Request.create(Request.ROBOT, "on", 0));
     }
 
     public int numCardsLeft = 0;
@@ -592,6 +592,7 @@ public class Player {
                 p.cancelTimers();
                 if (p.mySocket != null) {
                     p.mySocket.clearRequest();
+                    if (!p.robotOn) p.mySocket.addRequest(Request.create(Request.ROBOT, "on", 1));
                     Request req = new Request(Request.EXIT, false);
                     p.mySocket.addRequest(req.append("hold", holdMinutes));
                 }
@@ -624,8 +625,8 @@ public class Player {
         if (!Card.FOR_IOS) this.bExit.setUIID("myExit");
         bExit.addActionListener((e) -> {
             if (!watching && !tableEnded) {
-                boolean orgRobotOn = robotOn;
-                if (!orgRobotOn) mySocket.addRequest(Request.create(Request.ROBOT, "on", 1));
+//                boolean orgRobotOn = robotOn;
+//                if (!orgRobotOn) mySocket.addRequest(Request.create(Request.ROBOT, "on", 1));
 
                 Dialog dlg = new Dialog(Dict.get(main.lang, "Hold Seat") + "?");
                 Command defCmd = holdCommand(0);
@@ -633,7 +634,7 @@ public class Player {
                 dlg.add(new Button(holdCommand(5)));
                 dlg.add(new Button(defCmd));
                 dlg.setBackCommand("", null, (ev) -> {
-                    if (!orgRobotOn) mySocket.addRequest(Request.create(Request.ROBOT, "on", 0));
+//                    if (!orgRobotOn) mySocket.addRequest(Request.create(Request.ROBOT, "on", 0));
                 });
                 dlg.showModeless();
                 new UITimer(() -> {
@@ -868,10 +869,9 @@ public class Player {
             this.pointsInfo.setText(points + Dict.get(main.lang, " points"));
         } else {
             this.tableEnded = true;
-            int finPrac = Func.parseInteger(Storage.getInstance().readObject("finprac"));
-            if (finPrac < 1) {
-                Storage.getInstance().writeObject("finprac", 1);
-            }
+            new UITimer(() -> {
+                if (tableEnded) main.formStart.show();
+            }).schedule(10000, false, getCurrentForm());
         }
         final String summary = Func.trimmedString(data.get("summary"));
         int seat = Func.parseInteger(data.get("seat"));  // the contractor
@@ -1292,7 +1292,11 @@ public class Player {
                 if (initConnect) {
                     Display.getInstance().callSerially(() -> {
                         Dialog.show(Dict.get(main.lang, "Error"), Dict.get(main.lang, Dict.FAIL_CONNECT_SERVER), Dict.get(main.lang, "OK"), "");
-                        Display.getInstance().exitApplication();
+                        if (!TuoLaJiPro.INTERNAL) {
+                            Display.getInstance().exitApplication();
+                        } else {
+                            main.formHost.showBack();
+                        }
                     });
                     return;
                 }
