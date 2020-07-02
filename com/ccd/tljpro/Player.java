@@ -390,6 +390,7 @@ public class Player {
 
         this.robotOn = false;
         this.bRobot.setSelected(false);
+        mySocket.addRequest(Request.create(Request.ROBOT, "on", 0));
     }
 
     public int numCardsLeft = 0;
@@ -627,14 +628,17 @@ public class Player {
                 if (!orgRobotOn) mySocket.addRequest(Request.create(Request.ROBOT, "on", 1));
 
                 Dialog dlg = new Dialog(Dict.get(main.lang, "Hold Seat") + "?");
+                Command defCmd = holdCommand(0);
                 dlg.add(new Button(holdCommand(15)));
                 dlg.add(new Button(holdCommand(5)));
-                dlg.add(new Button(holdCommand(0)));
+                dlg.add(new Button(defCmd));
                 dlg.setBackCommand("", null, (ev) -> {
                     if (!orgRobotOn) mySocket.addRequest(Request.create(Request.ROBOT, "on", 0));
-                    dlg.dispose();
                 });
-                dlg.show();
+                dlg.showModeless();
+                new UITimer(() -> {
+                    defCmd.actionPerformed(e);
+                }).schedule(5000, false, getCurrentForm());
             } else {
                 mySocket.addRequest(new Request(Request.EXIT, false));
                 tableOn = false;

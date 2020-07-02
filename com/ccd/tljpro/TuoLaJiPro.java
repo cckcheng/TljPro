@@ -303,11 +303,17 @@ public class TuoLaJiPro {
     private void selectHost() {
         Form frm = new Form("Select Host", BoxLayout.y());
         RadioButton rb1 = new RadioButton("");
-        rb1.setSelected(true);
         RadioButton rb2 = new RadioButton("");
         new ButtonGroup(rb1, rb2);
+        rb1.setSelected(true);
         TextField tf1 = new TextField(Card.TLJ_DOMAIN);
         TextField tf2 = new TextField(Card.TLJ_IP);
+        tf1.addPointerPressedListener((e) -> {
+            rb1.setSelected(true);
+        });
+        tf2.addPointerPressedListener((e) -> {
+            rb2.setSelected(true);
+        });
 
         frm.add(BoxLayout.encloseX(rb1, tf1));
         frm.add(BoxLayout.encloseX(rb2, tf2));
@@ -353,9 +359,11 @@ public class TuoLaJiPro {
         int cw = sw / 7;
         int ch = (int) (cw * 1.618);
         Font materialFont = FontImage.getMaterialDesignFont();
-        FontImage redJoker = FontImage.createFixed(new String(Character.toChars(bigJoker)), materialFont, Hand.redColor, cw, ch);
+//        FontImage redJoker = FontImage.createFixed(new String(Character.toChars(bigJoker)), materialFont, Hand.redColor, cw, ch);
+        FontImage redJoker = FontImage.createFixed(new String(Character.toChars(bigJoker)), materialFont, Hand.redColor, 10, 20);
+//        FontImage redJoker = FontImage.createFixed("🃏", materialFont, Hand.redColor, cw, ch);
         Container center = new Container();
-        long tm = (new Date()).getTime();
+        long tm = (new Date()).getTime() / 1000;
         boolean even = ((int) tm % 2 == 0);
         int total = even ? 12 : 9;
 //        center.setShouldCalcPreferredSize(true);
@@ -366,8 +374,10 @@ public class TuoLaJiPro {
         int deg = 360 / total;
         int dx, dy;
 //        int dr = 40;
+
+        Image img = redJoker.scaled(cw, ch);
         for (int i = 0; i < total; i++) {
-            c = new Label(redJoker);
+            c = new Label(img);
             double rad = deg * i * Math.PI / 180;
 //            dx = 50 - (int) (Math.sin(rad) * dr);
 //            dy = 50 - (int) (Math.cos(rad) * dr);
@@ -468,7 +478,8 @@ public class TuoLaJiPro {
         if (globalId.isEmpty()) {
             this.startRegistration();
         } else {
-            this.myName = Preferences.get("Name", this.myName);
+            String uName = Preferences.get("Name", this.myName).trim();
+            if (!uName.isEmpty()) this.myName = uName;
             player.sendRequest(player.initRequest(Request.REGISTER)
                     .append("gid", globalId)
                     .append("email", Preferences.get("Email", ""))
@@ -843,7 +854,7 @@ public class TuoLaJiPro {
 
             case "table":
                 app.formTable.show();
-                app.formTable.repaint();
+//                app.formTable.repaint();
                 break;
             case "help":
                 app.formHelp.show();

@@ -108,14 +108,14 @@ public class TableView extends Form {
                 return;
             }
 
-            TableLayout tl = new TableLayout(2, 1);
+            TableLayout tl = new TableLayout(5, 1);
             Container props = new Container(tl);
             String lang = main.lang;
             RadioButton rb1 = new RadioButton("2->A");
             RadioButton rb2 = new RadioButton("8->A");
             RadioButton rb3 = new RadioButton("10->A");
             RadioButton rb4 = new RadioButton("5 10 K");
-            new ButtonGroup(rb1, rb2, rb3, rb4);
+            ButtonGroup rbGrp = new ButtonGroup(rb1, rb2, rb3, rb4);
             rb1.setSelected(true);
             props.add(BoxLayout.encloseX(rb1, rb2, rb3, rb4));
             CheckBox cPrivate = new CheckBox(Dict.get(lang, Dict.PRIVATE_TABLE));
@@ -125,10 +125,7 @@ public class TableView extends Form {
             Command okCmd = new Command(Dict.get(lang, "OK")) {
                 @Override
                 public void actionPerformed(ActionEvent ev) {
-                    String type = "FULL";
-                    if (rb2.isSelected()) type = "HALF";
-                    else if (rb3.isSelected()) type = "EXPRESS";
-                    else if (rb4.isSelected()) type = "POINTS";
+                    String type = rbGrp.getRadioButton(rbGrp.getSelectedIndex()).getText();
                     p.sendRequest(Request.create(Request.CREATE, "category", t.category)
                             .append("private", cPrivate.isSelected() ? 1 : 0)
                             .append("tableType", type)
@@ -141,7 +138,10 @@ public class TableView extends Form {
             Dialog dlg = new Dialog();
             dlg.setLayout(BoxLayout.y());
             dlg.add(props);
-            dlg.add(new Button(okCmd));
+            dlg.add(BoxLayout.encloseXCenter(new Button(okCmd),
+                    new Button(Command.create(Dict.get(lang, "Cancel"), null, (ev) -> {
+                    })))
+            );
             dlg.setBackCommand("", null, (ev) -> {
                 dlg.dispose();
             });
