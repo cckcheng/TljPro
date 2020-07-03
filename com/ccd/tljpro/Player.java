@@ -194,6 +194,7 @@ public class Player {
         mySocket.addRequest(req);
     }
 
+    private boolean closed = false;
     public void disconnect() {
         if (this.mySocket != null) {
             if (this.mySocket.isConnected()) {
@@ -201,6 +202,7 @@ public class Player {
                 this.mySocket = null;
             }
         }
+        closed = true;
     }
 
     private List<Character> candidateTrumps = new ArrayList<>();
@@ -870,8 +872,8 @@ public class Player {
         } else {
             this.tableEnded = true;
             new UITimer(() -> {
-                if (tableEnded) main.formStart.show();
-            }).schedule(10000, false, getCurrentForm());
+                if (tableEnded) main.startupShow();
+            }).schedule(5000, false, getCurrentForm());
         }
         final String summary = Func.trimmedString(data.get("summary"));
         int seat = Func.parseInteger(data.get("seat"));  // the contractor
@@ -1209,8 +1211,8 @@ public class Player {
                                 break;
 
                             case "init":
-                                main.switchScene("table");
                                 refreshTable(data);
+                                main.switchScene("table");
                                 break;
                             case "bid":
                                 if (tableOn) displayBid(data);
@@ -1280,6 +1282,7 @@ public class Player {
             if (TuoLaJiPro.DEBUG) System.out.println("ConnectErr: " + message);
 
             closeRequested = true;
+            if (closed) return;
 //            main.enableButtons();
             if (checkOnce) {
                 if (tljHost.equals(Card.TLJ_HOST)) {
@@ -1290,6 +1293,7 @@ public class Player {
                 if (initConnect) checkOnce = false;
             } else {
                 if (initConnect) {
+                    if (main.formMain != null) return;
                     Display.getInstance().callSerially(() -> {
                         Dialog.show(Dict.get(main.lang, "Error"), Dict.get(main.lang, Dict.FAIL_CONNECT_SERVER), Dict.get(main.lang, "OK"), "");
                         if (!TuoLaJiPro.INTERNAL) {
@@ -1312,6 +1316,7 @@ public class Player {
                 }
 
                 if (initConnect) {
+                    if (main.formMain != null) return;
                     connectServer(initConnect);
                 } else {
                     connectServer("");
@@ -1881,7 +1886,7 @@ public class Player {
                             buttonContainer.removeAll();
                             buttonContainer.add(BorderLayout.CENTER, btnPlay);
                             actionButtons = btnPlay;
-                            buttonContainer.revalidate();
+//                            buttonContainer.revalidate();
                         }
                     } else {
                         bidButtons.setEnabled(true);
@@ -1889,7 +1894,7 @@ public class Player {
                             buttonContainer.removeAll();
                             buttonContainer.add(BorderLayout.CENTER, bidButtons);
                             actionButtons = bidButtons;
-                            buttonContainer.revalidate();
+//                            buttonContainer.revalidate();
                         }
                         this.maxBid = contractPoint - 5;
                         btnBid.setText("" + this.maxBid);
@@ -1932,7 +1937,7 @@ public class Player {
 
                     buttonContainer.removeAll();
                     buttonContainer.add(BorderLayout.CENTER, buttons);
-                    buttonContainer.revalidate();
+//                    buttonContainer.revalidate();
                     actionButtons = buttons;
                 } else if (act.equals("bury")) {
                     userHelp.showHelp(userHelp.BURY_CARDS);
@@ -1943,7 +1948,7 @@ public class Player {
                         buttonContainer.removeAll();
                         buttonContainer.add(BorderLayout.CENTER, btnPlay);
                         actionButtons = btnPlay;
-                        buttonContainer.revalidate();
+//                        buttonContainer.revalidate();
                     }
                 } else if (act.equals("play")) {
                     btnPlay.setName("play");
@@ -1953,7 +1958,7 @@ public class Player {
                         buttonContainer.removeAll();
                         buttonContainer.add(BorderLayout.CENTER, btnPlay);
                         actionButtons = btnPlay;
-                        buttonContainer.revalidate();
+//                        buttonContainer.revalidate();
                     }
                 } else {
                     // just wait
@@ -1964,10 +1969,11 @@ public class Player {
                 actionButtons.setVisible(true);
 //                buttonContainer.setShouldCalcPreferredSize(true); // not work
 //                central.repaint();    // no difference
-                buttonContainer.revalidate();
+                buttonContainer.animateHierarchy(100);
+//                buttonContainer.revalidate();
             }
 
-            parent.revalidate();
+//            parent.revalidate();
         }
 
         private Button dimButton(char c, Dialog dlg) {

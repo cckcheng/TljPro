@@ -54,7 +54,7 @@ import java.util.Map;
  */
 public class TuoLaJiPro {
 
-    static public final boolean DEBUG = false;
+    static public final boolean DEBUG = true;
     static public final boolean BYPASS_LOGIN = false;
     static public final boolean INTERNAL = true;
 
@@ -378,8 +378,10 @@ public class TuoLaJiPro {
     }
 
     int idxLayout = 0;
-    private void startupShow() {
+    private Form prevForm;
+    public void startupShow() {
         if (this.orientation > 0) {
+            prevForm = getCurrentForm();
             formStart.show();
             return;
         }
@@ -471,17 +473,27 @@ public class TuoLaJiPro {
         });
         timer.schedule(3500, true, formStart);
 
-        center.addPointerPressedListener((e) -> {
-            if (formMain != null) {
-                if (player.tableEnded) {
-                    formTable.showBack();
-                } else {
-                    formMain.showBack();
-                }
-            } else if (INTERNAL) {
-                formHost.showBack();
-            }
+        formStart.addPointerPressedListener((ev) -> {
+            exitShow();
         });
+        formStart.setBackCommand("", null, (ev) -> {
+            exitShow();
+        });
+    }
+
+    private void exitShow() {
+        if (formMain != null) {
+            if (prevForm != null) {
+                prevForm.showBack();
+//            if (player.tableEnded) {
+//                formTable.showBack();
+            } else {
+                formMain.showBack();
+            }
+        } else if (INTERNAL) {
+            if (this.player != null) this.player.disconnect();
+            formHost.showBack();
+        }
     }
 
     public void showLogin() {
@@ -885,7 +897,7 @@ public class TuoLaJiPro {
         final TuoLaJiPro app = this;
         switch (scene) {
             case "entry":
-                app.formMain.showBack();
+                app.formMain.show();
                 isMainForm = true;
                 app.formMain.setGlassPane(null);
                 break;
@@ -1609,6 +1621,11 @@ public class TuoLaJiPro {
                                     btn.setEnabled(true);
                                 }
                             }).schedule(5000, false, formMain);
+                        });
+                        break;
+                    case "recommend":
+                        btn.addActionListener(evt -> {
+
                         });
                         break;
                 }

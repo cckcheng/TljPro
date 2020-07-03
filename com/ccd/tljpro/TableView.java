@@ -4,6 +4,7 @@ import com.codename1.components.ToastBar;
 import com.codename1.io.Storage;
 import com.codename1.ui.Button;
 import com.codename1.ui.ButtonGroup;
+import static com.codename1.ui.CN.getCurrentForm;
 import com.codename1.ui.CheckBox;
 import com.codename1.ui.Command;
 import com.codename1.ui.Component;
@@ -18,6 +19,7 @@ import com.codename1.ui.Tabs;
 import com.codename1.ui.TextArea;
 import com.codename1.ui.TextField;
 import com.codename1.ui.Toolbar;
+import com.codename1.ui.animations.CommonTransitions;
 import com.codename1.ui.events.ActionEvent;
 import com.codename1.ui.layouts.BorderLayout;
 import com.codename1.ui.layouts.BoxLayout;
@@ -96,6 +98,9 @@ public class TableView extends Form {
             int idx = this.listTabs.getSelectedIndex();
             if (idx == 0) {
                 ToastBar.showInfoMessage(Dict.get(main.lang, Dict.NOT_AVAILABLE));
+                new UITimer(() -> {
+                    main.startupShow();
+                }).schedule(5000, false, getCurrentForm());
                 return;
             }
             if (!main.registered) {
@@ -183,6 +188,7 @@ public class TableView extends Form {
 //            });
 //        });
 
+        this.setTransitionOutAnimator(CommonTransitions.createSlide(CommonTransitions.SLIDE_HORIZONTAL, true, 1000));
         new UITimer(new Runnable() {
             @Override
             public void run() {
