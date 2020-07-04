@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -315,8 +316,7 @@ public class Player {
         } else {
             this.partnerCardSeq.setText(part);
         }
-        this.widget.revalidate();
-//        this.partnerInfo.revalidate();
+        this.widget.animateHierarchyFade(500, 50);
     }
 
     private void definePartner(Map<String, Object> data) {
@@ -566,7 +566,7 @@ public class Player {
 //        hand.repaint();
 //        this.widget.revalidate();
         main.validateTable();
-        if (Card.DEBUG_MODE) Log.p("refresh table: done");
+        if (TuoLaJiPro.DEBUG) Log.p("refresh table: done");
     }
 
     private void startNotifyTimer(Map<String, Object> data) {
@@ -580,6 +580,7 @@ public class Player {
         }
     }
 
+    private long exitTime;
     private Command holdCommand(int holdMinutes) {
         String txt = Dict.get(main.lang, "No");
         if (holdMinutes > 0) {
@@ -597,6 +598,7 @@ public class Player {
                     if (!p.robotOn) p.mySocket.addRequest(Request.create(Request.ROBOT, "on", 1));
                     Request req = new Request(Request.EXIT, false);
                     p.mySocket.addRequest(req.append("hold", holdMinutes));
+                    exitTime = new Date().getTime();
                 }
                 Display.getInstance().callSerially(() -> {
                     p.main.switchScene("view");
@@ -1128,7 +1130,8 @@ public class Player {
         }
         this.isPlaying = true;
 //        this.gameInfo.revalidate();
-        this.widget.revalidate();
+//        this.widget.revalidate();
+        this.widget.animateHierarchyFade(500, 10);
     }
 
     private void updateBalance(Map<String, Object> data) {
@@ -1211,8 +1214,11 @@ public class Player {
                                 break;
 
                             case "init":
-                                refreshTable(data);
-                                main.switchScene("table");
+                                long cTime = new Date().getTime();
+                                if (cTime - exitTime > 2000L) {  // avoid re-enter too soon
+                                    refreshTable(data);
+                                    main.switchScene("table");
+                                }
                                 break;
                             case "bid":
                                 if (tableOn) displayBid(data);
@@ -1602,11 +1608,13 @@ public class Player {
                 buttonContainer = new Container(BorderLayout.absolute());
 //                buttonContainer.getAllStyles().setAlignment(Component.CENTER);
                 buttonContainer.add(BorderLayout.CENTER, bidButtons);
-                actionButtons = bidButtons;
+//                actionButtons = bidButtons;
 
                 timer.getAllStyles().setAlignment(Component.CENTER);
                 userHelp.getAllStyles().setAlignment(Component.CENTER);
                 central.add(timer).add(buttonContainer);
+
+//                actionButtons.setVisible(false);
             }
         }
 
@@ -1659,11 +1667,12 @@ public class Player {
 //                buttonContainer = new Container(BorderLayout.absolute());
 //                central.add(buttonContainer);
 //                if (actionButtons != bidButtons) {
-                    bidButtons.setEnabled(true);
-                    bidButtons.setVisible(true);
+//                    bidButtons.setEnabled(true);
+//                    bidButtons.setVisible(true);
                     buttonContainer.removeAll();
-                    buttonContainer.add(BorderLayout.CENTER, bidButtons);
-                    actionButtons = bidButtons;
+//                    buttonContainer.add(BorderLayout.CENTER, bidButtons);
+//                    actionButtons = bidButtons;
+                actionButtons = null;
                 bidButtons.setEnabled(false);
                 bidButtons.setVisible(false);
 //                }

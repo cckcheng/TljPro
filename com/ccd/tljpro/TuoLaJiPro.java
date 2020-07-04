@@ -54,7 +54,7 @@ import java.util.Map;
  */
 public class TuoLaJiPro {
 
-    static public final boolean DEBUG = true;
+    static public final boolean DEBUG = false;
     static public final boolean BYPASS_LOGIN = false;
     static public final boolean INTERNAL = true;
 
@@ -175,6 +175,7 @@ public class TuoLaJiPro {
 
     public void validateTable() {
         this.table.forceRevalidate();
+//        this.table.animateHierarchyAndWait(200);
     }
 
     public Form getCurForm() {
@@ -409,9 +410,10 @@ public class TuoLaJiPro {
 //        center.setShouldCalcPreferredSize(true);
 
         Image img = redJoker.scaled(cw, ch);
-        Label c;
+        Component c;
         for (int i = 0; i < total; i++) {
-            c = new Label(img);
+//            c = new Label(img);
+            c = BoxLayout.encloseXCenter(new Label(img));
             center.add(c);
             ll0.setInsets(c, "50% 50%");
         }
@@ -649,10 +651,9 @@ public class TuoLaJiPro {
                 if (!isLandscape()) {
                     return;
                 }
+                this.switchScene("view");
                 if (registered) {
-                    player.sendRequest(Request.create(Request.JOIN, "opt", "").setReSend(true));
-                } else {
-                    this.switchScene("view");
+                    player.sendRequest(new Request(Request.RESUME, true).setReSend(true));
                 }
             });
 

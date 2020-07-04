@@ -75,6 +75,8 @@ public class Dict {
                         return "联网失败";
                     case "start over":
                         return "重新开始";
+                    case "tba":
+                        return "待定";
 
                     case "privacy policy":
                         return "隐私政策";

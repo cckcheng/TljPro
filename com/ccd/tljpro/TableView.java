@@ -23,6 +23,7 @@ import com.codename1.ui.animations.CommonTransitions;
 import com.codename1.ui.events.ActionEvent;
 import com.codename1.ui.layouts.BorderLayout;
 import com.codename1.ui.layouts.BoxLayout;
+import com.codename1.ui.layouts.FlowLayout;
 import com.codename1.ui.plaf.Style;
 import com.codename1.ui.plaf.UIManager;
 import com.codename1.ui.table.TableLayout;
@@ -38,6 +39,8 @@ import java.util.Map;
  * @author ccheng
  */
 public class TableView extends Form {
+
+    static String TABLE_OPTIONS = "ALMWB";
 
     private Tabs listTabs;
     private final TuoLaJiPro main;
@@ -126,6 +129,13 @@ public class TableView extends Form {
             CheckBox cPrivate = new CheckBox(Dict.get(lang, Dict.PRIVATE_TABLE));
             props.add(cPrivate);
 
+            for (int x = 0, n = TABLE_OPTIONS.length(); x < n; x++) {
+                char code = TABLE_OPTIONS.charAt(x);
+                boolean available = t.optionSupported(code);
+                if (!available && idx <= 1) continue;
+                props.add(optionComponent(code, available));
+            }
+
             Player p = this.player;
             Command okCmd = new Command(Dict.get(lang, "OK")) {
                 @Override
@@ -134,6 +144,7 @@ public class TableView extends Form {
                     p.sendRequest(Request.create(Request.CREATE, "category", t.category)
                             .append("private", cPrivate.isSelected() ? 1 : 0)
                             .append("tableType", type)
+                            .append("option", selectedOptions(t))
                             .setReSend(true)
                     );
                     Storage.getInstance().writeObject("category", t.category);
@@ -326,6 +337,11 @@ public class TableView extends Form {
             tc.coins = coins;
 //            tabName += " " + FontImage.MATERIAL_MONETIZATION_ON + coins;
         }
+
+        if (n > 4) {
+            tc.avlOptions = lst.get(4);
+        }
+
         int idxTab = this.listTabs.getTabCount();
         this.categoryIndex.put(category, idxTab);
         this.listTabs.addTab(tabName, this.tableList.get(idxTab));
@@ -333,10 +349,132 @@ public class TableView extends Form {
         this.listTabs.setTabSelectedIcon(idxTab, FontImage.createMaterial(icon, s));
     }
 
+    static public String getTableOption(char code, String lang) {
+        String str = "";
+        switch (code) {
+            case 'A':
+                if (lang.equalsIgnoreCase("zh")) str = "任意定主";
+                else str = "No trump restriction";
+                break;
+            case 'L':
+                if (lang.equalsIgnoreCase("zh")) str = "起底后定主";
+                else str = "Late define trump";
+                break;
+            case 'M':
+                if (lang.equalsIgnoreCase("zh")) str = "抠底倍数";
+                else str = "Hole point multiple";
+                break;
+            case 'W':
+                if (lang.equalsIgnoreCase("zh")) str = "等人入场";
+                else str = "Minimum players";
+                break;
+            case 'B':
+                if (lang.equalsIgnoreCase("zh")) str = "中场休息";
+                else str = "Long break";
+                break;
+        }
+
+        return str;
+    }
+
+    private Map<Character, Object> optComponent = new HashMap<>();
+    private Component optionComponent(char code, boolean enabled) {
+        String str = getTableOption(code, main.lang);
+        if (!enabled) str += "(" + Dict.get(main.lang, "TBA") + ")";
+        Component cmp = null;
+        switch (code) {
+            case 'A':
+            case 'L':
+                cmp = new CheckBox(str);
+                optComponent.put(code, cmp);
+                break;
+            case 'M':
+                RadioButton rb1 = new RadioButton("4n");
+//                rb1.setPropertyValue("val", "4n");    // not work
+                rb1.setSelected(true);
+                RadioButton rb2 = new RadioButton("2n");
+//                rb1.setPropertyValue("val", "2n");
+                RadioButton rb3 = new RadioButton("2^n");
+//                rb1.setPropertyValue("val", "2^n");
+                optComponent.put(code, new ButtonGroup(rb1, rb2, rb3));
+                cmp = FlowLayout.encloseIn(new Label(str), rb1, rb2, rb3);
+                break;
+            case 'W':
+                RadioButton p0 = new RadioButton(Dict.get(main.lang, "No"));
+                System.out.println(p0.setPropertyValue("val", "0"));
+                p0.setSelected(true);
+                RadioButton p2 = new RadioButton("2");
+                p2.setPropertyValue("val", "2");
+                RadioButton p3 = new RadioButton("3");
+                p2.setPropertyValue("val", "3");
+                RadioButton p4 = new RadioButton("4");
+                p2.setPropertyValue("val", "4");
+                RadioButton p5 = new RadioButton("5");
+                p2.setPropertyValue("val", "5");
+                RadioButton p6 = new RadioButton("6");
+                p2.setPropertyValue("val", "6");
+                optComponent.put(code, new ButtonGroup(p0, p2, p3, p4, p5, p6));
+                cmp = FlowLayout.encloseIn(new Label(str), p0, p2, p3, p4, p5, p6);
+                break;
+            case 'B':
+                RadioButton b0 = new RadioButton(Dict.get(main.lang, "No"));
+                b0.setPropertyValue("val", "0");
+                b0.setSelected(true);
+                RadioButton b5 = new RadioButton("5" + Dict.get(main.lang, "minutes"));
+                b5.setPropertyValue("val", "5");
+                RadioButton b10 = new RadioButton("10" + Dict.get(main.lang, "minutes"));
+                b10.setPropertyValue("val", "10");
+                optComponent.put(code, new ButtonGroup(b0, b5, b10));
+                cmp = FlowLayout.encloseIn(new Label(str), b0, b5, b10);
+                break;
+            default:
+                cmp = new Label(str);
+                break;
+        }
+
+        cmp.setEnabled(enabled);
+        return cmp;
+    }
+
+    private String selectedOptions(TableContainer t) {
+        String opt = "";
+        for (int x = 0, n = TABLE_OPTIONS.length(); x < n; x++) {
+            char code = TABLE_OPTIONS.charAt(x);
+            boolean available = t.optionSupported(code);
+            if (!available) continue;
+            switch (code) {
+                case 'A':
+                case 'L':
+                    CheckBox cb = (CheckBox) optComponent.get(code);
+                    if (cb.isSelected()) {
+                        opt += "," + code;
+                    }
+                    break;
+                case 'M':
+                case 'W':
+                case 'B':
+                    ButtonGroup bg = (ButtonGroup) optComponent.get(code);
+//                    RadioButton rb = bg.getRadioButton(bg.getSelectedIndex());
+                    int sIdx = bg.getSelectedIndex();
+//                    System.out.println(rb.getText() + ":");
+//                    for (String p : rb.getPropertyNames()) {
+//                        System.out.println(p);
+//                    }
+//                    opt += "," + code + rb.getPropertyValue("val");
+                    if (sIdx > 0) opt += "," + code + sIdx;
+                    break;
+            }
+        }
+
+        if (!opt.isEmpty()) opt = opt.substring(1);
+        return opt;
+    }
+
     class TableContainer extends Container {
 
         String category;
         String dispName;
+        String avlOptions;
         int coins = 0;
 
         TableContainer(String category) {
@@ -380,5 +518,8 @@ public class TableView extends Form {
             return btn;
         }
 
+        boolean optionSupported(char code) {
+            return avlOptions != null && avlOptions.indexOf(code) >= 0;
+        }
     }
 }
