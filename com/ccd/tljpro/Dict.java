@@ -179,6 +179,7 @@ public class Dict {
     public static final int TOPUP = 82;
 
     public static final int FAIL_CONNECT_SERVER = 99;
+    public static final int NO_CONNECTION = 97;
 
     static public String get(final String lang, int k) {
         switch (k) {
@@ -254,6 +255,8 @@ public class Dict {
                 return lang.equals("zh") ? "请稍候..." : "Please wait...";
             case FAIL_CONNECT_SERVER:
                 return lang.equals("zh") ? "服务器连接失败" : "Failed to connection server";
+            case NO_CONNECTION:
+                return lang.equals("zh") ? "无网络" : "No connection";
             case UPGRADE_IOS:
                 return lang.equals("zh") ? "无法登录，请升级到IOS 13"
                         : "Native login not supported, please upgrade to IOS 13";

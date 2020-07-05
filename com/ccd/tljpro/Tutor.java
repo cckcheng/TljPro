@@ -45,9 +45,6 @@ public class Tutor extends Container {
     int totalScore = 0;
 
     public void showTopic() {
-        if (Card.DEBUG_MODE) {
-            Storage.getInstance().clearStorage();
-        }
         totalScore = Func.parseInteger(Storage.getInstance().readObject("tutor_score"));
         if (totalScore < 0) {
             totalScore = 0;

@@ -78,7 +78,7 @@ public class TuoLaJiPro {
         AvailableColors.put("DK_BLUE", new CustomColor("Dark Blue", "深蓝", DARK_BLUE));
     }
 
-    static public int BACKGROUND_COLOR = Card.DEBUG_MODE ? 0xffffff : DARK_BLUE;
+    static public int BACKGROUND_COLOR = DARK_BLUE;
 
     public CustomColor currentColor;
     private Form current;
@@ -409,11 +409,16 @@ public class TuoLaJiPro {
         int total = even ? 12 : 9;
 //        center.setShouldCalcPreferredSize(true);
 
+        if (Card.FOR_IOS) {
+            cw *= 3 / 2;
+            ch *= 3 / 2;
+        }
         Image img = redJoker.scaled(cw, ch);
         Component c;
         for (int i = 0; i < total; i++) {
 //            c = new Label(img);
             c = BoxLayout.encloseXCenter(new Label(img));
+//            c.setUIID("Container");
             center.add(c);
             ll0.setInsets(c, "50% 50%");
         }
@@ -464,8 +469,9 @@ public class TuoLaJiPro {
         formStart.getContentPane().animateHierarchy(3000);
         idxLayout = x % n;
 
+        final int cw0 = cw, ch0 = ch;
         UITimer timer = new UITimer(() -> {
-            updateLayerLayout(center, ll, cw, ch, total);
+            updateLayerLayout(center, ll, cw0, ch0, total);
             if (idxLayout >= n) idxLayout = idxLayout % n;
             Layout layout = layouts.get(idxLayout++);
             center.setLayout(layout);

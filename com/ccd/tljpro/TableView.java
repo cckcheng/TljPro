@@ -390,40 +390,40 @@ public class TableView extends Form {
                 break;
             case 'M':
                 RadioButton rb1 = new RadioButton("4n");
-//                rb1.setPropertyValue("val", "4n");    // not work
+                rb1.putClientProperty("val", "4n");
                 rb1.setSelected(true);
                 RadioButton rb2 = new RadioButton("2n");
-//                rb1.setPropertyValue("val", "2n");
+                rb2.putClientProperty("val", "2n");
                 RadioButton rb3 = new RadioButton("2^n");
-//                rb1.setPropertyValue("val", "2^n");
+                rb3.putClientProperty("val", "2^n");
                 optComponent.put(code, new ButtonGroup(rb1, rb2, rb3));
                 cmp = FlowLayout.encloseIn(new Label(str), rb1, rb2, rb3);
                 break;
             case 'W':
                 RadioButton p0 = new RadioButton(Dict.get(main.lang, "No"));
-                System.out.println(p0.setPropertyValue("val", "0"));
+                p0.putClientProperty("val", "0");
                 p0.setSelected(true);
                 RadioButton p2 = new RadioButton("2");
-                p2.setPropertyValue("val", "2");
+                p2.putClientProperty("val", "2");
                 RadioButton p3 = new RadioButton("3");
-                p2.setPropertyValue("val", "3");
+                p3.putClientProperty("val", "3");
                 RadioButton p4 = new RadioButton("4");
-                p2.setPropertyValue("val", "4");
+                p4.putClientProperty("val", "4");
                 RadioButton p5 = new RadioButton("5");
-                p2.setPropertyValue("val", "5");
+                p5.putClientProperty("val", "5");
                 RadioButton p6 = new RadioButton("6");
-                p2.setPropertyValue("val", "6");
+                p6.putClientProperty("val", "6");
                 optComponent.put(code, new ButtonGroup(p0, p2, p3, p4, p5, p6));
                 cmp = FlowLayout.encloseIn(new Label(str), p0, p2, p3, p4, p5, p6);
                 break;
             case 'B':
                 RadioButton b0 = new RadioButton(Dict.get(main.lang, "No"));
-                b0.setPropertyValue("val", "0");
+                b0.putClientProperty("val", "0");
                 b0.setSelected(true);
                 RadioButton b5 = new RadioButton("5" + Dict.get(main.lang, "minutes"));
-                b5.setPropertyValue("val", "5");
+                b5.putClientProperty("val", "5");
                 RadioButton b10 = new RadioButton("10" + Dict.get(main.lang, "minutes"));
-                b10.setPropertyValue("val", "10");
+                b10.putClientProperty("val", "10");
                 optComponent.put(code, new ButtonGroup(b0, b5, b10));
                 cmp = FlowLayout.encloseIn(new Label(str), b0, b5, b10);
                 break;
@@ -454,14 +454,12 @@ public class TableView extends Form {
                 case 'W':
                 case 'B':
                     ButtonGroup bg = (ButtonGroup) optComponent.get(code);
-//                    RadioButton rb = bg.getRadioButton(bg.getSelectedIndex());
                     int sIdx = bg.getSelectedIndex();
-//                    System.out.println(rb.getText() + ":");
-//                    for (String p : rb.getPropertyNames()) {
-//                        System.out.println(p);
-//                    }
-//                    opt += "," + code + rb.getPropertyValue("val");
-                    if (sIdx > 0) opt += "," + code + sIdx;
+//                    if (sIdx > 0) opt += "," + code + sIdx;
+                    if (sIdx > 0) {
+                        RadioButton rb = bg.getRadioButton(sIdx);
+                        opt += "," + code + rb.getClientProperty("val");
+                    }
                     break;
             }
         }

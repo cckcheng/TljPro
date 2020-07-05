@@ -1,5 +1,6 @@
 package com.ccd.tljpro;
 
+import com.codename1.components.ToastBar;
 import com.codename1.io.JSONParser;
 import com.codename1.io.Log;
 import com.codename1.io.Socket;
@@ -316,7 +317,7 @@ public class Player {
         } else {
             this.partnerCardSeq.setText(part);
         }
-        this.widget.animateHierarchyFade(500, 50);
+        this.widget.animateLayoutFade(500, 50);
     }
 
     private void definePartner(Map<String, Object> data) {
@@ -390,9 +391,6 @@ public class Player {
         }
         this.leadingPlayer = null;
         this.currentPass = "";
-
-        this.robotOn = false;
-        this.bRobot.setSelected(false);
     }
 
     public int numCardsLeft = 0;
@@ -1131,7 +1129,7 @@ public class Player {
         this.isPlaying = true;
 //        this.gameInfo.revalidate();
 //        this.widget.revalidate();
-        this.widget.animateHierarchyFade(500, 10);
+        this.widget.animateLayoutFade(500, 10);
     }
 
     private void updateBalance(Map<String, Object> data) {
@@ -1156,7 +1154,7 @@ public class Player {
 
         public void closeConnection() {
             this.closeRequested = true;
-            if (Card.DEBUG_MODE) Log.p("this.closeRequested: " + this.closeRequested);
+            if (TuoLaJiPro.DEBUG) Log.p("this.closeRequested: " + this.closeRequested);
         }
 
         public void clearRequest() {
@@ -1301,12 +1299,8 @@ public class Player {
                 if (initConnect) {
                     if (main.formMain != null) return;
                     Display.getInstance().callSerially(() -> {
-                        Dialog.show(Dict.get(main.lang, "Error"), Dict.get(main.lang, Dict.FAIL_CONNECT_SERVER), Dict.get(main.lang, "OK"), "");
-                        if (!TuoLaJiPro.INTERNAL) {
-                            Display.getInstance().exitApplication();
-                        } else {
-                            main.formHost.showBack();
-                        }
+                        ToastBar.showErrorMessage(Dict.get(main.lang, Dict.FAIL_CONNECT_SERVER), 10000);
+//                        Dialog.show(Dict.get(main.lang, "Error"), Dict.get(main.lang, Dict.FAIL_CONNECT_SERVER), Dict.get(main.lang, "OK"), "");
                     });
                     return;
                 }
@@ -1337,22 +1331,27 @@ public class Player {
             closeRequested = false;
             checkOnce = false;
 
-            if (initConnect) {
-                initConnect = false;
-                new UITimer(new Runnable() {
-                    public void run() {
-                        main.showLogin();
-                    }
-                }).schedule(2500, false, main.formStart);
+            if (isConnected()) {
+                if (initConnect) {
+                    initConnect = false;
+                    new UITimer(new Runnable() {
+                        public void run() {
+                            main.showLogin();
+                        }
+                    }).schedule(2500, false, main.formStart);
 
+                } else {
+                    main.enableButtons();
+                }
             } else {
-                main.enableButtons();
+                ToastBar.showErrorMessage(Dict.get(main.lang, Dict.NO_CONNECTION), -1);
+                return;
             }
 
             byte[] buffer = new byte[4096];
             int count = 0;
             try {
-                if (Card.DEBUG_MODE) Log.p("connected!");
+                if (TuoLaJiPro.DEBUG) Log.p("connected!");
                 while (isConnected() && !closeRequested) {
                     if (!checkConnection && !pendingRequests.isEmpty()) {
                         this.currentRequest = pendingRequests.remove(0);
@@ -1601,13 +1600,14 @@ public class Player {
 //                playButton.getAllStyles().setAlignment(Component.CENTER);
 
                 userHelp = new UserHelp(main.lang);
-                central = new Container(new BoxLayout(BoxLayout.Y_AXIS));
-                central.getAllStyles().setAlignment(Component.CENTER);
+                central = new Container(BoxLayout.yCenter());
+//                central.getAllStyles().setAlignment(Component.CENTER);
 //                buttonContainer = new Container(new BoxLayout(BoxLayout.X_AXIS_NO_GROW));
 //                buttonContainer = new Container(BorderLayout.center());
-                buttonContainer = new Container(BorderLayout.absolute());
+                buttonContainer = new Container(BoxLayout.xCenter());
+//                buttonContainer = new Container(BorderLayout.absolute());
 //                buttonContainer.getAllStyles().setAlignment(Component.CENTER);
-                buttonContainer.add(BorderLayout.CENTER, bidButtons);
+                buttonContainer.add(bidButtons);
 //                actionButtons = bidButtons;
 
                 timer.getAllStyles().setAlignment(Component.CENTER);
@@ -1670,7 +1670,7 @@ public class Player {
 //                    bidButtons.setEnabled(true);
 //                    bidButtons.setVisible(true);
                     buttonContainer.removeAll();
-//                    buttonContainer.add(BorderLayout.CENTER, bidButtons);
+//                    buttonContainer.add( bidButtons);
 //                    actionButtons = bidButtons;
                 actionButtons = null;
                 bidButtons.setEnabled(false);
@@ -1831,7 +1831,7 @@ public class Player {
             if (this.location.equals("bottom")) {
                 userHelp.clear();
                 if (robotOn || watching) {
-                    parent.revalidate();
+//                    parent.revalidate();
                     return;
                 }
 //                if (Display.getInstance().isBuiltinSoundAvailable(Display.SOUND_TYPE_ALARM)) {
@@ -1840,7 +1840,7 @@ public class Player {
 
                 if (act.equals("dim")) {
                     userHelp.showHelp(userHelp.SET_TRUMP);
-                    Container buttons = new Container(new BoxLayout(BoxLayout.X_AXIS_NO_GROW));
+                    Container buttons = new Container(BoxLayout.xCenter());
                     for (char c : candidateTrumps) {
                         Button btn = new Button();
                         if (c == Card.JOKER) {
@@ -1879,12 +1879,13 @@ public class Player {
                             } else {
                                 cancelTimer();
                                 mySocket.addRequest(Request.create(Request.TRUMP, "trump", c));
+                                buttonContainer.removeAll();
                             }
                         });
                     }
 
                     buttonContainer.removeAll();
-                    buttonContainer.add(BorderLayout.CENTER, buttons);
+                    buttonContainer.add(buttons);
                     actionButtons = buttons;
                 } else if (act.equals("bid")) {
                     if (candidateTrumps.isEmpty()) {
@@ -1893,17 +1894,19 @@ public class Player {
                         btnPlay.setEnabled(true);
                         if (actionButtons != btnPlay) {
                             buttonContainer.removeAll();
-                            buttonContainer.add(BorderLayout.CENTER, btnPlay);
+                            buttonContainer.add(btnPlay);
                             actionButtons = btnPlay;
 //                            buttonContainer.revalidate();
+                            buttonContainer.animateLayout(100);
                         }
                     } else {
                         bidButtons.setEnabled(true);
                         if (actionButtons != bidButtons) {
                             buttonContainer.removeAll();
-                            buttonContainer.add(BorderLayout.CENTER, bidButtons);
+                            buttonContainer.add(bidButtons);
                             actionButtons = bidButtons;
 //                            buttonContainer.revalidate();
+                            buttonContainer.animateLayout(100);
                         }
                         this.maxBid = contractPoint - 5;
                         btnBid.setText("" + this.maxBid);
@@ -1913,11 +1916,6 @@ public class Player {
 
                     Container buttons = new Container(new BoxLayout(BoxLayout.X_AXIS_NO_GROW));
 
-//                    ButtonGroup btnGroup = new ButtonGroup();
-//                    RadioButton rb1 = RadioButton.createToggle(Dict.get(main.lang, "1st"), btnGroup);
-//                    RadioButton rb2 = RadioButton.createToggle(Dict.get(main.lang, "2nd"), btnGroup);
-//                    RadioButton rb3 = RadioButton.createToggle(Dict.get(main.lang, "3rd"), btnGroup);
-//                    RadioButton rb4 = RadioButton.createToggle(Dict.get(main.lang, "4th"), btnGroup);
                     RadioButton rb1 = new RadioButton(Dict.get(main.lang, "1st"));
                     RadioButton rb2 = new RadioButton(Dict.get(main.lang, "2nd"));
                     RadioButton rb3 = new RadioButton(Dict.get(main.lang, "3rd"));
@@ -1939,13 +1937,12 @@ public class Player {
                     btn.setCapsText(false);
                     btn.addActionListener((e)->{
                         cancelTimer();
-//                        mySocket.addRequest(actionPartner, "\"def\":\"0\"");
                         mySocket.addRequest(Request.create(Request.PARTNER, "def", "0"));
                     });
                     buttons.add(btn);
 
                     buttonContainer.removeAll();
-                    buttonContainer.add(BorderLayout.CENTER, buttons);
+                    buttonContainer.add(buttons);
 //                    buttonContainer.revalidate();
                     actionButtons = buttons;
                 } else if (act.equals("bury")) {
@@ -1955,9 +1952,9 @@ public class Player {
                     btnPlay.setEnabled(true);
                     if (actionButtons != btnPlay) {
                         buttonContainer.removeAll();
-                        buttonContainer.add(BorderLayout.CENTER, btnPlay);
+                        buttonContainer.add(btnPlay);
                         actionButtons = btnPlay;
-//                        buttonContainer.revalidate();
+                        buttonContainer.revalidate();
                     }
                 } else if (act.equals("play")) {
                     btnPlay.setName("play");
@@ -1965,9 +1962,9 @@ public class Player {
                     btnPlay.setEnabled(true);
                     if (actionButtons != btnPlay) {
                         buttonContainer.removeAll();
-                        buttonContainer.add(BorderLayout.CENTER, btnPlay);
+                        buttonContainer.add(btnPlay);
                         actionButtons = btnPlay;
-//                        buttonContainer.revalidate();
+                        buttonContainer.revalidate();
                     }
                 } else {
                     // just wait
@@ -1975,11 +1972,12 @@ public class Player {
                     return;
                 }
 
+                central.revalidate();
                 actionButtons.setVisible(true);
 //                buttonContainer.setShouldCalcPreferredSize(true); // not work
 //                central.repaint();    // no difference
-                buttonContainer.animateHierarchy(100);
 //                buttonContainer.revalidate();
+//                central.animateLayout(500);
             }
 
 //            parent.revalidate();
