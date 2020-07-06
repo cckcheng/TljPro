@@ -56,7 +56,7 @@ public class TuoLaJiPro {
 
     static public final boolean DEBUG = false;
     static public final boolean BYPASS_LOGIN = false;
-    static public final boolean INTERNAL = true;
+    static public final boolean INTERNAL = false;
 
 //    static public final String STORAGE_PROFILE = "profile";
     static public final int GREEN = 0x008000;
@@ -861,7 +861,7 @@ public class TuoLaJiPro {
         playerName = StringUtil.replaceAll(playerName, "\\", "");
         playerName = StringUtil.replaceAll(playerName, "'", "");
         playerName = StringUtil.replaceAll(playerName, ":", " ");
-        if (playerName.isEmpty()) {
+        if (playerName.trim().isEmpty()) {
             this.errMsg = Dict.get(lang, Dict.INVALID_PLAYER_NAME);
             return null;
         }
@@ -1597,6 +1597,55 @@ public class TuoLaJiPro {
         frm.show();
     }
 
+    void recommendFriend(String title) {
+        Form frm = new Form(title, BorderLayout.center());
+        frm.setSafeArea(true);
+        Container props = new Container(new GridLayout(7, 1));
+        props.add(new TextField("", Dict.get(lang, Dict.FRIEND_EMAIL)));
+        props.add(new TextField("", Dict.get(lang, Dict.FRIEND_EMAIL)));
+        props.add(new TextField("", Dict.get(lang, Dict.FRIEND_EMAIL)));
+        props.add(new TextField("", Dict.get(lang, Dict.FRIEND_EMAIL)));
+        props.add(new TextField("", Dict.get(lang, Dict.FRIEND_EMAIL)));
+        props.add(new TextField("", Dict.get(lang, Dict.YOUR_NAME)));
+        props.add(Dict.get(lang, Dict.NAME_NOTE));
+        frm.add(BorderLayout.CENTER, props);
+        Toolbar tbar = frm.getToolbar();
+        tbar.setUIID("myTool");
+        tbar.addMaterialCommandToRightBar(Dict.get(lang, "Submit"), FontImage.MATERIAL_DONE_OUTLINE, ev -> {
+            String emails = "";
+            for (int x = 0; x < 5; x++) {
+                String s = ((TextField) props.getComponentAt(x)).getText().trim();
+                if (s.isEmpty()) continue;
+                if (!Dict.validEmail(s)) {
+                    Dialog.show(Dict.get(lang, Dict.INVALID_EMAIL), s, Dict.get(lang, "OK"), null);
+                    return;
+                }
+                emails += "," + s;
+            }
+            if (emails.isEmpty()) return;
+            String nm = ((TextField) props.getComponentAt(5)).getText().trim();
+            if (nm.isEmpty()) {
+                Dialog.show(Dict.get(lang, Dict.INPUT_NAME), null, Dict.get(lang, "OK"), null);
+                return;
+            }
+            nm = StringUtil.replaceAll(nm, "\"", "");
+            nm = StringUtil.replaceAll(nm, "\\", "");
+            nm = StringUtil.replaceAll(nm, "'", "");
+            nm = StringUtil.replaceAll(nm, ":", " ");
+            if (nm.trim().isEmpty()) {
+                Dialog.show(Dict.get(lang, Dict.INVALID_NAME), null, Dict.get(lang, "OK"), null);
+                return;
+            }
+            player.sendRequest(Request.create(Request.RECOMMEND, "emails", emails.substring(1))
+                    .append("name", nm).append("lang", lang));
+            formMain.showBack();
+        });
+        tbar.setBackCommand("", (e) -> {
+            switchScene("entry");
+        });
+        frm.show();
+    }
+
     class ButtonText {
         char icon;
         String type;
@@ -1632,7 +1681,7 @@ public class TuoLaJiPro {
                         break;
                     case "recommend":
                         btn.addActionListener(evt -> {
-
+                            recommendFriend(textMap.get(lang));
                         });
                         break;
                 }

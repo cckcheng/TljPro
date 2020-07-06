@@ -38,7 +38,7 @@ public class ServerMessage {
         String content = Func.trimmedString(data.get("content"));
         if (key.isEmpty() || title.isEmpty()) return;
 
-        messages.put(key, new ServerMessage(title, content));
+        if (!type.isEmpty()) messages.put(key, new ServerMessage(title, content));
         Dialog.show(title, content, Dict.get(lang, "OK"), null);
     }
 }

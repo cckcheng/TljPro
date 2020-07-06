@@ -27,6 +27,7 @@ public class Request {
 
     static final String REGISTER = "reg";
     static final String VERIFY = "auth";
+    static final String RECOMMEND = "recomm";
 
     private String msg;
     private final String action;

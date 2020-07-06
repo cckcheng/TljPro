@@ -177,6 +177,11 @@ public class Dict {
 
     public static final int COIN_NOT_ENOUGH = 81;
     public static final int TOPUP = 82;
+    public static final int INVALID_NAME = 85;
+    public static final int NAME_NOTE = 86;
+    public static final int INPUT_NAME = 87;
+    public static final int FRIEND_EMAIL = 88;
+    public static final int YOUR_NAME = 89;
 
     public static final int FAIL_CONNECT_SERVER = 99;
     public static final int NO_CONNECTION = 97;
@@ -250,6 +255,16 @@ public class Dict {
                 return lang.equals("zh") ? "账户余额不足" : "Insufficient balance";
             case TOPUP:
                 return lang.equals("zh") ? "充值" : "Top up";
+            case FRIEND_EMAIL:
+                return lang.equals("zh") ? "朋友Email" : "Friend's Email";
+            case YOUR_NAME:
+                return lang.equals("zh") ? "您的姓名" : "Your Name";
+            case NAME_NOTE:
+                return lang.equals("zh") ? "您的姓名仅用于和朋友通讯" : "Your name is only used to communicate with your friends";
+            case INPUT_NAME:
+                return lang.equals("zh") ? "请填写您的姓名" : "Please input your name";
+            case INVALID_NAME:
+                return lang.equals("zh") ? "姓名含有非法字符" : "Invalid charaters in name";
 
             case PLEASE_WAIT:
                 return lang.equals("zh") ? "请稍候..." : "Please wait...";
