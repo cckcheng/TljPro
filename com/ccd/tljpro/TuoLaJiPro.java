@@ -56,7 +56,7 @@ public class TuoLaJiPro {
 
     static public final boolean DEBUG = false;
     static public final boolean BYPASS_LOGIN = false;
-    static public final boolean INTERNAL = false;
+    static public final boolean INTERNAL = true;
 
 //    static public final String STORAGE_PROFILE = "profile";
     static public final int GREEN = 0x008000;
@@ -1598,22 +1598,24 @@ public class TuoLaJiPro {
     }
 
     void recommendFriend(String title) {
-        Form frm = new Form(title, BorderLayout.center());
+        Form frm = new Form(Dict.get(lang, Dict.PROMOTION_NOTE), BorderLayout.center());
         frm.setSafeArea(true);
-        Container props = new Container(new GridLayout(7, 1));
-        props.add(new TextField("", Dict.get(lang, Dict.FRIEND_EMAIL)));
-        props.add(new TextField("", Dict.get(lang, Dict.FRIEND_EMAIL)));
-        props.add(new TextField("", Dict.get(lang, Dict.FRIEND_EMAIL)));
-        props.add(new TextField("", Dict.get(lang, Dict.FRIEND_EMAIL)));
-        props.add(new TextField("", Dict.get(lang, Dict.FRIEND_EMAIL)));
+        Container props = new Container(new TableLayout(7, 1));
+        props.setScrollableY(true);
+        int total = 5;
+        for (int x = 0; x < total; x++) {
+            props.add(new TextField("", Dict.get(lang, Dict.FRIEND_EMAIL)));
+        }
         props.add(new TextField("", Dict.get(lang, Dict.YOUR_NAME)));
-        props.add(Dict.get(lang, Dict.NAME_NOTE));
+
         frm.add(BorderLayout.CENTER, props);
+        frm.add(BorderLayout.SOUTH, Dict.get(lang, Dict.NAME_NOTE));
+
         Toolbar tbar = frm.getToolbar();
         tbar.setUIID("myTool");
         tbar.addMaterialCommandToRightBar(Dict.get(lang, "Submit"), FontImage.MATERIAL_DONE_OUTLINE, ev -> {
             String emails = "";
-            for (int x = 0; x < 5; x++) {
+            for (int x = 0; x < total; x++) {
                 String s = ((TextField) props.getComponentAt(x)).getText().trim();
                 if (s.isEmpty()) continue;
                 if (!Dict.validEmail(s)) {
@@ -1623,7 +1625,7 @@ public class TuoLaJiPro {
                 emails += "," + s;
             }
             if (emails.isEmpty()) return;
-            String nm = ((TextField) props.getComponentAt(5)).getText().trim();
+            String nm = ((TextField) props.getComponentAt(total)).getText().trim();
             if (nm.isEmpty()) {
                 Dialog.show(Dict.get(lang, Dict.INPUT_NAME), null, Dict.get(lang, "OK"), null);
                 return;

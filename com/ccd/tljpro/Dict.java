@@ -186,6 +186,8 @@ public class Dict {
     public static final int FAIL_CONNECT_SERVER = 99;
     public static final int NO_CONNECTION = 97;
 
+    public static final int PROMOTION_NOTE = 101;
+
     static public String get(final String lang, int k) {
         switch (k) {
             case PLAY:
@@ -265,6 +267,9 @@ public class Dict {
                 return lang.equals("zh") ? "请填写您的姓名" : "Please input your name";
             case INVALID_NAME:
                 return lang.equals("zh") ? "姓名含有非法字符" : "Invalid charaters in name";
+
+            case PROMOTION_NOTE:
+                return lang.equals("zh") ? "推荐朋友可获奖励，详见使用指南" : "Recommend friend to get reward, see GUIDE";
 
             case PLEASE_WAIT:
                 return lang.equals("zh") ? "请稍候..." : "Please wait...";

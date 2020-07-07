@@ -5,7 +5,6 @@ import com.codename1.io.JSONParser;
 import com.codename1.io.Log;
 import com.codename1.io.Socket;
 import com.codename1.io.SocketConnection;
-import com.codename1.io.Storage;
 import com.codename1.ui.Button;
 import com.codename1.ui.ButtonGroup;
 import static com.codename1.ui.CN.getCurrentForm;
@@ -391,6 +390,9 @@ public class Player {
         }
         this.leadingPlayer = null;
         this.currentPass = "";
+
+        LayeredLayout ll = (LayeredLayout) widget.getLayout();
+        ll.setInsets(lbPass, "auto auto 50% 50%");
     }
 
     public int numCardsLeft = 0;
@@ -487,10 +489,15 @@ public class Player {
         if (!this.currentPass.isEmpty()) {
             lbPass.setText(this.currentPass);
             lbPass.setVisible(true);
+
             String passInfo = Dict.get(main.lang, Dict.TABLE_CODE) + ": " + this.currentPass;
             p0.userHelp.showInfo(passInfo);
 //            showInfo(passInfo);
 //            ToastBar.showInfoMessage(Dict.get(main.lang, Dict.TABLE_CODE) + ": " + this.currentPass); //not work
+
+            LayeredLayout ll = (LayeredLayout) widget.getLayout();
+            ll.setInsets(lbPass, "-" + Hand.deltaGeneral + " 25% auto auto");
+            widget.animateLayout(2000);
         } else {
             lbPass.setVisible(false);
 //            FontImage.setMaterialIcon(lbPass, '\0');
@@ -727,20 +734,16 @@ public class Player {
         ll.setInsets(bRobot, "auto 0 0 auto");   //top right bottom left
         if (main.registered) ll.setInsets(bSit, "auto 0 0 auto");   //top right bottom left
         ll.setInsets(this.lbGeneral, "-" + Hand.deltaGeneral + " auto auto 0")
-                .setInsets(this.lbPass, "-" + Hand.deltaGeneral + " auto auto 0")
+                .setInsets(this.lbPass, "auto auto 50% 50%")
                 .setInsets(this.partnerCardSeq, "auto 0 " + Hand.deltaGeneral + " auto")
                 .setInsets(this.partnerCard, "-" + Hand.deltaRank + " 0 auto auto")
                 .setInsets(this.pointsInfo, "0 auto auto 20%")
-                //                .setInsets(this.gameInfo, "-" + Hand.deltaRank + " auto auto 0");
                 .setInsets(this.contractInfo, "-" + Hand.deltaRank + " auto auto 0")
                 .setInsets(this.trumpInfo, "-" + Hand.deltaRank + " auto auto 0");
-//        ll.setReferenceComponentTop(this.gameInfo, lbGeneral, 1f);
-//        ll.setReferenceComponentTop(this.partnerInfo, bExit, 1f);
         ll.setReferenceComponentTop(this.contractInfo, lbGeneral, 1f);
         ll.setReferenceComponentTop(this.trumpInfo, lbGeneral, 1f);
         ll.setReferenceComponentLeft(this.trumpInfo, this.contractInfo, 1f);
         ll.setReferenceComponentTop(this.partnerCard, lbGeneral, 1f);
-        ll.setReferenceComponentLeft(this.lbPass, lbGeneral, 1f);
         ll.setReferenceComponentBottom(this.partnerCardSeq, this.partnerCard, 0f);
         ll.setReferenceComponentRight(this.partnerCardSeq, this.partnerCard, 1f);
 
@@ -1008,7 +1011,7 @@ public class Player {
         int points = Func.parseInteger(data.get("pt0")); // total points by non-contract players
         if (points != -1) {
             this.pointsInfo.setText(points + Dict.get(main.lang, " points"));
-            this.widget.revalidate();
+            this.widget.animateLayout(500);
         }
 
         int pointSeat = Func.parseInteger(data.get("pseat"));
@@ -1127,8 +1130,6 @@ public class Player {
             this.trumpInfo.getStyle().setFgColor(BLACK_COLOR);
         }
         this.isPlaying = true;
-//        this.gameInfo.revalidate();
-//        this.widget.revalidate();
         this.widget.animateLayoutFade(500, 10);
     }
 
