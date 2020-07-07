@@ -399,7 +399,7 @@ public class TuoLaJiPro {
         int ch = (int) (cw * 1.618);
         Font materialFont = FontImage.getMaterialDesignFont();
 //        FontImage redJoker = FontImage.createFixed(new String(Character.toChars(bigJoker)), materialFont, Hand.redColor, cw, ch);
-        FontImage redJoker = FontImage.createFixed(new String(Character.toChars(bigJoker)), materialFont, Hand.redColor, 10, 20);
+        FontImage redJoker = FontImage.createFixed(new String(Character.toChars(bigJoker)), materialFont, Hand.redColor, 100, 200);
 //        FontImage redJoker = FontImage.createFixed("🃏", materialFont, Hand.redColor, cw, ch);
 
         LayeredLayout ll0 = new LayeredLayout();
@@ -410,8 +410,8 @@ public class TuoLaJiPro {
 //        center.setShouldCalcPreferredSize(true);
 
         if (Card.FOR_IOS) {
-            cw *= 3 / 2;
-            ch *= 3 / 2;
+            cw = cw * 3 / 2;
+            ch = ch * 3 / 2;
         }
         Image img = redJoker.scaled(cw, ch);
         Component c;
@@ -478,6 +478,9 @@ public class TuoLaJiPro {
 
 //            center.animateLayoutAndWait(3000);
             formStart.getContentPane().animateHierarchy(3000);
+            if (formMain == null) {
+                ToastBar.showErrorMessage(Dict.get(lang, "Connecting") + "...", 1500);
+            }
         });
         timer.schedule(3500, true, formStart);
 

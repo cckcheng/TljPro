@@ -490,13 +490,13 @@ public class Player {
             lbPass.setText(this.currentPass);
             lbPass.setVisible(true);
 
-            String passInfo = Dict.get(main.lang, Dict.TABLE_CODE) + ": " + this.currentPass;
-            p0.userHelp.showInfo(passInfo);
+//            String passInfo = Dict.get(main.lang, Dict.TABLE_CODE) + ": " + this.currentPass;
+//            p0.userHelp.showInfo(passInfo);
 //            showInfo(passInfo);
 //            ToastBar.showInfoMessage(Dict.get(main.lang, Dict.TABLE_CODE) + ": " + this.currentPass); //not work
 
             LayeredLayout ll = (LayeredLayout) widget.getLayout();
-            ll.setInsets(lbPass, "-" + Hand.deltaGeneral + " 25% auto auto");
+            ll.setInsets(lbPass, "-" + Hand.deltaGeneral + " 18% auto auto");
             widget.animateLayout(2000);
         } else {
             lbPass.setVisible(false);
@@ -605,6 +605,10 @@ public class Player {
                     p.mySocket.addRequest(req.append("hold", holdMinutes));
                     exitTime = new Date().getTime();
                 }
+//                if (exitTimer != null) {
+//                    exitTimer.cancel();
+//                    exitTimer = null;
+//                }
                 Display.getInstance().callSerially(() -> {
                     p.main.switchScene("view");
                 });
@@ -617,6 +621,7 @@ public class Player {
     }
 
     private Container widget;
+    private UITimer exitTimer;
     public void createTable(Container table) {
         this.hand = new Hand(this);
 
@@ -646,9 +651,10 @@ public class Player {
 //                    if (!orgRobotOn) mySocket.addRequest(Request.create(Request.ROBOT, "on", 0));
                 });
                 dlg.showModeless();
-                new UITimer(() -> {
+                exitTimer = new UITimer(() -> {
                     defCmd.actionPerformed(e);
-                }).schedule(5000, false, getCurrentForm());
+                });
+                exitTimer.schedule(5000, false, dlg);
             } else {
                 mySocket.addRequest(new Request(Request.EXIT, false));
                 tableOn = false;
@@ -1215,8 +1221,8 @@ public class Player {
                             case "init":
                                 long cTime = new Date().getTime();
                                 if (cTime - exitTime > 2000L) {  // avoid re-enter too soon
-                                    refreshTable(data);
                                     main.switchScene("table");
+                                    refreshTable(data);
                                 }
                                 break;
                             case "bid":
