@@ -1642,7 +1642,7 @@ public class TuoLaJiPro {
                 return;
             }
             player.sendRequest(Request.create(Request.RECOMMEND, "emails", emails.substring(1))
-                    .append("name", nm).append("lang", lang));
+                    .append("myname", nm).append("lang", lang));
             formMain.showBack();
         });
         tbar.setBackCommand("", (e) -> {
@@ -1686,7 +1686,11 @@ public class TuoLaJiPro {
                         break;
                     case "recommend":
                         btn.addActionListener(evt -> {
-                            recommendFriend(textMap.get(lang));
+                            if (registered) {
+                                recommendFriend(textMap.get(lang));
+                            } else {
+                                infoRegisterRequired();
+                            }
                         });
                         break;
                 }

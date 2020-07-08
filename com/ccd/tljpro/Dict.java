@@ -183,7 +183,7 @@ public class Dict {
     public static final int FRIEND_EMAIL = 88;
     public static final int YOUR_NAME = 89;
 
-    public static final int FAIL_CONNECT_SERVER = 99;
+//    public static final int FAIL_CONNECT_SERVER = 99;
     public static final int NO_CONNECTION = 97;
 
     public static final int PROMOTION_NOTE = 101;
@@ -273,8 +273,8 @@ public class Dict {
 
             case PLEASE_WAIT:
                 return lang.equals("zh") ? "请稍候..." : "Please wait...";
-            case FAIL_CONNECT_SERVER:
-                return lang.equals("zh") ? "服务器连接失败" : "Failed to connection server";
+//            case FAIL_CONNECT_SERVER:
+//                return lang.equals("zh") ? "服务器连接失败" : "Failed to connect server";
             case NO_CONNECTION:
                 return lang.equals("zh") ? "无网络" : "No connection";
             case UPGRADE_IOS:

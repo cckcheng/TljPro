@@ -391,6 +391,8 @@ public class Player {
         this.leadingPlayer = null;
         this.currentPass = "";
 
+        this.robotOn = false;
+        this.bRobot.setSelected(false);
         LayeredLayout ll = (LayeredLayout) widget.getLayout();
         ll.setInsets(lbPass, "auto auto 50% 50%");
     }
@@ -497,7 +499,7 @@ public class Player {
 
             LayeredLayout ll = (LayeredLayout) widget.getLayout();
             ll.setInsets(lbPass, "-" + Hand.deltaGeneral + " 18% auto auto");
-            widget.animateLayout(2000);
+//            widget.animateLayout(2000);
         } else {
             lbPass.setVisible(false);
 //            FontImage.setMaterialIcon(lbPass, '\0');
@@ -621,6 +623,7 @@ public class Player {
     }
 
     private Container widget;
+    private Container pInfo;
     private UITimer exitTimer;
     public void createTable(Container table) {
         this.hand = new Hand(this);
@@ -722,18 +725,20 @@ public class Player {
         this.pointsInfo.getStyle().setFont(Hand.fontRank);
 
         this.widget = new Container(new LayeredLayout());
+        this.pInfo = new Container(new LayeredLayout());
 
 //        this.widget.add(bExit).add(this.lbGeneral).add(this.gameInfo).add(this.partnerInfo).add(this.pointsInfo);
         this.widget.add(bExit).add(this.lbGeneral).add(this.lbPass).add(this.trumpInfo).add(this.contractInfo)
                 .add(this.partnerCardSeq).add(this.partnerCard).add(this.pointsInfo);
         this.widget.add(bRobot);
         if (main.registered) this.widget.add(bSit);
-        this.widget.revalidate();
+//        this.widget.revalidate();
 
         table.add(hand);
         table.revalidate();
         table.add(this.widget);
-        table.revalidate();
+        table.add(this.pInfo);
+//        table.revalidate();
 
         LayeredLayout ll = (LayeredLayout) table.getLayout();
         ll.setInsets(bExit, "0 0 auto auto");   //top right bottom left
@@ -754,10 +759,11 @@ public class Player {
         ll.setReferenceComponentRight(this.partnerCardSeq, this.partnerCard, 1f);
 
         for (PlayerInfo pp : infoLst) {
-            pp.addItems(this.widget);
+            pp.addItems(this.pInfo);
         }
 
-        table.forceRevalidate();
+//        table.forceRevalidate();
+        table.animateLayout(500);
     }
 
     public void refreshLang() {
@@ -1306,8 +1312,7 @@ public class Player {
                 if (initConnect) {
                     if (main.formMain != null) return;
                     Display.getInstance().callSerially(() -> {
-                        ToastBar.showErrorMessage(Dict.get(main.lang, Dict.FAIL_CONNECT_SERVER), 10000);
-//                        Dialog.show(Dict.get(main.lang, "Error"), Dict.get(main.lang, Dict.FAIL_CONNECT_SERVER), Dict.get(main.lang, "OK"), "");
+                        ToastBar.showErrorMessage(Dict.get(main.lang, "Network Error"), 10000);
                     });
                     return;
                 }
@@ -1979,11 +1984,12 @@ public class Player {
                     return;
                 }
 
-                central.revalidate();
+//                central.revalidate();
                 actionButtons.setVisible(true);
 //                buttonContainer.setShouldCalcPreferredSize(true); // not work
 //                central.repaint();    // no difference
 //                buttonContainer.revalidate();
+                buttonContainer.animateLayout(200);
 //                central.animateLayout(500);
             }
 
