@@ -1936,6 +1936,12 @@ public class Player {
                     rb2.getAllStyles().setFont(Hand.fontGeneral);
                     rb3.getAllStyles().setFont(Hand.fontGeneral);
                     rb4.getAllStyles().setFont(Hand.fontGeneral);
+                    if (Card.FOR_IOS) {
+                        rb1.getAllStyles().setBgTransparency(100);
+                        rb2.getAllStyles().setBgTransparency(100);
+                        rb3.getAllStyles().setBgTransparency(100);
+                        rb4.getAllStyles().setBgTransparency(100);
+                    }
                     ButtonGroup btnGroup = new ButtonGroup(rb1, rb2, rb3, rb4);
                     buttons.addAll(rb1, rb2, rb3, rb4);
                     String rnk = Card.rankToString(playerRank);

@@ -56,7 +56,7 @@ public class TuoLaJiPro {
 
     static public final boolean DEBUG = false;
     static public final boolean BYPASS_LOGIN = false;
-    static public final boolean INTERNAL = true;
+    static public final boolean INTERNAL = false;
 
 //    static public final String STORAGE_PROFILE = "profile";
     static public final int GREEN = 0x008000;
@@ -259,7 +259,7 @@ public class TuoLaJiPro {
         }
 
         if (this.currentColor == null) {
-            this.currentColorKey = "DK_BLUE";
+            this.currentColorKey = Card.FOR_IOS ? "LT_BLUE" : "DK_BLUE";
             this.currentColor = AvailableColors.get(this.currentColorKey);
         }
         BACKGROUND_COLOR = this.currentColor.backColor;
