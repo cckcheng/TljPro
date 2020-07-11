@@ -54,9 +54,9 @@ import java.util.Map;
  */
 public class TuoLaJiPro {
 
-    static public final boolean DEBUG = false;
+    static public final boolean DEBUG = true;
     static public final boolean BYPASS_LOGIN = false;
-    static public final boolean INTERNAL = false;
+    static public final boolean INTERNAL = true;
 
 //    static public final String STORAGE_PROFILE = "profile";
     static public final int GREEN = 0x008000;
@@ -292,7 +292,7 @@ public class TuoLaJiPro {
         SideMenus.add(new ButtonText("guide", "Guide", "指南", FontImage.MATERIAL_LIST_ALT));
         SideMenus.add(new ButtonText("account", "Account", "账户", FontImage.MATERIAL_ACCOUNT_CIRCLE));
         SideMenus.add(new ButtonText("rank", "Ranking", "排行耪", FontImage.MATERIAL_STAR));
-        SideMenus.add(new ButtonText("recommend", "Recommend Friend", "推荐朋友", FontImage.MATERIAL_PEOPLE_OUTLINE));
+        SideMenus.add(new ButtonText("recommend", "Refer Friends", "推荐朋友", FontImage.MATERIAL_PEOPLE_OUTLINE));
 
         if (!INTERNAL) {
             startup();

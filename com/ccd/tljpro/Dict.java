@@ -269,7 +269,7 @@ public class Dict {
                 return lang.equals("zh") ? "姓名含有非法字符" : "Invalid charaters in name";
 
             case PROMOTION_NOTE:
-                return lang.equals("zh") ? "推荐朋友可获奖励，详见使用指南" : "Recommend friend to get reward, see GUIDE";
+                return lang.equals("zh") ? "推荐朋友可获奖励，详见使用指南" : "Refer friends to get reward, see GUIDE";
 
             case PLEASE_WAIT:
                 return lang.equals("zh") ? "请稍候..." : "Please wait...";
