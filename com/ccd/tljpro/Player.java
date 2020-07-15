@@ -650,8 +650,9 @@ public class Player {
                 dlg.add(new Button(holdCommand(15)));
                 dlg.add(new Button(holdCommand(5)));
                 dlg.add(new Button(defCmd));
+                dlg.add(new Button(Command.create(Dict.get(main.lang, "Cancel"), null, (ev) -> {
+                })));
                 dlg.setBackCommand("", null, (ev) -> {
-//                    if (!orgRobotOn) mySocket.addRequest(Request.create(Request.ROBOT, "on", 0));
                 });
                 dlg.showModeless();
                 exitTimer = new UITimer(() -> {

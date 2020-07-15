@@ -54,7 +54,7 @@ import java.util.Map;
  */
 public class TuoLaJiPro {
 
-    static public final boolean DEBUG = true;
+    static public final boolean DEBUG = false;
     static public final boolean BYPASS_LOGIN = false;
     static public final boolean INTERNAL = true;
 
@@ -1070,9 +1070,14 @@ public class TuoLaJiPro {
             current = getCurrentForm();
         }
 
-        if (this.isMainForm || this.player == null || this.player.tableEnded || !this.player.tableOn) {
+        if (current == this.formStart) {
+            exitShow();
+        } else if (current != this.formTable) {
             destroy();
         }
+//        if (this.isMainForm || this.player == null || this.player.tableEnded || !this.player.tableOn) {
+//            destroy();
+//        }
     }
 
     public void destroy() {
@@ -1589,6 +1594,15 @@ public class TuoLaJiPro {
             ));
 
         }
+
+        frm.getToolbar().addMaterialCommandToLeftBar("Clear All", FontImage.MATERIAL_DELETE, (e) -> {
+            sr.clearStorage();
+            if (formMain == null) {
+                startMain();
+            } else {
+                formMain.showBack();
+            }
+        });
 
         frm.getToolbar().addMaterialCommandToRightBar("Start", FontImage.MATERIAL_STAR, (e) -> {
             if (formMain == null) {
