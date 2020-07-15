@@ -1441,13 +1441,16 @@ public class Player {
         PlayerInfo pInfo;
         Label timer;
         int timeout;
+        long deadline;
         CountDown(PlayerInfo pInfo, int timeout) {
             this.pInfo = pInfo;
             this.timer = pInfo.timer;
             this.timeout = timeout;
+            this.deadline = (new Date()).getTime()/1000 + timeout;
         }
         public void run() {
-            this.timeout--;
+            long curTm = (new Date()).getTime()/1000;
+            this.timeout = (int)(deadline - curTm);
             if (this.timeout > 0) {
                 this.timer.setText(this.timeout + "");
             } else {
@@ -1998,6 +2001,8 @@ public class Player {
 //                buttonContainer.revalidate();
                 buttonContainer.animateLayout(200);
 //                central.animateLayout(500);
+            } else {
+                parent.animateLayout(200);
             }
 
 //            parent.revalidate();
