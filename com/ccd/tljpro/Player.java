@@ -577,14 +577,16 @@ public class Player {
     }
 
     private void startNotifyTimer(Map<String, Object> data) {
-        if (gameTimer == null) {
-            int pauseSeconds = Func.parseInteger(data.get("pause"));
-            if (pauseSeconds - 5 > 0) {
-                gameTimer = new UITimer(this.notifyPlayer);
-                gameTimer.schedule((pauseSeconds - 5) * 1000, false, main.formTable);
-            }
-            this.infoLst.get(0).showTimer(pauseSeconds, 0, "wait");
+        if (gameTimer != null) {
+            gameTimer.cancel();
         }
+
+        int pauseSeconds = Func.parseInteger(data.get("pause"));
+        if (pauseSeconds - 5 > 0) {
+            gameTimer = new UITimer(this.notifyPlayer);
+            gameTimer.schedule((pauseSeconds - 5) * 1000, false, main.formTable);
+        }
+        this.infoLst.get(0).showTimer(pauseSeconds, 0, "wait");
     }
 
     private long exitTime;
@@ -605,7 +607,7 @@ public class Player {
                     if (!p.robotOn) p.mySocket.addRequest(Request.create(Request.ROBOT, "on", 1));
                     Request req = new Request(Request.EXIT, false);
                     p.mySocket.addRequest(req.append("hold", holdMinutes));
-                    exitTime = new Date().getTime();
+                    exitTime = System.currentTimeMillis();
                 }
 //                if (exitTimer != null) {
 //                    exitTimer.cancel();
@@ -1226,7 +1228,7 @@ public class Player {
                                 break;
 
                             case "init":
-                                long cTime = new Date().getTime();
+                                long cTime = System.currentTimeMillis();
                                 if (cTime - exitTime > 2000L) {  // avoid re-enter too soon
                                     main.switchScene("table");
                                     refreshTable(data);
@@ -1446,10 +1448,10 @@ public class Player {
             this.pInfo = pInfo;
             this.timer = pInfo.timer;
             this.timeout = timeout;
-            this.deadline = (new Date()).getTime()/1000 + timeout;
+            this.deadline = System.currentTimeMillis() / 1000 + timeout;
         }
         public void run() {
-            long curTm = (new Date()).getTime()/1000;
+            long curTm = System.currentTimeMillis() / 1000;
             this.timeout = (int)(deadline - curTm);
             if (this.timeout > 0) {
                 this.timer.setText(this.timeout + "");
@@ -1662,6 +1664,7 @@ public class Player {
             }
             actionButtons.setEnabled(false);
             actionButtons.setVisible(false);
+            buttonContainer.revalidate();
         }
 
         synchronized void reset() {
@@ -1837,12 +1840,16 @@ public class Player {
                 needChangeActions = true;
             }
 
+            if (timeout < 1) return;
+
             this.points.setText("");
             this.timer.setText(timeout + "");
             FontImage.setMaterialIcon(timer, FontImage.MATERIAL_TIMER);
             this.timer.setVisible(true);
             countDownTimer = new UITimer(new CountDown(this, timeout));
-            countDownTimer.schedule(950, true, main.formTable);   // slightly less to 1 sec
+//            int milli = 950;   // slightly less to 1 sec
+            int milli = 1000;
+            countDownTimer.schedule(milli, true, main.formTable);
 
             if (this.location.equals("bottom")) {
                 userHelp.clear();
@@ -2002,7 +2009,8 @@ public class Player {
                 buttonContainer.animateLayout(200);
 //                central.animateLayout(500);
             } else {
-                parent.animateLayout(200);
+//                parent.animateLayout(200);
+                parent.revalidate();
             }
 
 //            parent.revalidate();

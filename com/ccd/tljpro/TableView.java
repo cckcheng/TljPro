@@ -82,7 +82,7 @@ public class TableView extends Form {
             Storage.getInstance().writeObject("category", t.category);
         });
         cmdRefresh = Command.createMaterial(Dict.get(main.lang, "Refresh"), FontImage.MATERIAL_REFRESH, (e) -> {
-            long tm = new Date().getTime();
+            long tm = System.currentTimeMillis();
             if (tm > MIN_REFRESH_TIME + lastRefreshTime) {
                 player.sendRequest(new Request(Request.LIST, true));
                 lastRefreshTime = tm;
@@ -203,7 +203,7 @@ public class TableView extends Form {
         new UITimer(new Runnable() {
             @Override
             public void run() {
-                long tm = new Date().getTime();
+                long tm = System.currentTimeMillis();
                 if (tm > MIN_REFRESH_TIME + lastRefreshTime) {
                     player.sendRequest(new Request(Request.LIST, true));
                     lastRefreshTime = tm;

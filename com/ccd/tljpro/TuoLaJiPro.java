@@ -404,7 +404,7 @@ public class TuoLaJiPro {
 
         LayeredLayout ll0 = new LayeredLayout();
         Container center = new Container(ll0);
-        long tm = (new Date()).getTime() / 1000;
+        long tm = System.currentTimeMillis() / 1000;
         boolean even = ((int) tm % 2 == 0);
         int total = even ? 12 : 9;
 //        center.setShouldCalcPreferredSize(true);
