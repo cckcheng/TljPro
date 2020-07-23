@@ -170,6 +170,7 @@ public class Player {
     public Request initRequest() {
         if (this.tableOn) return initRequest(Request.JOIN);
         return initRequest(Request.LIST);
+//        return initRequest(Request.RE);
     }
 
     public Request initRequest(String action) {
@@ -243,7 +244,9 @@ public class Player {
             hand.addCard(Card.create(cards));
         }
 
-        hand.sortCards(currentTrump, playerRank, true);
+        char trump = currentTrump;
+        if (currentTrump == 0) trump = trumpRecommend.charAt(0);
+        hand.sortCards(trump, playerRank, true);
         int actTime = Func.parseInteger(data.get("acttime"));
         infoLst.get(0).showTimer(actTime, 100, "bury");
     }
@@ -1152,8 +1155,11 @@ public class Player {
         int balance = Func.parseInteger(data.get("coin"));
         if (balance == coins) return;
         coins = balance;
-        main.updateAccountInfo(coins);
-        main.formView.updateBalance(coins);
+
+        if (main.formMain != null) {
+            main.updateAccountInfo(coins);
+            main.formView.updateBalance(coins);
+        }
     }
 
     static int serverWaitCycle = 10; // 10 times
@@ -1212,9 +1218,7 @@ public class Player {
                                 break;
 
                             case "acc": // account info
-                                if (main.formMain != null) {
-                                    updateBalance(data);
-                                }
+                                updateBalance(data);
                                 break;
                             case "coin":
                                 Func.noEnoughCoin(main.lang);

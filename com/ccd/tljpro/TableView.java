@@ -279,6 +279,8 @@ public class TableView extends Form {
             while (category.length() > 0) {
                 int idx = category.indexOf(',');
                 if (idx > 0) {
+                    System.out.println("category=" + category);
+                    System.out.println("idx=" + idx);
                     addCategoryTab(category.substring(0, idx));
                 } else {
                     addCategoryTab(category);

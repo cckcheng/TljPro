@@ -13,6 +13,7 @@ import com.codename1.social.LoginCallback;
 import com.codename1.ui.Button;
 import com.codename1.ui.ButtonGroup;
 import static com.codename1.ui.CN.*;
+import com.codename1.ui.CheckBox;
 import com.codename1.ui.Command;
 import com.codename1.ui.Component;
 import com.codename1.ui.Container;
@@ -305,6 +306,8 @@ public class TuoLaJiPro {
 
     private void selectHost() {
         formHost = new Form("Select Host", BoxLayout.y());
+
+        CheckBox cbTest = new CheckBox("Test");
         TextField tf1 = new TextField(Card.TLJ_DOMAIN, 8);
         TextField tf2 = new TextField(Card.TLJ_IP, 8);
 
@@ -313,6 +316,9 @@ public class TuoLaJiPro {
             String host = tf1.getText().trim();
             if (host.isEmpty()) return;
             Card.TLJ_HOST = Card.TLJ_HOST_IP = host;
+            Card.TLJ_PORT = cbTest.isSelected()
+                    ? (Card.FOR_IOS ? Card.PORT_IOS_TEST : Card.PORT_ANDROID_TEST)
+                    : (Card.FOR_IOS ? Card.PORT_IOS : Card.PORT_ANDROID);
             startup();
         });
         Button btn2 = new Button("Go");
@@ -320,8 +326,12 @@ public class TuoLaJiPro {
             String host = tf2.getText().trim();
             if (host.isEmpty()) return;
             Card.TLJ_HOST = Card.TLJ_HOST_IP = host;
+            Card.TLJ_PORT = cbTest.isSelected()
+                    ? (Card.FOR_IOS ? Card.PORT_IOS_TEST : Card.PORT_ANDROID_TEST)
+                    : (Card.FOR_IOS ? Card.PORT_IOS : Card.PORT_ANDROID);
             startup();
         });
+        formHost.add(BoxLayout.encloseXCenter(cbTest));
         formHost.add(BoxLayout.encloseX(tf1, btn1));
         formHost.add(BoxLayout.encloseX(tf2, btn2));
 
@@ -571,9 +581,16 @@ public class TuoLaJiPro {
         return true;
     }
 
+    private boolean firstIn = false;
     private void startMain() {
-        if (this.doRegistration()) return;
-        if (this.initSetup()) return;
+        if (this.doRegistration()) {
+            firstIn = true;
+            return;
+        }
+        if (this.initSetup()) {
+            firstIn = true;
+            return;
+        }
 
         Display.getInstance().callSerially(() -> {
             if (this.formMain != null) {
@@ -599,11 +616,15 @@ public class TuoLaJiPro {
 //            this.formView.getStyle().setBgColor(BACKGROUND_COLOR);
             this.formView.init();
 
-            this.player.connectServer(Player.OPTION_CHECK);
+            if (!firstIn) this.player.connectServer(Player.OPTION_CHECK);
 
             this.entry.setLayout(BoxLayout.yCenter());
             this.entry.animateLayoutAndWait(2000);
             Display.getInstance().lockOrientation(false);
+
+            if (this.player.coins > 0) {
+                updateAccountInfo(this.player.coins);
+            }
         });
     }
 
@@ -756,6 +777,9 @@ public class TuoLaJiPro {
                     showStorage();
                 });
             }
+
+            Button rightMenu = topTool.getRightSideMenuButton();
+            rightMenu.setText(Dict.get(lang, "Tools"));
         }
     }
 

@@ -53,6 +53,8 @@ public class Dict {
                         return "开局";
                     case "browse":
                         return "浏览";
+                    case "tools":
+                        return "工具";
                     case "help":
                         return "帮助";
                     case "settings":
