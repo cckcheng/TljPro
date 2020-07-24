@@ -72,7 +72,7 @@ public class Player {
         public void run() {
             Display.getInstance().callSerially(() -> {
                 Display.getInstance().playBuiltinSound(Display.SOUND_TYPE_ALARM);
-                Display.getInstance().vibrate(1000);  // this works
+                if (main.vibrate) Display.getInstance().vibrate(1000);  // this works
             });
             gameTimer = null;
         }
@@ -231,7 +231,7 @@ public class Player {
     synchronized private void addRemains(Map<String, Object> data) {
         if (this.hand.isEmpty()) return;
         String cards = Func.trimmedString(data.get("cards"));
-        if (cards.isEmpty()) return;
+//        if (cards.isEmpty()) return;
         int x = cards.indexOf(',');
         while (x > 0) {
             String s = cards.substring(0, x);
@@ -247,8 +247,10 @@ public class Player {
         char trump = currentTrump;
         if (currentTrump == 0) trump = trumpRecommend.charAt(0);
         hand.sortCards(trump, playerRank, true);
-        int actTime = Func.parseInteger(data.get("acttime"));
-        infoLst.get(0).showTimer(actTime, 100, "bury");
+        if (currentTrump > 0) {
+            int actTime = Func.parseInteger(data.get("acttime"));
+            infoLst.get(0).showTimer(actTime, 100, "bury");
+        }
     }
 
     private String defRecommend = "";
@@ -393,6 +395,7 @@ public class Player {
         }
         this.leadingPlayer = null;
         this.currentPass = "";
+        this.currentTrump = 0;
 
         this.robotOn = false;
         this.bRobot.setSelected(false);
@@ -1221,7 +1224,7 @@ public class Player {
                                 updateBalance(data);
                                 break;
                             case "coin":
-                                Func.noEnoughCoin(main.lang);
+                                Func.noEnoughCoin(main);
                                 break;
                             case "list":
                                 // list current tables

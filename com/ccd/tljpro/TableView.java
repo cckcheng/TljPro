@@ -75,7 +75,7 @@ public class TableView extends Form {
             }
             TableContainer t = this.tableList.get(idx);
             if (t.coins > 0 && player.coins < t.coins) {
-                Func.noEnoughCoin(main.lang);
+                Func.noEnoughCoin(main);
                 return;
             }
             player.sendRequest(Request.create(Request.JOIN, "opt", t.category).setReSend(true));
@@ -112,7 +112,7 @@ public class TableView extends Form {
             }
             TableContainer t = this.tableList.get(idx);
             if (t.coins > 0 && player.coins < t.coins) {
-                Func.noEnoughCoin(main.lang);
+                Func.noEnoughCoin(main);
                 return;
             }
 

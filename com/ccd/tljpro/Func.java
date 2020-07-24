@@ -48,14 +48,14 @@ public class Func {
         return lst;
     }
 
-    static public void noEnoughCoin(String lang) {
-        Dialog dlg = new Dialog(Dict.get(lang, Dict.COIN_NOT_ENOUGH));
-        dlg.add(new Button(Command.create(Dict.get(lang, Dict.TOPUP), null,
+    static public void noEnoughCoin(TuoLaJiPro main) {
+        Dialog dlg = new Dialog(Dict.get(main.lang, Dict.COIN_NOT_ENOUGH));
+        dlg.add(new Button(Command.create(Dict.get(main.lang, Dict.TOPUP), null,
                 (ev) -> {
-
+                    ServerMessage.showMessage(main, "topup");
                 }))
         );
-        dlg.add(new Button(Command.create(Dict.get(lang, "Cancel"), null,
+        dlg.add(new Button(Command.create(Dict.get(main.lang, "Cancel"), null,
                 (ev) -> {
                 }))
         );

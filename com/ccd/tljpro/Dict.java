@@ -80,6 +80,11 @@ public class Dict {
                     case "tba":
                         return "待定";
 
+                    case "on":
+                        return "开";
+                    case "vibrate":
+                        return "振动";
+
                     case "privacy policy":
                         return "隐私政策";
                     case "submit":
