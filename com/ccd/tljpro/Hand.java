@@ -132,6 +132,7 @@ public class Hand extends Component {
         this.sCardWidth = (int) (this.cardWidth * 0.9);
         this.sPitch = (int) (this.xPitch * 0.8);
 
+        this.maxCardNum = (w - this.cardWidth * 3) / this.xPitch;
 //        this.xPL1 = this.xPL2 = getX() + 5;
 //        this.xPR1 = this.xPR2 = getX() + w - 50;
 //        this.yPL1 = this.yPR1 = getY() + h - h / 4 - 20;
@@ -421,7 +422,7 @@ public class Hand extends Component {
         int lenC = this.clubs.size();
         int lenD = this.diamonds.size();
         int lenNonTrump = lenS + lenH + lenC + lenD;
-        if (lenNonTrump > 20) {
+        if (lenNonTrump > this.maxCardNum) {
             return;
         }
 
@@ -527,6 +528,7 @@ public class Hand extends Component {
 //        this.repaint();
     }
 
+    private int maxCardNum = 20;
     private void splitSuites(char trumpSuite) {
         this.upperList.addAll(this.trumps);
         int lenT = this.trumps.size();
@@ -541,7 +543,7 @@ public class Hand extends Component {
         int tolerance = 3;
         int threshold = halfLen - tolerance;
 
-        if (lenNonTrump <= 20 || lenT >= threshold) {
+        if (lenNonTrump <= maxCardNum || lenT >= threshold) {
             needResort = false;
             for (int i = 0; i < TOTAL_SUITES; i++) {
                 List<Card> cc = this.suites.get(i);
