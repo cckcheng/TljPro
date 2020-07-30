@@ -452,13 +452,13 @@ public class TuoLaJiPro {
         } else {
             layouts.add(new GridLayout(3, 3));
         }
-        layouts.add(ll);
+//        layouts.add(ll);
         if (total == 12) {
             layouts.add(new GridLayout(2, 6));
         } else {
             layouts.add(new GridLayout(1, 9));
         }
-        layouts.add(ll);
+//        layouts.add(ll);
 
         if (total == 12) {
             layouts.add(new GridLayout(4, 3));
@@ -477,6 +477,8 @@ public class TuoLaJiPro {
         } else {
             layouts.add(new GridLayout(2, 9));
         }
+        layouts.add(BoxLayout.xCenter());
+        layouts.add(BoxLayout.yCenter());
 
         final int n = layouts.size();
         int x = rnd.nextInt(n);

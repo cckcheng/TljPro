@@ -828,10 +828,12 @@ public class Hand extends Component {
 
         if (this.player.isPlaying) {
             for (Player.PlayerInfo pp : this.player.infoLst) {
-                if (pp.cards == null) {
+                List<Card> pCards = pp.cards;
+                if (player.lastRoundOn) pCards = pp.cardsLastRound;
+                if (pCards == null) {
                     continue;
                 }
-                int dWidth = displayWidth(pp.cards.size());
+                int dWidth = displayWidth(pCards.size());
                 int yp = pp.posY();
                 switch (pp.location) {
                     case "top":
@@ -849,7 +851,7 @@ public class Hand extends Component {
                         g.translate(x + getWidth() - dWidth - 10, yp);
                         break;
                 }
-                for (Card c : pp.cards) {
+                for (Card c : pCards) {
                     drawCard(g, c, sCardWidth, sCardHeight, false);
                     g.translate(this.sPitch, 0);
                 }

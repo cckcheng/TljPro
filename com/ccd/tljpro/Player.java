@@ -348,6 +348,7 @@ public class Player {
     public final List<PlayerInfo> infoLst = new ArrayList<>();
     public Map<Integer, PlayerInfo> playerMap = new HashMap<>();
     public boolean tableOn = false;
+    public boolean lastRoundOn = false;
     private boolean robotOn = false;
     private boolean watching = false;
     public boolean tableEnded = false;
@@ -369,6 +370,7 @@ public class Player {
     private Button bExit;
     private CheckBox bRobot;
     private Button bSit;
+    private CheckBox bLastRound;
 
     private String currentTableId = "";
     private String currentPass = "";
@@ -418,6 +420,7 @@ public class Player {
         this.watching = visit.equals("Y");
         this.bRobot.setVisible(!this.watching);
         this.bSit.setVisible(this.watching);
+        this.bLastRound.setVisible(false);
         if (this.watching) {
             this.numCardsLeft = Func.parseInteger(data.get("cnum"));
         } else {
@@ -700,6 +703,14 @@ public class Player {
             mySocket.addRequest(Request.create(Request.SIT, "tid", currentTableId.substring(1)).setReSend(true));
         });
 
+        this.bLastRound = new CheckBox(Dict.get(main.lang, "Last Round"));
+        this.bLastRound.getAllStyles().setFont(Hand.fontGeneral);
+        this.bLastRound.getAllStyles().setFgColor(INFO_COLOR);
+        bLastRound.addActionListener((e) -> {
+            lastRoundOn = bLastRound.isSelected();
+            hand.repaint();
+        });
+
         this.lbGeneral = new Label("Game ");
         this.lbGeneral.getStyle().setFont(Hand.fontGeneral);
         this.lbGeneral.getStyle().setFgColor(main.currentColor.generalColor);
@@ -741,6 +752,7 @@ public class Player {
                 .add(this.partnerCardSeq).add(this.partnerCard).add(this.pointsInfo);
         this.widget.add(bRobot);
         if (main.registered) this.widget.add(bSit);
+        this.widget.add(bLastRound);
 //        this.widget.revalidate();
 
         table.add(hand);
@@ -752,6 +764,7 @@ public class Player {
         LayeredLayout ll = (LayeredLayout) table.getLayout();
         ll.setInsets(bExit, "0 0 auto auto");   //top right bottom left
         ll.setInsets(bRobot, "auto 0 0 auto");   //top right bottom left
+        ll.setInsets(bLastRound, "auto 0 33% auto");   //top right bottom left
         if (main.registered) ll.setInsets(bSit, "auto 0 0 auto");   //top right bottom left
         ll.setInsets(this.lbGeneral, "-" + Hand.deltaGeneral + " auto auto 0")
                 .setInsets(this.lbPass, "auto auto 50% 50%")
@@ -779,6 +792,7 @@ public class Player {
         this.bExit.setText(Dict.get(main.lang, "Exit"));
         this.bRobot.setText(Dict.get(main.lang, "Robot"));
         this.bSit.setText(Dict.get(main.lang, "Join"));
+        this.bLastRound.setText(Dict.get(main.lang, "Last Round"));
 
         this.lbGeneral.getStyle().setFgColor(main.currentColor.generalColor);
         this.pointsInfo.getStyle().setFgColor(main.currentColor.pointColor);
@@ -1080,10 +1094,20 @@ public class Player {
                 }
             }
         } else {
+            boolean hasLast = false;
+            if (this.lastRoundOn) {
+                this.lastRoundOn = false;
+                this.bLastRound.setSelected(false);
+            }
             for (PlayerInfo pp : this.infoLst) {
+                pp.cardsLastRound.clear();
+                if (pp.cards.isEmpty()) continue;
+                pp.cardsLastRound.addAll(pp.cards);
                 this.hand.clearPlayCards(pp);
+                hasLast = true;
             }
             this.leadingPlayer = null;
+            this.bLastRound.setVisible(hasLast);
         }
 
         if (actionSeat > 0) {
@@ -1445,6 +1469,7 @@ public class Player {
         }
     }
 
+    final static int MIN_SECONDS_ACT = 10;  // minimum time for player to act
     class CountDown implements Runnable {
 
         PlayerInfo pInfo;
@@ -1459,9 +1484,36 @@ public class Player {
         }
         public void run() {
             long curTm = System.currentTimeMillis() / 1000;
-            this.timeout = (int)(deadline - curTm);
+            this.timeout = (int) (deadline - curTm);
             if (this.timeout > 0) {
+                if (lastRoundOn) {
+                    if (pInfo.location.equals("bottom")) {
+                        if (this.timeout <= MIN_SECONDS_ACT) {
+                            lastRoundOn = false;
+                            bLastRound.setSelected(false);
+                            bLastRound.setVisible(false);
+                            this.timer.setVisible(true);
+                            pInfo.actionButtons.setVisible(true);
+                            hand.repaint();
+                        } else {
+                            pInfo.actionButtons.setVisible(false);
+                            pInfo.parent.revalidate();
+                        }
+                    } else {
+                        this.timer.setVisible(false);
+                        this.timer.getParent().revalidate();
+                        return;
+                    }
+                } else {
+                    if (pInfo.location.equals("bottom") && !pInfo.actionButtons.isVisible()) {
+                        pInfo.actionButtons.setVisible(true);
+                        pInfo.parent.revalidate();
+                    }
+                }
                 this.timer.setText(this.timeout + "");
+                if (!this.timer.isVisible()) {
+                    this.timer.setVisible(true);
+                }
             } else {
                 this.timer.setText("");
                 FontImage.setMaterialIcon(timer, FontImage.MATERIAL_TIMER_OFF);
@@ -1484,6 +1536,7 @@ public class Player {
         Label contractor;   // for contractor and partner
         Label timer;   // count down timer
         List<Card> cards = new ArrayList<>();   // cards played
+        List<Card> cardsLastRound = new ArrayList<>();   // cards played last round
         String playerName;
         UITimer countDownTimer;
         Component actionButtons;
@@ -1675,6 +1728,8 @@ public class Player {
         }
 
         synchronized void reset() {
+            cardsLastRound.clear();
+
             cancelTimer();
             mainInfo.getAllStyles().setFgColor(main.currentColor.generalColor);
             contractor.getAllStyles().setFgColor(main.currentColor.pointColor);
