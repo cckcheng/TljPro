@@ -904,6 +904,9 @@ public class Player {
         bRobot.setSelected(false);
         this.robotOn = false;
 
+        bLastRound.setVisible(false);
+        lastRoundOn = false;
+
         int points = Func.parseInteger(data.get("pt0"));
         if (points != -1) {
             this.pointsInfo.setText(points + Dict.get(main.lang, " points"));
@@ -1505,7 +1508,7 @@ public class Player {
                         return;
                     }
                 } else {
-                    if (pInfo.location.equals("bottom") && !pInfo.actionButtons.isVisible()) {
+                    if (!pInfo.currentAct.equals("wait") && pInfo.location.equals("bottom") && !pInfo.actionButtons.isVisible()) {
                         pInfo.actionButtons.setVisible(true);
                         pInfo.parent.revalidate();
                     }
@@ -1894,8 +1897,11 @@ public class Player {
         }
 
         int maxBid = -1;
-        boolean needChangeActions=false;
+        boolean needChangeActions = false;
+        String currentAct = "";
+
         synchronized void showTimer(int timeout, int contractPoint, String act) {
+            currentAct = act;
             cancelTimer();  // cancel the running timer if any
             if (act.equals("dim")) {
                 this.setContractor(CONTRACTOR);

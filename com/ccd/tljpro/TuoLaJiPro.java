@@ -58,7 +58,7 @@ public class TuoLaJiPro {
 
     static public final boolean DEBUG = false;
     static public final boolean BYPASS_LOGIN = false;
-    static public final boolean INTERNAL = true;
+    static public final boolean INTERNAL = false;
 
 //    static public final String STORAGE_PROFILE = "profile";
     static public final int GREEN = 0x008000;
