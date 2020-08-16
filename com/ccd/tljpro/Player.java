@@ -115,13 +115,16 @@ public class Player {
         }
 
         if (this.mySocket != null && this.mySocket.isConnected()) {
+            if (TuoLaJiPro.DEBUG) {
+                System.out.println("Already Connected");
+            }
             main.showLogin();
             return;
         }
 
-        if (this.mySocket == null || init) {
+//        if (this.mySocket == null || init) {
             this.mySocket = new MySocket();
-        }
+//        }
 
         initConnect = init;
         Socket.connect(tljHost, Card.TLJ_PORT, this.mySocket);
@@ -133,9 +136,9 @@ public class Player {
             return;
         }
 
-        if (this.mySocket == null) {
+//        if (this.mySocket == null) {
             this.mySocket = new MySocket();
-        }
+//        }
         if (!this.mySocket.isConnected()) {
             main.disableButtons();
             Socket.connect(tljHost, Card.TLJ_PORT, mySocket);
@@ -408,6 +411,7 @@ public class Player {
     public int numCardsLeft = 0;
 
     private void refreshTable(Map<String, Object> data) {
+        main.setNoSleep(true);
         this.tableOn = true;
         this.resetTable();
 
@@ -623,6 +627,7 @@ public class Player {
 //                    exitTimer = null;
 //                }
                 Display.getInstance().callSerially(() -> {
+                    p.main.setNoSleep(false);
                     p.main.switchScene("view");
                 });
             }
@@ -674,6 +679,7 @@ public class Player {
                 mySocket.addRequest(new Request(Request.EXIT, false));
                 tableOn = false;
                 cancelTimers();
+                main.setNoSleep(false);
                 main.switchScene("view");
             }
         });
@@ -905,6 +911,7 @@ public class Player {
         this.robotOn = false;
 
         bLastRound.setVisible(false);
+        bLastRound.setSelected(false);
         lastRoundOn = false;
 
         int points = Func.parseInteger(data.get("pt0"));
@@ -912,6 +919,7 @@ public class Player {
             this.pointsInfo.setText(points + Dict.get(main.lang, " points"));
         } else {
             this.tableEnded = true;
+            main.setNoSleep(false);
             new UITimer(() -> {
                 if (tableEnded) main.startupShow();
             }).schedule(5000, false, getCurrentForm());
@@ -1402,6 +1410,12 @@ public class Player {
             try {
                 if (TuoLaJiPro.DEBUG) Log.p("connected!");
                 while (isConnected() && !closeRequested) {
+                    if (mySocket != this) {
+                        closeRequested = true;
+                        if (TuoLaJiPro.DEBUG) Log.p("wrong socket!");
+                        break;
+                    }
+
                     if (!checkConnection && !pendingRequests.isEmpty()) {
                         this.currentRequest = pendingRequests.remove(0);
                         String request = this.currentRequest.getMsg();

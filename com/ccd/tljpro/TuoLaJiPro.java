@@ -58,7 +58,7 @@ public class TuoLaJiPro {
 
     static public final boolean DEBUG = false;
     static public final boolean BYPASS_LOGIN = false;
-    static public final boolean INTERNAL = false;
+    static public final boolean INTERNAL = true;
 
 //    static public final String STORAGE_PROFILE = "profile";
     static public final int GREEN = 0x008000;
@@ -230,8 +230,19 @@ public class TuoLaJiPro {
 
     public Image back;
 
+    public void setNoSleep(boolean noSleep) {
+        Display disp = Display.getInstance();
+        disp.setNoSleep(noSleep);
+        disp.setScreenSaverEnabled(!noSleep);
+    }
+
     public void start() {
+        Display disp = Display.getInstance();
+        disp.requestFullScreen();
+        disp.setBuiltinSoundsEnabled(true);
         if (current != null) {
+            disp.setNoSleep(true);
+            disp.setScreenSaverEnabled(false);
             current.show();
             return;
         }
@@ -242,8 +253,6 @@ public class TuoLaJiPro {
             Preferences.set("UserID", "TestUserID");
             Preferences.set("Email", "TestEmail");
         }
-
-        Display disp = Display.getInstance();
 
         Object sObj = Storage.getInstance().readObject("lang");
         if (sObj != null) {
@@ -272,10 +281,6 @@ public class TuoLaJiPro {
         back = theme.getImage("btn.png");
 //        back = back.scaledHeight(Hand.fontRank.getHeight());
 //        String onlineHelp = getHelp();
-        disp.requestFullScreen();
-        disp.setNoSleep(true);
-        disp.setScreenSaverEnabled(false);
-        disp.setBuiltinSoundsEnabled(true);
         this.version = disp.getProperty("AppVersion", this.version);
 
         if (DEBUG) {
@@ -630,7 +635,10 @@ public class TuoLaJiPro {
 //            this.formView.getStyle().setBgColor(BACKGROUND_COLOR);
             this.formView.init();
 
-            if (!firstIn) this.player.connectServer(Player.OPTION_CHECK);
+            if (!firstIn) {
+//                this.player.connectServer(Player.OPTION_CHECK);
+                this.player.initCheckin(Player.OPTION_CHECK);
+            }
 
             this.entry.setLayout(BoxLayout.yCenter());
             this.entry.animateLayoutAndWait(2000);
