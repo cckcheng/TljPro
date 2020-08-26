@@ -241,9 +241,15 @@ public class TuoLaJiPro {
         disp.requestFullScreen();
         disp.setBuiltinSoundsEnabled(true);
         if (current != null) {
-            disp.setNoSleep(true);
-            disp.setScreenSaverEnabled(false);
             current.show();
+            if (current == this.formTable) {
+                disp.setNoSleep(true);
+                disp.setScreenSaverEnabled(false);
+            } else {
+                disp.setNoSleep(false);
+                disp.setScreenSaverEnabled(true);
+                if (player != null) player.connectServer("");
+            }
             return;
         }
 
@@ -1136,7 +1142,7 @@ public class TuoLaJiPro {
         if (this.player != null) {
             player.disconnect();
         }
-        Display.getInstance().exitApplication();
+//        Display.getInstance().exitApplication();
     }
 
     private String currentLang;

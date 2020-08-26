@@ -1477,10 +1477,10 @@ public class Player {
 
             }
 
+            mySocket = null;
             if (!closeRequested) {
                 // not expected, connect again
                if (TuoLaJiPro.DEBUG) Log.p("re-connect");
-                mySocket = null;
                 connectServer(this.lastRequest);
             }
         }
