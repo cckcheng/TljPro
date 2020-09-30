@@ -25,6 +25,8 @@ public class Request {
     static final String WATCH = "watch";
     static final String LIST = "list";
 
+    static final String TOUR = "tour";
+
     static final String REGISTER = "reg";
     static final String VERIFY = "auth";
     static final String RECOMMEND = "recomm";

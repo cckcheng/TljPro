@@ -115,6 +115,7 @@ public class TuoLaJiPro {
     public Form formHelp = null;
     public Form formTutor = null;
     public Form formSetting = null;
+    public Tour formTour = null;
 
 //    private Label lbTitle;
     private Button btnTutor = null;
@@ -314,6 +315,7 @@ public class TuoLaJiPro {
             startup();
         } else {
             selectHost();
+            SideMenus.add(new ButtonText("tour", "Tours", "比赛", FontImage.MATERIAL_PEOPLE_OUTLINE));
         }
     }
 
@@ -531,10 +533,10 @@ public class TuoLaJiPro {
         if (formMain != null) {
             if (prevForm != null) {
                 prevForm.showBack();
-//            if (player.tableEnded) {
-//                formTable.showBack();
+                current = prevForm;
             } else {
                 formMain.showBack();
+                current = formMain;
             }
         } else if (INTERNAL) {
             if (this.player != null) this.player.disconnect();
@@ -989,6 +991,17 @@ public class TuoLaJiPro {
                 app.tutor.showTopic();
                 app.formTutor.show();
                 break;
+
+            case "tour":
+                if (app.formTour == null) {
+                    app.formTour = new Tour(app, "Tour", new BorderLayout());
+                    app.formTour.setBackCommand("", null, (e) -> {
+                        app.switchScene("entry");
+                    });
+                    app.formTour.init();
+                }
+                app.formTour.show();
+                break;
             default:
                 break;
         }
@@ -1142,7 +1155,7 @@ public class TuoLaJiPro {
         if (this.player != null) {
             player.disconnect();
         }
-//        Display.getInstance().exitApplication();
+        Display.getInstance().exitApplication();
     }
 
     private String currentLang;
@@ -1763,6 +1776,11 @@ public class TuoLaJiPro {
                             } else {
                                 infoRegisterRequired();
                             }
+                        });
+                        break;
+                    case "tour":
+                        btn.addActionListener(evt -> {
+                            switchScene("tour");
                         });
                         break;
                 }
