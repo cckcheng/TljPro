@@ -1319,6 +1319,9 @@ public class Player {
                                 tableOn = false;
                                 main.showPlayOption();
                                 break;
+                            case "group":
+                                main.formTour.fetchPlayers(data);
+                                break;
 
                             case "priv":
                                 main.showPrivacy(Func.trimmedString(data.get("msg")));
