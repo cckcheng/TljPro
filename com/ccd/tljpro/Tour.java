@@ -72,7 +72,9 @@ public class Tour extends Form {
             if (n > 0) {
                 int[] ind = new int[n];
                 for (int x = 0; x < n; x++) {
-                    ind[x] = this.accountIds.indexOf(grp.players.get(x));
+                    int idx = this.accountIds.indexOf(grp.players.get(x));
+                    if (idx < 0) continue;
+                    ind[x] = idx;
                 }
                 model.setSelectedIndices(ind);
             }
@@ -97,13 +99,14 @@ public class Tour extends Form {
             }
             if (!pids.isEmpty()) pids = pids.substring(1);
             Request req = Request.create(Request.GROUP, "type", "save")
-                    .append("name", name)
+                    .append("gname", name)
                     .append("ids", pids)
-                    .append("tm", "" + dt.getTime());
+                    .append("time", "" + dt.getTime() / 1000);
             if (grp != null) {
                 req.append("gid", grp.id);
             }
             player.sendRequest(req);
+            thisForm.showBack();
         }));
 
         frm.setBackCommand("", null, (ev) -> {
@@ -132,13 +135,13 @@ public class Tour extends Form {
 
     public void fetchPlayers(Map<String, Object> data) {
         String ids = Func.trimmedString(data.get("ids"));
-        this.accountIds = Func.toStringList(ids, ',');
-        if (this.accountIds.isEmpty()) return;
+        List<String> idLst = Func.toStringList(ids, ',');
+        if (idLst.isEmpty()) return;
+        this.accountIds = idLst;
         this.playerNames.clear();
         for (String id : this.accountIds) {
             this.playerNames.add(Func.trimmedString(data.get(id)));
         }
-//        System.out.println("total player: " + this.playerNames.size());
     }
 
     class Group {
