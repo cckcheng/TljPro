@@ -1320,7 +1320,7 @@ public class Player {
                                 main.showPlayOption();
                                 break;
                             case "group":
-                                main.formTour.fetchPlayers(data);
+                                main.formTour.loadGroups(data);
                                 break;
 
                             case "priv":

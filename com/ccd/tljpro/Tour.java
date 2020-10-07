@@ -44,7 +44,7 @@ public class Tour extends Form {
         Button btnRefresh = new Button("Refresh");
         this.menu = BoxLayout.encloseX(btnNew, btnRefresh);
         btnNew.addActionListener((ev) -> {
-            editGroup();
+            editGroup(null);
         });
 
         this.body = new Container(BoxLayout.y());
@@ -56,14 +56,27 @@ public class Tour extends Form {
         }
     }
 
-    private void editGroup() {
+    private void editGroup(Group grp) {
         Form thisForm = this;
         Form frm = new Form("Group", BoxLayout.y());
         DefaultListModel model = new DefaultListModel(this.playerNames);
+        model.setMultiSelectionMode(true);
         CheckBoxList lst = new CheckBoxList(model);
-        TextField grpName = new TextField("", "Group Name");
+        String gName = grp == null ? "" : grp.name;
+        TextField grpName = new TextField(gName, "Group Name");
         Picker dateTimePicker = new Picker();
         dateTimePicker.setType(Display.PICKER_TYPE_DATE_AND_TIME);
+        if (grp != null) {
+            dateTimePicker.setDate(grp.startTime);
+            int n = grp.players.size();
+            if (n > 0) {
+                int[] ind = new int[n];
+                for (int x = 0; x < n; x++) {
+                    ind[x] = this.accountIds.indexOf(grp.players.get(x));
+                }
+                model.setSelectedIndices(ind);
+            }
+        }
 
         frm.add(grpName);
         frm.add(dateTimePicker);
@@ -76,13 +89,21 @@ public class Tour extends Form {
                 return;
             }
             Date dt = (Date) dateTimePicker.getValue();
-            System.out.println(dt.toString());
+//            System.out.println(dt.toString());
             int[] indices = model.getSelectedIndices();
-            List<Integer> ll = new ArrayList<Integer>();
+            String pids = "";
             for (int n : indices) {
-                ll.add(n);
+                pids += "," + this.accountIds.get(n);
             }
-            System.out.println(ll.toString());
+            if (!pids.isEmpty()) pids = pids.substring(1);
+            Request req = Request.create(Request.GROUP, "type", "save")
+                    .append("name", name)
+                    .append("ids", pids)
+                    .append("tm", "" + dt.getTime());
+            if (grp != null) {
+                req.append("gid", grp.id);
+            }
+            player.sendRequest(req);
         }));
 
         frm.setBackCommand("", null, (ev) -> {
@@ -91,14 +112,62 @@ public class Tour extends Form {
         frm.show();
     }
 
+    public void loadGroups(Map<String, Object> data) {
+        String ids = Func.trimmedString(data.get("gids"));
+        List<String> grpIds = Func.toStringList(ids, ',');
+        if (grpIds.isEmpty()) return;
+        this.body.removeAll();
+        for (String id : grpIds) {
+            String s = Func.trimmedString(data.get(id));
+            Group grp = new Group(id, s);
+            Button btn = new Button(grp.brief());
+            btn.addActionListener(evt -> {
+                editGroup(grp);
+            });
+            this.body.add(btn);
+        }
+        this.body.revalidate();
+        this.fetchPlayers(data);
+    }
+
     public void fetchPlayers(Map<String, Object> data) {
         String ids = Func.trimmedString(data.get("ids"));
-        this.playerNames.clear();
         this.accountIds = Func.toStringList(ids, ',');
         if (this.accountIds.isEmpty()) return;
+        this.playerNames.clear();
         for (String id : this.accountIds) {
             this.playerNames.add(Func.trimmedString(data.get(id)));
         }
 //        System.out.println("total player: " + this.playerNames.size());
+    }
+
+    class Group {
+
+        String id;
+        String name;
+        Date startTime;
+        String playerIds;
+        List<String> players;
+
+        Group(String id, String info) {
+            this.id = id;
+            List<String> grpInfo = Func.toStringList(info, '|');
+            if (grpInfo.size() < 3) return;
+            this.name = grpInfo.get(0);
+            String s = grpInfo.get(1);
+            if (!s.isEmpty()) {
+                this.startTime = new Date();
+                long tm = Func.parseLong(s);
+                if (tm > 0) this.startTime.setTime(tm);
+            }
+            this.playerIds = grpInfo.get(2);
+            this.players = Func.toStringList(this.playerIds, ',');
+        }
+
+        String brief() {
+            String s = this.name;
+            if (this.startTime != null) s += ", " + this.startTime.toString();
+            return s;
+        }
     }
 }

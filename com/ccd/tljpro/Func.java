@@ -27,6 +27,15 @@ public class Func {
         }
     }
 
+    public static long parseLong(Object obj) {
+        if (obj == null) return -1;
+        try {
+            return (long) Double.parseDouble(obj.toString());
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
     public static boolean parseBoolean(Object obj) {
         if (obj == null) return false;
         String r = obj.toString();
