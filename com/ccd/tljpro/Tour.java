@@ -118,7 +118,6 @@ public class Tour extends Form {
     public void loadGroups(Map<String, Object> data) {
         String ids = Func.trimmedString(data.get("gids"));
         List<String> grpIds = Func.toStringList(ids, ',');
-        if (grpIds.isEmpty()) return;
         this.body.removeAll();
         for (String id : grpIds) {
             String s = Func.trimmedString(data.get(id));
