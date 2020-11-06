@@ -515,7 +515,6 @@ public class Player {
 //            widget.animateLayout(2000);
         } else {
             lbPass.setVisible(false);
-//            FontImage.setMaterialIcon(lbPass, '\0');
         }
 
         String strTrump = "";
@@ -654,7 +653,7 @@ public class Player {
 
         this.bExit = new Button(Dict.get(main.lang, "Exit"));
         this.bExit.getAllStyles().setFont(Hand.fontGeneral);
-        FontImage.setMaterialIcon(bExit, FontImage.MATERIAL_EXIT_TO_APP);
+        bExit.setMaterialIcon( FontImage.MATERIAL_EXIT_TO_APP);
         if (!Card.FOR_IOS) this.bExit.setUIID("myExit");
         bExit.addActionListener((e) -> {
             if (!watching && !tableEnded) {
@@ -686,7 +685,7 @@ public class Player {
 
         this.bRobot = new CheckBox(Dict.get(main.lang, "Robot"));
         this.bRobot.getAllStyles().setFont(Hand.fontGeneral);
-        FontImage.setMaterialIcon(bRobot, FontImage.MATERIAL_ANDROID);
+        bRobot.setMaterialIcon( FontImage.MATERIAL_ANDROID);
         bRobot.getAllStyles().setFgColor(INFO_COLOR);
         bRobot.addActionListener((e) -> {
             robotOn = bRobot.isSelected();
@@ -724,7 +723,7 @@ public class Player {
         this.lbPass = new Label(" ");
         this.lbPass.getStyle().setFont(Hand.fontGeneral);
         this.lbPass.getStyle().setFgColor(TIMER_COLOR);
-        FontImage.setMaterialIcon(lbPass, FontImage.MATERIAL_LOCK_OPEN);
+        lbPass.setMaterialIcon(FontImage.MATERIAL_LOCK_OPEN);
 
         String gmInfo = "gmInfo";
         String ptInfo = "ptInfo";
@@ -1525,9 +1524,11 @@ public class Player {
                         return;
                     }
                 } else {
-                    if (!pInfo.currentAct.equals("wait") && pInfo.location.equals("bottom") && !pInfo.actionButtons.isVisible()) {
-                        pInfo.actionButtons.setVisible(true);
-                        pInfo.parent.revalidate();
+                    if (pInfo.location.equals("bottom")) {
+                        if (!pInfo.currentAct.equals("wait") && !pInfo.actionButtons.isVisible()) {
+                            pInfo.actionButtons.setVisible(true);
+                            pInfo.parent.revalidate();
+                        }
                     }
                 }
                 this.timer.setText(this.timeout + "");
@@ -1536,7 +1537,7 @@ public class Player {
                 }
             } else {
                 this.timer.setText("");
-                FontImage.setMaterialIcon(timer, FontImage.MATERIAL_TIMER_OFF);
+                timer.setMaterialIcon(FontImage.MATERIAL_TIMER_OFF);
                 pInfo.dismissActions();
                 pInfo.countDownTimer.cancel();
                 pInfo.countDownTimer = null;
@@ -1648,8 +1649,10 @@ public class Player {
                 btnPass.setName("pass");
 //                btnPassSingle.setName("pass");
 
-                FontImage.setMaterialIcon(btnPlus, FontImage.MATERIAL_ARROW_UPWARD);
-                FontImage.setMaterialIcon(btnMinus, FontImage.MATERIAL_ARROW_DOWNWARD);
+//                FontImage.setMaterialIcon(btnPlus, FontImage.MATERIAL_ARROW_UPWARD);
+//                FontImage.setMaterialIcon(btnMinus, FontImage.MATERIAL_ARROW_DOWNWARD);
+                btnPlus.setMaterialIcon(FontImage.MATERIAL_ARROW_UPWARD);
+                btnMinus.setMaterialIcon(FontImage.MATERIAL_ARROW_DOWNWARD);
 
 //                btnBid.getAllStyles().setFgColor(BUTTON_COLOR);
                 btnBid.getAllStyles().setFont(Hand.fontRank);
@@ -1929,7 +1932,7 @@ public class Player {
 
             this.points.setText("");
             this.timer.setText(timeout + "");
-            FontImage.setMaterialIcon(timer, FontImage.MATERIAL_TIMER);
+            timer.setMaterialIcon(FontImage.MATERIAL_TIMER);
             this.timer.setVisible(true);
             countDownTimer = new UITimer(new CountDown(this, timeout));
 //            int milli = 950;   // slightly less to 1 sec
@@ -2004,7 +2007,6 @@ public class Player {
                             buttonContainer.removeAll();
                             buttonContainer.add(btnPlay);
                             actionButtons = btnPlay;
-//                            buttonContainer.revalidate();
                             buttonContainer.animateLayout(100);
                         }
                     } else {
@@ -2013,7 +2015,6 @@ public class Player {
                             buttonContainer.removeAll();
                             buttonContainer.add(bidButtons);
                             actionButtons = bidButtons;
-//                            buttonContainer.revalidate();
                             buttonContainer.animateLayout(100);
                         }
                         this.maxBid = contractPoint - 5;
@@ -2068,7 +2069,7 @@ public class Player {
                         buttonContainer.removeAll();
                         buttonContainer.add(btnPlay);
                         actionButtons = btnPlay;
-                        buttonContainer.revalidate();
+                        buttonContainer.animateLayout(100);
                     }
                 } else if (act.equals("play")) {
                     btnPlay.setName("play");
@@ -2078,7 +2079,8 @@ public class Player {
                         buttonContainer.removeAll();
                         buttonContainer.add(btnPlay);
                         actionButtons = btnPlay;
-                        buttonContainer.revalidate();
+//                        buttonContainer.revalidate(); // not work
+                        buttonContainer.animateLayout(100); // necessary, otherwise button may not show
                     }
                 } else {
                     // just wait

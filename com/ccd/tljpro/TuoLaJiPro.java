@@ -706,7 +706,7 @@ public class TuoLaJiPro {
             }
             this.btnPlay = bPlay;
 
-            FontImage.setMaterialIcon(bPlay, FontImage.MATERIAL_PEOPLE);
+            bPlay.setMaterialIcon( FontImage.MATERIAL_PEOPLE);
             bPlay.addActionListener((e) -> {
                 if (!isLandscape()) {
                     return;
@@ -720,7 +720,7 @@ public class TuoLaJiPro {
             btnBrowse = new Button(Dict.get(lang, "Browse"));
             btnBrowse.getStyle().setFgColor(menuColor);
             btnBrowse.getAllStyles().setFont(Hand.fontRank);
-            FontImage.setMaterialIcon(btnBrowse, FontImage.MATERIAL_VIEW_MODULE);
+            btnBrowse.setMaterialIcon( FontImage.MATERIAL_VIEW_MODULE);
             btnBrowse.addActionListener((e) -> {
                 if (!isLandscape()) {
                     return;
@@ -731,7 +731,7 @@ public class TuoLaJiPro {
             btnPrivateTable = new Button(Dict.get(lang, Dict.PRIVATE_TABLE));
             btnPrivateTable.getStyle().setFgColor(menuColor);
             btnPrivateTable.getAllStyles().setFont(Hand.fontRank);
-            FontImage.setMaterialIcon(btnPrivateTable, FontImage.MATERIAL_LOCK);
+            btnPrivateTable.setMaterialIcon( FontImage.MATERIAL_LOCK);
             btnPrivateTable.addActionListener((e) -> {
                 if (!isLandscape()) {
                     return;
@@ -747,7 +747,7 @@ public class TuoLaJiPro {
             btnHelp = new Button(Dict.get(lang, "Help"));
             btnHelp.getStyle().setFgColor(menuColor);
 //            btnHelp.getAllStyles().setFont(Hand.fontRank);
-            FontImage.setMaterialIcon(btnHelp, FontImage.MATERIAL_HELP);
+            btnHelp.setMaterialIcon( FontImage.MATERIAL_HELP);
             btnHelp.addActionListener((e) -> {
                 if (!isLandscape()) {
                     return;
@@ -758,7 +758,7 @@ public class TuoLaJiPro {
             btnTutor = new Button(Dict.get(lang, "Tutorial"));
             btnTutor.getStyle().setFgColor(menuColor);
             btnTutor.getAllStyles().setFont(Hand.fontRank);
-            FontImage.setMaterialIcon(btnTutor, FontImage.MATERIAL_TOUCH_APP);
+            btnTutor.setMaterialIcon( FontImage.MATERIAL_TOUCH_APP);
             btnTutor.addActionListener((e) -> {
                 if (!isLandscape()) {
                     return;
@@ -769,7 +769,7 @@ public class TuoLaJiPro {
             btnSetting = new Button(Dict.get(lang, "Settings"));
             btnSetting.getStyle().setFgColor(menuColor);
 //            btnSetting.getAllStyles().setFont(Hand.fontRank);
-            FontImage.setMaterialIcon(btnSetting, FontImage.MATERIAL_SETTINGS);
+            btnSetting.setMaterialIcon(FontImage.MATERIAL_SETTINGS);
             btnSetting.addActionListener((e) -> {
                 showSettings();
             });
@@ -1197,7 +1197,7 @@ public class TuoLaJiPro {
         }
 
         Button bReturn = new Button(Dict.get(lang, "Exit"));
-        FontImage.setMaterialIcon(bReturn, FontImage.MATERIAL_EXIT_TO_APP);
+        bReturn.setMaterialIcon(FontImage.MATERIAL_EXIT_TO_APP);
 //        bReturn.setUIID("return");
         bReturn.addActionListener((e) -> {
             this.switchScene("entry");
@@ -1753,7 +1753,7 @@ public class TuoLaJiPro {
             if (btn == null) {
                 btn = new Button(textMap.get(lang));
                 btn.getStyle().setFgColor(Player.BUTTON_COLOR);
-                FontImage.setMaterialIcon(btn, icon);
+                btn.setMaterialIcon(icon);
                 switch (type) {
                     case "guide":
                     case "account":

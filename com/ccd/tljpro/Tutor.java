@@ -97,7 +97,7 @@ public class Tutor extends Container {
 //            index.getAllStyles().setFgColor(0); // no effect
             this.add(index);
             Button bExit = new Button(Dict.get(main.lang, "Exit"));
-            FontImage.setMaterialIcon(bExit, FontImage.MATERIAL_EXIT_TO_APP);
+            bExit.setMaterialIcon( FontImage.MATERIAL_EXIT_TO_APP);
 //            bExit.setUIID("myExit");
             bExit.addActionListener((e) -> {
                 main.switchScene("entry");
