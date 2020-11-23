@@ -1525,7 +1525,7 @@ public class Player {
                     }
                 } else {
                     if (pInfo.location.equals("bottom")) {
-                        if (!pInfo.currentAct.equals("wait") && !pInfo.actionButtons.isVisible()) {
+                        if (pInfo.actionButtons != null && !pInfo.currentAct.equals("wait") && !pInfo.actionButtons.isVisible()) {
                             pInfo.actionButtons.setVisible(true);
                             pInfo.parent.revalidate();
                         }
